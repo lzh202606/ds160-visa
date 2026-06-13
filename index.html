@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>踏梦寰球之旅 · 美签一站式服务</title>
+<style>
+  :root {
+    --bg: #060918;
+    --surface: rgba(14,20,45,0.85);
+    --border: rgba(108,140,255,0.12);
+    --accent: #5b8def;
+    --accent2: #3ce7b5;
+    --gold: #f5b642;
+    --text: #dce2f0;
+    --dim: #6e7899;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+  .bg-orb { position:fixed; border-radius:50%; filter:blur(140px); opacity:0.12; pointer-events:none; z-index:0; }
+  .bg-orb:nth-child(1) { width:600px; height:600px; background:var(--accent); top:-200px; left:-150px; animation:f1 25s infinite; }
+  .bg-orb:nth-child(2) { width:450px; height:450px; background:var(--accent2); bottom:-150px; right:-100px; animation:f2 30s infinite; }
+  .bg-orb:nth-child(3) { width:350px; height:350px; background:var(--gold); top:40%; left:50%; animation:f3 20s infinite; }
+  @keyframes f1 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(100px,60px)} 66%{transform:translate(-40px,-50px)} }
+  @keyframes f2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-80px,-70px)} }
+  @keyframes f3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,80px)} }
+
+  .container { max-width:800px; margin:0 auto; padding:32px 20px 60px; position:relative; z-index:1; }
+
+  /* Hero */
+  .hero {
+    text-align:center; padding:60px 24px 40px; margin-bottom:28px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:32px; backdrop-filter:blur(30px);
+    position:relative; overflow:hidden;
+  }
+  .hero::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--gold),transparent); }
+  .hero .logo-icon {
+    display:inline-block; width:72px; height:72px; border-radius:18px;
+    background:linear-gradient(135deg,var(--accent),#2563EB); margin-bottom:20px;
+    font-size:36px; line-height:72px; box-shadow:0 8px 40px rgba(91,141,239,0.3);
+  }
+  .hero h1 { font-size:30px; font-weight:900; margin-bottom:6px; background:linear-gradient(135deg,#c8d6ff,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero .brand { font-size:12px; color:var(--dim); letter-spacing:3px; margin-bottom:16px; }
+  .hero .tagline { font-size:15px; color:var(--dim); margin-bottom:24px; line-height:1.8; }
+
+  /* CTA */
+  .cta-row { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .btn {
+    padding:14px 32px; border:none; border-radius:12px; font-size:15px; font-weight:700;
+    cursor:pointer; transition:all 0.3s; text-decoration:none; display:inline-block;
+    letter-spacing:0.5px;
+  }
+  .btn-primary {
+    background:linear-gradient(135deg,var(--accent),#4870e0);
+    color:#fff; box-shadow:0 6px 30px rgba(91,141,239,0.35);
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 36px rgba(91,141,239,0.5); }
+  .btn-outline {
+    background:transparent; border:1px solid rgba(91,141,239,0.3);
+    color:var(--accent);
+  }
+  .btn-outline:hover { background:rgba(91,141,239,0.06); }
+
+  /* Features */
+  .features {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-bottom:28px;
+  }
+  .feat-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:20px;
+    padding:24px 20px; backdrop-filter:blur(20px); transition:all 0.3s;
+  }
+  .feat-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 6px 30px rgba(91,141,239,0.1); }
+  .feat-card .f-icon { font-size:32px; margin-bottom:12px; }
+  .feat-card h3 { font-size:15px; font-weight:700; margin-bottom:6px; }
+  .feat-card p { font-size:12px; color:var(--dim); line-height:1.7; }
+
+  /* Service cards */
+  .service-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; margin-bottom:28px; }
+  .svc-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:24px;
+    padding:28px 24px; backdrop-filter:blur(20px); position:relative; overflow:hidden;
+    transition:all 0.3s; text-decoration:none; color:inherit; display:block;
+  }
+  .svc-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    transition:background 0.3s;
+  }
+  .svc-card:nth-child(1)::before { background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .svc-card:nth-child(2)::before { background:linear-gradient(90deg,var(--gold),#ff7b00); }
+  .svc-card:nth-child(3)::before { background:linear-gradient(90deg,#d4a853,#a0522d); }
+  .svc-card:hover { border-color:rgba(108,140,255,0.25); transform:translateY(-3px); box-shadow:0 8px 40px rgba(91,141,239,0.12); }
+  .svc-card .s-badge {
+    display:inline-block; padding:2px 10px; border-radius:6px; font-size:10px; font-weight:700;
+    margin-bottom:12px;
+  }
+  .s-badge.green { background:rgba(46,213,115,0.1); color:#2ed573; }
+  .s-badge.gold { background:rgba(245,182,66,0.1); color:var(--gold); }
+  .svc-card h3 { font-size:18px; font-weight:800; margin-bottom:8px; }
+  .svc-card .s-desc { font-size:13px; color:var(--dim); line-height:1.7; margin-bottom:12px; }
+  .svc-card .s-features { list-style:none; font-size:12px; color:var(--dim); }
+  .svc-card .s-features li { padding:3px 0; }
+  .svc-card .s-features li::before { content:'✓ '; color:var(--accent2); font-weight:700; }
+
+  /* Footer */
+  .footer {
+    text-align:center; padding:28px 20px; margin-top:12px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; backdrop-filter:blur(20px);
+  }
+  .footer .social { font-size:13px; color:var(--dim); margin-bottom:4px; }
+  .footer .copyright { font-size:10px; color:#3a4060; }
+
+  @media(max-width:520px){
+    .hero { padding:40px 16px 28px; }
+    .hero h1 { font-size:22px; }
+    .service-grid { grid-template-columns:1fr; }
+    .features { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+
+<div class="container">
+  <div class="hero">
+    <div class="logo-icon">🌍</div>
+    <div class="brand">踏梦寰球之旅</div>
+    <h1>美签一站式服务平台</h1>
+    <div class="tagline">
+      智能填表 DS-160 · AI 面签评估 · 模拟面签练习<br>
+      让你的美签申请不再踩坑
+    </div>
+    <div class="cta-row">
+      <a href="form.html" class="btn btn-primary">📝 开始填表</a>
+      <a href="interview.html" class="btn btn-outline" style="border-color:rgba(212,168,83,0.4);color:#d4a853;">🎯 面签模拟</a>
+      <a href="assessment.html" class="btn btn-outline">🛡️ 面签评估</a>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feat-card">
+      <div class="f-icon">📋</div>
+      <h3>23 节官方表单</h3>
+      <p>完全对标官方 DS-160，118+ 字段逐一映射</p>
+    </div>
+    <div class="feat-card">
+      <div class="f-icon">🧠</div>
+      <h3>AI 智能校验</h3>
+      <p>自动检测护照过期、SEVIS 错误等致命问题</p>
+    </div>
+    <div class="feat-card">
+      <div class="f-icon">🛡️</div>
+      <h3>8 维面签评估</h3>
+      <p>基于真实数据，预测面签通过率并给出优化建议</p>
+    </div>
+    <div class="feat-card">
+      <div class="f-icon">📄</div>
+      <h3>一键导出 PDF</h3>
+      <p>填表 + 评估 + 确认页，一份专业文档全搞定</p>
+    </div>
+    <div class="feat-card">
+      <div class="f-icon">🔒</div>
+      <h3>一次性链接</h3>
+      <p>付费获取专属链接，用完即失效，隐私安全</p>
+    </div>
+    <div class="feat-card">
+      <div class="f-icon">📱</div>
+      <h3>手机可用</h3>
+      <p>电脑/手机/平板全适配，随时随地填表</p>
+    </div>
+    <div class="feat-card">
+      <div class="f-icon">🎯</div>
+      <h3>面签模拟器</h3>
+      <p>模拟真实面签场景，练习回答，获取即时反馈</p>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <div class="service-grid">
+    <a href="form.html" class="svc-card" style="text-decoration:none;">
+      <div class="s-badge green">最受欢迎</div>
+      <h3>📝 DS-160 智能填表</h3>
+      <div class="s-desc">23 节完整表单 · 智能校验 · 一键生成 PDF 报告</div>
+      <ul class="s-features">
+        <li>涵盖 F/J/M/B1/B2 全类型签证</li>
+        <li>自动检测护照/SEVIS/姓名等常见错误</li>
+        <li>PDF 含 DS-160 预览 + 面签评估报告</li>
+        <li>Confirmation 确认页模拟</li>
+      </ul>
+    </a>
+    <a href="assessment.html" class="svc-card" style="text-decoration:none;">
+      <div class="s-badge gold">高价值</div>
+      <h3>🛡️ 面签风险评估</h3>
+      <div class="s-desc">8 维分析 · 雷达图可视化 · 个性化优化建议</div>
+      <ul class="s-features">
+        <li>国内约束力 · 财务 · 旅行史 · 背景</li>
+        <li>目的合理性 · 材料完整度</li>
+        <li>安全审查风险 · 时间节点分析</li>
+        <li>逐项打分 + 行动清单</li>
+      </ul>
+    </a>
+    <a href="interview.html" class="svc-card" style="text-decoration:none;">
+      <div class="s-badge gold" style="background:rgba(212,168,83,0.15);color:#d4a853;">第二盈利点</div>
+      <h3>🎯 面签模拟器</h3>
+      <div class="s-desc">沉浸式模拟面签 · 实时期待反馈 · 多维评分</div>
+      <ul class="s-features">
+        <li>覆盖 B1/B2、F1、J1 全签证类型</li>
+        <li>练习模式：每题即时反馈+优化建议</li>
+        <li>模拟模式：限时连续作答，真实压力感</li>
+        <li>8+ 维度逐题打分，结果雷达图</li>
+      </ul>
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="social">📕 小红书：踏梦寰球之旅 | 💬 微信详询</div>
+    <div class="copyright">© 2026 踏梦寰球之旅 · 美签纵横团出品</div>
+  </div>
+</div>
+
+<nav style="position:fixed;bottom:0;left:0;right:0;background:rgba(6,9,24,0.95);backdrop-filter:blur(10px);border-top:1px solid rgba(108,140,255,0.12);padding:8px 16px;display:flex;justify-content:center;gap:20px;z-index:99;">
+  <a href="form.html" style="font-size:12px;color:#6e7899;text-decoration:none;padding:6px 16px;border-radius:8px;display:flex;align-items:center;gap:4px;">📝 填表</a>
+  <a href="assessment.html" style="font-size:12px;color:#5b8def;text-decoration:none;padding:6px 16px;border-radius:8px;display:flex;align-items:center;gap:4px;font-weight:600;">🛡️ 评估</a>
+  <a href="interview.html" style="font-size:12px;color:#6e7899;text-decoration:none;padding:6px 16px;border-radius:8px;display:flex;align-items:center;gap:4px;">🎯 模拟</a>
+</nav>
+
+</body>
+</html>

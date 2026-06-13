@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS-160 链接生成器 - 管理后台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0f172a; color: #e2e8f0; min-height: 100vh;
+  }
+  .container { max-width: 700px; margin: 0 auto; padding: 40px 20px; }
+
+  .login-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 100;
+  }
+  .login-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+    padding: 40px; width: 360px; text-align: center;
+  }
+  .login-card h1 { font-size: 20px; margin-bottom: 8px; }
+  .login-card p { color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
+  .login-card input {
+    width: 100%; padding: 10px 14px; border: 1px solid #334155; border-radius: 8px;
+    background: #0f172a; color: #e2e8f0; font-size: 14px; margin-bottom: 12px;
+    text-align: center; letter-spacing: 4px;
+  }
+  .login-card .btn {
+    width: 100%; padding: 10px; border: none; border-radius: 8px;
+    background: #1a56db; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+
+  .header { text-align: center; margin-bottom: 32px; }
+  .header h1 { font-size: 24px; margin-bottom: 6px; }
+  .header p { color: #94a3b8; font-size: 13px; }
+
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+    padding: 24px; margin-bottom: 20px;
+  }
+  .card h2 { font-size: 16px; margin-bottom: 16px; color: #60a5fa; }
+
+  .form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+  .form-group input, .form-group select {
+    padding: 8px 12px; border: 1px solid #334155; border-radius: 6px;
+    background: #0f172a; color: #e2e8f0; font-size: 13px;
+  }
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 6px; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: #1a56db; color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+
+  .link-item {
+    background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 8px;
+  }
+  .link-item .token { font-family: monospace; color: #34d399; font-size: 14px; }
+  .link-item .url { font-size: 12px; color: #93c5fd; word-break: break-all; margin: 4px 0; }
+  .link-item .meta { font-size: 11px; color: #64748b; }
+  .copy-btn { color: #60a5fa; cursor: pointer; font-size: 11px; margin-left: 8px; }
+  .copy-btn:hover { text-decoration: underline; }
+
+  .note { font-size: 12px; color: #fbbf24; background: #451a03; padding: 12px; border-radius: 8px; margin-top: 16px; line-height: 1.8; }
+
+  #mainPanel { display: none; }
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h1>🔐 管理后台</h1>
+    <p>DS-160 一次性链接生成器</p>
+    <input type="password" id="adminPass" placeholder="输入管理密码" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" onclick="login()">进入</button>
+  </div>
+</div>
+
+<div class="container" id="mainPanel">
+  <div class="header">
+    <h1>DS-160 一次性链接生成器</h1>
+    <p>生成的链接每人仅能使用一次，PDF下载后自动作废</p>
+  </div>
+
+  <!-- 生成链接 -->
+  <div class="card">
+    <h2>生成一次性链接</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>生成数量</label>
+        <input type="number" id="genCount" value="1" min="1" max="50" style="width:80px;">
+      </div>
+      <div class="form-group">
+        <label>备注标签</label>
+        <input type="text" id="genLabel" placeholder="如：客户张三-F1签证" style="width:200px;">
+      </div>
+      <div class="form-group" style="align-self: flex-end;">
+        <button class="btn btn-primary" onclick="generateLinks()">生成链接</button>
+      </div>
+    </div>
+    <div id="generatedLinks"></div>
+  </div>
+
+  <!-- 使用说明 -->
+  <div class="card">
+    <h2>使用说明</h2>
+    <div class="note">
+      1. 输入数量和标签，点击"生成链接"<br>
+      2. 复制链接发给客户（微信/邮件）<br>
+      3. 客户打开链接填表 → 下载PDF → 链接自动失效<br>
+      4. 链接失效后，任何人再次打开都会看到"已使用"<br>
+      <br>
+      <strong>安全机制</strong>：<br>
+      • Token 经过 HMAC 签名，无法被伪造<br>
+      • 同一设备上 PDF 下载后记录已使用状态<br>
+      • 支持设置在几小时后过期<br>
+      • 默认管理密码: <code>ds160admin</code>（可在代码中修改）
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASS = 'ds160admin'; // 可修改
+const SECRET = 'ds160-secret-key-2026'; // HMAC签名密钥
+
+// ═════════════ 登录 ═════════════
+function login() {
+  const pw = document.getElementById('adminPass').value;
+  if (pw === ADMIN_PASS) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('mainPanel').style.display = 'block';
+  } else {
+    alert('密码错误');
+  }
+}
+
+// ═════════════ HMAC-SHA256 签名 ═════════════
+async function hmacSign(message, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// ═════════════ 生成链接 ═════════════
+async function generateLinks() {
+  const count = parseInt(document.getElementById('genCount').value) || 1;
+  const label = document.getElementById('genLabel').value.trim();
+
+  const links = [];
+  for (let i = 0; i < count; i++) {
+    const id = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
+    const ts = Date.now();
+    const payload = `${id}.${ts}`;
+    const sig = await hmacSign(payload, SECRET);
+    const token = `${payload}.${sig}`;
+    const baseUrl = getFormUrl();
+    links.push({ token, label, url: `${baseUrl}?token=${token}`, created: new Date().toISOString() });
+  }
+
+  const html = links.map((l, i) => `
+    <div class="link-item">
+      <div class="token">Token #${i+1}: ${l.token.substring(0, 20)}...</div>
+      <div class="url">${l.url}</div>
+      <div class="meta">${l.label || '无标签'} | ${l.created}
+        <span class="copy-btn" onclick="copyToClipboard('${l.url.replace(/'/g, "\\'")}')">📋 复制链接</span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('generatedLinks').innerHTML =
+    '<h3 style="font-size:14px;margin-bottom:8px;color:#34d399;">已生成 ' + count + ' 个一次性链接：</h3>' + html;
+}
+
+function getFormUrl() {
+  // COS线上地址（硬编码确保生成正确链接）
+  const COS_URL = 'https://ds160-1322068521.cos-website.ap-guangzhou.myqcloud.com/form.html';
+  // 如果从线上访问，直接用当前域名；否则用硬编码COS地址
+  if (window.location.protocol === 'https:' || window.location.protocol === 'http:') {
+    const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+    return base + 'form.html';
+  }
+  return COS_URL;
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => alert('已复制链接！\n\n' + text));
+}
+</script>
+</body>
+</html>

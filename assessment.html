@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面签风险评估 | 过签侠</title>
+<style>
+  :root {
+    --bg: #060918;
+    --surface: rgba(14,20,45,0.8);
+    --border: rgba(108,140,255,0.12);
+    --accent: #5b8def;
+    --accent2: #3ce7b5;
+    --gold: #f5b642;
+    --danger: #ff5367;
+    --warn: #ffae42;
+    --safe: #2ed573;
+    --text: #dce2f0;
+    --dim: #6e7899;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Animated bg orbs */
+  .bg-orb { position:fixed; border-radius:50%; filter:blur(120px); opacity:0.15; pointer-events:none; z-index:0; }
+  .bg-orb:nth-child(1) { width:500px; height:500px; background:var(--accent); top:-150px; left:-100px; animation:float1 20s infinite; }
+  .bg-orb:nth-child(2) { width:400px; height:400px; background:var(--accent2); bottom:-100px; right:-80px; animation:float2 25s infinite; }
+  .bg-orb:nth-child(3) { width:300px; height:300px; background:var(--gold); top:50%; left:60%; animation:float3 18s infinite; }
+  @keyframes float1 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(80px,40px)} 66%{transform:translate(-30px,-30px)} }
+  @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,-50px)} }
+  @keyframes float3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(50px,60px)} }
+
+  .container { max-width:860px; margin:0 auto; padding:24px 16px 60px; position:relative; z-index:1; }
+
+  /* ── Hero ── */
+  .hero {
+    text-align:center; padding:36px 20px 28px; margin-bottom:20px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:28px; backdrop-filter:blur(30px);
+    position:relative; overflow:hidden;
+  }
+  .hero::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent); }
+  .hero .tag {
+    display:inline-block; padding:3px 14px; border-radius:20px; font-size:10px; font-weight:700;
+    background:rgba(91,141,239,0.1); color:var(--accent); letter-spacing:1px; margin-bottom:12px;
+  }
+  .hero h1 { font-size:28px; font-weight:900; margin-bottom:4px; background:linear-gradient(135deg,#c8d6ff,var(--accent),#8bc4ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero .sub { font-size:12px; color:var(--dim); }
+
+  /* ── Score Hero ── */
+  .score-panel {
+    display:flex; align-items:center; justify-content:center; gap:32px;
+    padding:28px 24px; margin-bottom:20px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:24px; backdrop-filter:blur(30px); flex-wrap:wrap;
+  }
+  .gauge-wrap { position:relative; width:160px; height:160px; flex-shrink:0; }
+  .gauge-num {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; line-height:1;
+  }
+  .gauge-val { font-size:48px; font-weight:900; transition:color 1s; }
+  .gauge-sub { font-size:10px; color:var(--dim); margin-top:2px; }
+  .verdict-col { text-align:left; }
+  .vtag {
+    display:inline-block; padding:3px 12px; border-radius:6px; font-size:12px; font-weight:700; margin-bottom:8px;
+  }
+  .vtag.green { background:rgba(46,213,115,0.12); color:var(--safe); }
+  .vtag.yellow { background:rgba(255,174,66,0.12); color:var(--warn); }
+  .vtag.red { background:rgba(255,83,103,0.12); color:var(--danger); }
+  .vdesc { font-size:13px; color:var(--dim); line-height:1.7; max-width:320px; }
+
+  /* ── Stats Bar ── */
+  .stats-bar {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:8px; margin-bottom:20px;
+  }
+  .stat-chip {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:14px 12px; text-align:center; backdrop-filter:blur(20px);
+    transition:transform 0.3s, border-color 0.3s;
+  }
+  .stat-chip:hover { transform:translateY(-2px); border-color:var(--accent); }
+  .stat-val { font-size:22px; font-weight:800; }
+  .stat-label { font-size:10px; color:var(--dim); margin-top:2px; }
+
+  /* ── Radar ── */
+  .radar-box {
+    background:var(--surface); border:1px solid var(--border); border-radius:24px;
+    padding:20px 12px 12px; margin-bottom:20px; text-align:center; backdrop-filter:blur(20px);
+  }
+  .radar-box h3 { font-size:13px; color:var(--accent); margin-bottom:4px; }
+
+  /* ── Dimension Cards ── */
+  .dim-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-bottom:20px; }
+  .dcard {
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:16px; backdrop-filter:blur(20px); position:relative; overflow:hidden;
+    transition:all 0.3s ease;
+  }
+  .dcard:hover { border-color:rgba(108,140,255,0.3); box-shadow:0 4px 30px rgba(91,141,239,0.1); transform:translateY(-2px); }
+  .dcard .d-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .dcard .d-icon { font-size:20px; }
+  .dcard .d-name { font-weight:700; font-size:13px; flex:1; }
+  .dcard .d-score { font-size:18px; font-weight:900; padding:2px 8px; border-radius:6px; }
+  .d-hi { color:var(--safe); background:rgba(46,213,115,0.08); }
+  .d-md { color:var(--warn); background:rgba(255,174,66,0.08); }
+  .d-lo { color:var(--danger); background:rgba(255,83,103,0.08); }
+  .dcard .d-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.04); margin-bottom:8px; overflow:hidden; }
+  .dcard .d-fill { height:100%; border-radius:2px; transition:width 1.4s cubic-bezier(0.25,1,0.5,1); }
+  .b-hi { background:linear-gradient(90deg,var(--safe),var(--accent2)); }
+  .b-md { background:linear-gradient(90deg,var(--gold),var(--warn)); }
+  .b-lo { background:linear-gradient(90deg,var(--danger),#ff7b93); }
+  .dcard .d-tip { font-size:11px; color:var(--dim); line-height:1.5; }
+  .dcard .d-alert { margin-top:6px; padding:5px 8px; border-radius:6px; font-size:10px; line-height:1.5; }
+  .a-red { background:rgba(255,83,103,0.06); color:#ff8a9e; }
+  .a-yellow { background:rgba(255,174,66,0.06); color:#ffc87a; }
+  .a-green { background:rgba(46,213,115,0.06); color:#6df0a3; }
+
+  /* ── Risk Focus ── */
+  .risk-focus {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+    padding: 20px 24px; margin-bottom: 20px; backdrop-filter: blur(20px);
+    border-left: 3px solid var(--danger);
+  }
+  .risk-focus h3 { font-size: 14px; color: var(--danger); margin-bottom: 12px; }
+  .risk-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px;
+  }
+  .risk-item:last-child { border-bottom: none; }
+  .risk-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,83,103,0.15); color: var(--danger); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
+  .risk-text { flex: 1; line-height: 1.6; }
+  .risk-action { font-size: 11px; color: var(--accent); margin-top: 2px; }
+
+  /* ── Score Formula ── */
+  .d-formula {
+    font-size: 10px; color: var(--dim); margin-top: 4px; line-height: 1.6;
+    background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 6px;
+    font-family: 'SF Mono', 'Cascadia Code', monospace;
+  }
+
+  /* ── Talking Points ── */
+  .talk-section {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+    padding: 20px 24px; margin-bottom: 20px; backdrop-filter: blur(20px);
+    border-left: 3px solid var(--accent);
+  }
+  .talk-section h3 { font-size: 14px; color: var(--accent); margin-bottom: 4px; }
+  .talk-sub { font-size: 11px; color: var(--dim); margin-bottom: 14px; }
+  .talk-item {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .talk-q { font-size: 12px; color: var(--accent); margin-bottom: 4px; font-weight: 600; }
+  .talk-a { font-size: 13px; line-height: 1.7; color: var(--text); }
+  .talk-note { font-size: 10px; color: var(--dim); margin-top: 4px; font-style: italic; }
+
+  /* ── Tiered Checklist ── */
+  .tl-section { margin-bottom: 6px; }
+  .tl-label { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; display: inline-block; }
+  .tl-urgent { background: rgba(255,83,103,0.1); color: var(--danger); }
+  .tl-important { background: rgba(255,174,66,0.1); color: var(--warn); }
+
+  /* ── Actions ── */
+  .actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .btn {
+    padding:10px 26px; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;
+    transition:all 0.3s; letter-spacing:0.5px;
+  }
+  .btn-prim {
+    background:linear-gradient(135deg,var(--accent),#4870e0); color:#fff;
+    box-shadow:0 4px 24px rgba(91,141,239,0.3);
+  }
+  .btn-prim:hover { transform:translateY(-2px); box-shadow:0 6px 32px rgba(91,141,239,0.45); }
+  .btn-ghost { background:transparent; border:1px solid rgba(91,141,239,0.3); color:var(--accent); }
+  .btn-ghost:hover { background:rgba(91,141,239,0.06); }
+
+  .footer-note { text-align:center; font-size:10px; color:#3a4060; margin-top:28px; line-height:1.8; }
+
+  /* ── No Data ── */
+  .nod { text-align:center; padding:80px 20px; }
+  .nod .icon { font-size:56px; margin-bottom:12px; opacity:0.5; }
+  .nod h2 { font-size:17px; color:var(--dim); margin-bottom:4px; }
+  .nod p { font-size:12px; color:#3a4060; line-height:1.8; }
+
+  /* ── Manual Panel ── */
+  #mp { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; overflow-y:auto; padding:16px; }
+  #mp .m-in { max-width:440px; margin:16px auto; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:20px; }
+  #mp label { font-size:10px; color:var(--dim); display:block; margin-bottom:2px; }
+  #mp input, #mp select { width:100%; padding:8px 10px; border:1px solid rgba(108,140,255,0.15); border-radius:8px; background:rgba(255,255,255,0.02); color:var(--text); font-size:12px; margin-bottom:8px; }
+
+  @media(max-width:520px){
+    .hero h1 { font-size:20px; }
+    .score-panel { gap:16px; padding:18px; }
+    .gauge-wrap { width:120px; height:120px; }
+    .gauge-val { font-size:34px; }
+    .dim-grid { grid-template-columns:1fr; }
+    .stats-bar { grid-template-columns:repeat(4,1fr); }
+    .stat-val { font-size:17px; }
+  }
+
+  /* ── Print ── */
+  @media print {
+    .bg-orb, .actions, .bottom-nav, .btn, button, .talk-section { display: none !important; }
+    body { background: #fff; color: #000; padding: 0; }
+    .container { max-width: 100%; padding: 0; }
+    .hero, .score-panel, .radar-box, .dcard, .checklist, .risk-focus { background: #fff; border: 1px solid #ddd; break-inside: avoid; }
+    .dcard { box-shadow: none; }
+    .d-score, .stat-val, .gauge-val, .d-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .footer-note { display: block; }
+  }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(14,20,45,0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 8px 16px; display: flex; justify-content: center; gap: 20px; z-index: 99; }
+  .bottom-nav a { font-size: 12px; color: var(--dim); text-decoration: none; padding: 6px 16px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+  .bottom-nav a:hover { background: rgba(255,255,255,0.05); color: var(--accent); }
+  .bottom-nav a.highlight { background: rgba(91,141,239,0.15); color: var(--accent); font-weight: 600; }
+  body { padding-bottom: 56px; }
+</style>
+</head>
+<body>
+
+<div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+
+<div class="container" id="app">
+  <div id="view"></div>
+</div>
+
+<div id="mp"><div class="m-in"><h3 style="font-size:14px;color:var(--accent);margin-bottom:12px;">📝 快速评估</h3><div id="qf"></div><div style="display:flex;gap:8px;"><button class="btn btn-prim" onclick="runQA()" style="flex:1;">生成报告</button><button class="btn btn-ghost" onclick="document.getElementById('mp').style.display='none'" style="flex:1;">取消</button></div></div></div>
+
+<script>
+function scoreCls(s){return s>=80?'d-hi':s>=60?'d-md':'d-lo';}
+function fillCls(s){return s>=80?'b-hi':s>=60?'b-md':'b-lo';}
+function tipCls(s){return s>=80?'a-green':s>=60?'a-yellow':'a-red';}
+
+function assess(data){
+  const o=(data.occupation||'').toLowerCase(),mR=(data.maritalStatus||''),m=mR.toLowerCase();
+  const sx=(data.sex||'').toLowerCase(),sal=parseInt(data.monthlySalary)||0;
+  const v=(data.visaType||'').trim(),rUS=(data.relativeInUS||'').toLowerCase();
+  const im=!!(m==='married'||mR==='已婚'||mR==='MARRIED');
+  const iF=sx==='female'||sx==='f'||sx==='女';
+  const hasJ=!!(o&&o!=='unemployed'&&o!=='retired'&&o!=='无业'&&o!=='退休'&&o!=='学生'&&o!=='student');
+  const iStu=!!(o==='学生'||o==='student');
+  const hasRel=rUS==='yes'||rUS==='是';
+  let age=0;if(data.dob){const d=new Date(data.dob);if(!isNaN(d.getTime())){age=new Date().getFullYear()-d.getFullYear();const n=new Date();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))age--;}}
+
+  const dims=[
+    {id:'ties',name:'国内约束力',icon:'🏠',tip:'',formula:[],talk:[]},
+    {id:'fin',name:'财务能力',icon:'💰',tip:'',formula:[],talk:[]},
+    {id:'trv',name:'旅行记录',icon:'✈️',tip:'',formula:[],talk:[]},
+    {id:'bg',name:'背景稳定',icon:'🧭',tip:'',formula:[],talk:[]},
+    {id:'purp',name:'目的合理',icon:'🎯',tip:'',formula:[],talk:[]},
+    {id:'docs',name:'材料完整',icon:'📋',tip:'',formula:[],talk:[]},
+    {id:'sec',name:'安全审查',icon:'🔐',tip:'',formula:[],talk:[]},
+    {id:'time',name:'时间节点',icon:'📅',tip:'',formula:[],talk:[]}
+  ];
+
+  // ── ties: 国内约束力 ──
+  let s1=30; dims[0].formula.push('基础分 30');
+  if(hasJ){s1+=15;dims[0].formula.push('有工作/职业 +15');}
+  else if(iStu){s1+=10;dims[0].formula.push('学生身份 +10');}
+  else{dims[0].formula.push('无稳定职业 +0');}
+  if(im){s1+=15;dims[0].formula.push('已婚 +15');}
+  else{dims[0].formula.push(age>=25?'未婚(≥25岁) +0':'未婚(年轻) +0');}
+  if(hasRel){s1-=20;dims[0].formula.push('在美有亲属 -20 ⚠️');}
+
+  // ── fin: 财务能力 ──
+  let s2=25; dims[1].formula.push('基础分 25');
+  if(sal>=30000){s2+=30;dims[1].formula.push('月入≥3万 +30');}
+  else if(sal>=20000){s2+=25;dims[1].formula.push('月入2-3万 +25');}
+  else if(sal>=10000){s2+=20;dims[1].formula.push('月入1-2万 +20');}
+  else if(sal>=5000){s2+=10;dims[1].formula.push('月入5千-1万 +10');}
+  else{dims[1].formula.push('月入<5千或未填 +0');}
+  if((data.tripPayer||'').toLowerCase()==='self'){s2+=10;dims[1].formula.push('自己承担旅费 +10');}
+  if(data.employerName){s2+=10;dims[1].formula.push('有雇主信息 +10');}
+
+  // ── trv: 旅行记录 ──
+  let s3=30; dims[2].formula.push('基础分 30');
+  if((data.prevUSTravel||data.prevVisa||'').toLowerCase()==='yes'){s3+=25;dims[2].formula.push('有赴美记录 +25');}
+  else if((data.countriesVisited||'').split(/[\n,，]/).filter(Boolean).length>0){s3+=15;dims[2].formula.push('有其他出国记录 +15');}
+  else{dims[2].formula.push('无出国记录 +0');}
+  const hadUV=(data.hadUSVisa||'').toLowerCase()==='yes';
+  if((data.visaRevoked||'').toLowerCase()==='yes'){s3-=30;dims[2].formula.push('签证曾被吊销 -30 ⚠️');}
+  if(hadUV&&!(data.visaRevoked||'').toLowerCase()==='yes'){s3+=10;dims[2].formula.push('曾持有美签 +10');}
+
+  // ── bg: 背景稳定 ──
+  let s4=40; dims[3].formula.push('基础分 40');
+  if(age>=40){s4+=25;dims[3].formula.push('年龄≥40(高稳定) +25');}
+  else if(age>=35){s4+=20;dims[3].formula.push('年龄35-39 +20');}
+  else if(age>=25){s4+=15;dims[3].formula.push('年龄25-34 +15');}
+  else if(age>=18){s4+=5;dims[3].formula.push('年龄18-24 +5');}
+  else{dims[3].formula.push('年龄未知 +0');}
+  if(im){s4+=10;dims[3].formula.push('已婚 +10');}
+  if(iF&&age<30&&!im){s4-=5;dims[3].formula.push('年轻单身女性 -5');}
+
+  // ── purp: 目的合理 ──
+  let s5=35; dims[4].formula.push('基础分 35');
+  if(v==='F1'||v==='F2'){s5+=15;dims[4].formula.push('学生签证 +15');}
+  else if(v==='B1'||v==='B2'||v==='B1/B2'){s5+=10;dims[4].formula.push('商旅签证 +10');}
+  const tp=(data.tripPurpose||'');
+  if(tp.length>=10){s5+=20;dims[4].formula.push('目的描述详细 +20');}
+  else if(tp.length>=3){s5+=10;dims[4].formula.push('有目的描述 +10');}
+  const sd=parseInt(data.stayLength)||0;
+  if(sd>0&&sd<=30){s5+=10;dims[4].formula.push('停留≤30天合理 +10');}
+  else if(sd>30&&sd<=90){s5+=5;dims[4].formula.push('停留30-90天 +5');}
+  else if(sd>90){dims[4].formula.push('停留>90天需说明');}
+
+  // ── docs: 材料完整 ──
+  let s6=40; dims[5].formula.push('基础分 40');
+  const cf=['surname','givenName','dob','passportNo','tripPurpose','contactName','occupation'];
+  const ff=cf.filter(k=>data[k]&&data[k].toString().trim()).length;
+  const docBonus=Math.round(ff/cf.length*30);
+  s6+=docBonus;dims[5].formula.push('核心字段 '+ff+'/'+cf.length+' +'+docBonus);
+  if(data.passportExpiry){
+    const e=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);
+    if(e>sm){s6+=10;dims[5].formula.push('护照有效期充足 +10');}
+    else{dims[5].formula.push('护照不足6个月 +0 ⚠️');}
+  }else{dims[5].formula.push('未填护照到期日 +0');}
+  if(data.email){s6+=5;dims[5].formula.push('有邮箱 +5');}
+
+  // ── sec: 安全审查 ──
+  let s7=50; dims[6].formula.push('基础分 50');
+  const vR=(data.visaRefused||'').toLowerCase()==='yes';
+  const mil=(data.militaryService||'').toLowerCase()==='yes';
+  const st=(data.specialTraining||'').toLowerCase()==='yes';
+  if(hadUV&&!vR){s7+=15;dims[6].formula.push('有美签无拒签 +15');}
+  if(vR){s7-=20;dims[6].formula.push('有拒签史 -20 ⚠️');}
+  if(mil){s7-=10;dims[6].formula.push('军事背景 -10');}
+  if(st){s7-=15;dims[6].formula.push('特殊训练 -15 ⚠️');}
+  if((data.countriesVisited||'').length>0){s7+=5;dims[6].formula.push('有国际旅行 +5');}
+  if(data.organization){s7-=5;dims[6].formula.push('所属组织 -5');}
+
+  // ── time: 时间节点 ──
+  let s8=50; dims[7].formula.push('基础分 50');
+  const mo=new Date().getMonth();
+  if(mo>=5&&mo<=7){s8-=10;dims[7].formula.push('旺季(6-8月) -10');}
+  else if(mo>=10){s8-=5;dims[7].formula.push('年末旺季 -5');}
+  else{s8+=10;dims[7].formula.push('淡季 +10');}
+  if(hadUV){s8+=10;dims[7].formula.push('有美签经历 +10');}
+
+  dims[0].score=Math.max(0,Math.min(100,s1));dims[1].score=Math.max(0,Math.min(100,s2));dims[2].score=Math.max(0,Math.min(100,s3));dims[3].score=Math.max(0,Math.min(100,s4));dims[4].score=Math.max(0,Math.min(100,s5));dims[5].score=Math.max(0,Math.min(100,s6));dims[6].score=Math.max(0,Math.min(100,s7));dims[7].score=Math.max(0,Math.min(100,s8));
+  dims.forEach(d=>{d.level=d.score>=80?'hi':d.score>=60?'md':'lo';d.color=d.score>=80?'#2ed573':d.score>=60?'#ffae42':'#ff5367';});
+
+  // ── Tips + Talking Points ──
+  // ties
+  if(hasRel){dims[0].tip='⚠️ 在美有亲属，需强化国内约束力';dims[0].talk=[
+    {q:'VO: Do you have relatives in the US?',a:'Yes, my [aunt/uncle] lives in [city]. But my immediate family — my [spouse/parents/children] — are all in China. My life and career are here.',note:'先承认再强调国内直系亲属'}
+  ];}
+  else if(dims[0].score<80){dims[0].tip='约束力尚可，可继续优化';dims[0].talk=[
+    {q:'VO: What makes you return to China?',a:'I have a stable job at [company] for [X] years, my [spouse/children/parents] are here, and I own [property/car]. My entire career and family life is in China.',note:'三要素：工作+家庭+财产'}
+  ];}
+  else{dims[0].tip='国内约束力牢固 ✅';}
+
+  // fin
+  if(dims[1].score<60){dims[1].tip='需准备存款证明与银行流水';dims[1].talk=[
+    {q:'VO: Who will pay for this trip?',a:'I will cover all expenses myself. I have been working at [company] for [X] years with a monthly salary of ¥[amount]. I have savings of ¥[amount] and can provide bank statements for the past 6 months.',note:'具体数字+可提供证明=可信'}
+  ];}
+  else if(dims[1].score<80){dims[1].tip='财务能力达标，可补充资金证明';}
+  else{dims[1].tip='财务能力优秀 ✅';}
+
+  // trv
+  if(dims[2].score<40){dims[2].tip='无赴美记录属正常，可用其他旅行弥补';}
+  else if(dims[2].score<80){dims[2].tip='有一定出行记录';}
+  else{dims[2].tip='良好出入境记录 ✅';}
+
+  // bg
+  if(iF&&age<30&&!im){dims[3].tip='年轻单身女性需加强材料';dims[3].talk=[
+    {q:'VO: Tell me about your life in China.',a:'I work at [company] as a [position]. I live with my parents/siblings. I am [planning to get married / in a relationship] and my partner lives here. I have strong ties here.',note:'年轻女性需主动展示生活扎根在国内'}
+  ];}
+  else if(dims[3].score<60){dims[3].tip='背景需补充稳定性证明';}
+  else{dims[3].tip='背景条件良好 ✅';}
+
+  // purp
+  if(dims[4].score<60){dims[4].tip='赴美目的需更详细明确';dims[4].talk=[
+    {q:'VO: Why do you want to go to the US?',a: v==='F1'?'I was accepted by [University] to study [Major]. Professor [Name]\'s research on [topic] aligns perfectly with my interests. After graduation, I plan to return to China and work in the [industry] industry.':'I plan to visit [city/cities] for [X] days. I have booked [hotel/airbnb] and created a detailed itinerary. My main goal is [tourism/business/visiting].',note:'具体地点+时间+目的=真诚'}
+  ];}
+  else{dims[4].tip='目的明确计划清晰 ✅';}
+
+  // docs
+  if(data.passportExpiry){const e=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(e<=sm){dims[5].tip='⚠️ 护照有效期不足6个月！必须先换发护照';dims[5].talk=[{q:'紧急行动',a:'请立即前往出入境管理局换发新护照。护照有效期不足6个月是面签的绝对硬伤，签证官会当场拒签。换发后需更新DS-160表格。',note:'优先级：紧急 ⚠️'}]}}
+  if(!dims[5].talk.length){if(dims[5].score<60)dims[5].tip='补充DS-160缺失字段';else dims[5].tip='材料填写完整 ✅';}
+
+  // sec
+  if(vR){dims[6].tip='⚠️ 有拒签史，需针对性准备';dims[6].talk=[
+    {q:'VO: You were refused a visa before. What has changed?',a:'Last time I was refused because [reason]. Since then, [I got a new job / my financial situation improved / I got married / I have traveled to other countries]. Here are the documents showing the change.',note:'诚实说明+展示变化=关键'}
+  ];}
+  else if(dims[6].score<60){dims[6].tip='安全审查风险偏高，准备解释材料';}
+  else if(dims[6].score<80){dims[6].tip='审查风险可控';}
+  else{dims[6].tip='安全审查低风险 ✅';}
+
+  // time
+  if(dims[7].score<60){dims[7].tip='当前是签证高峰期，预约可能紧张';}
+  else if(dims[7].score<80){dims[7].tip='时间节点正常';}
+  else{dims[7].tip='当前时机适宜 ✅';}
+
+  const overall=Math.round(dims.reduce((s,d)=>s+d.score,0)/8);
+
+  // ── Risk Items (top 3) ──
+  const risks = [];
+  if(data.passportExpiry){const e=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(e<=sm)risks.push({text:'护照有效期不足6个月',action:'这是面签的硬伤——签证官会直接拒签。请立即换发新护照，然后更新DS-160。'});}
+  if(vR)risks.push({text:'有美国签证拒签史',action:'签证官会特别关注拒签原因。必须准备好解释"情况有何变化"的有力回答，并携带新材料证明。'});
+  if(hasRel)risks.push({text:'在美有亲属',action:'签证官会怀疑你有移民倾向。必须主动强调你在国内的约束力——工作、配偶、子女、房产。'});
+  if(iF&&age<30&&!im&&!risks.find(r=>r.text.includes('亲属')))risks.push({text:'年轻单身女性',action:'这是签证官重点审查的人群。准备展示稳定工作、家庭纽带、清晰的回国计划。'});
+  if(mil||st)risks.push({text:'军事/特殊技能背景',action:'可能触发行政审查(Administrative Processing)。准备好详细的工作和培训说明材料。'});
+  if(dims[0].score<50)risks.push({text:'国内约束力不足',action:'签证官最关心的就是"你会不会回来"。加强工作证明、房产证、家庭关系等约束力材料。'});
+  if(!data.employerName&&hasJ)risks.push({text:'有工作但未填写雇主信息',action:'签证官会质疑工作的真实性。填写完整的公司名称和地址。'});
+
+  return {dims,overall,risks:risks.slice(0,3),data};
+}
+
+function radarSVG(dims){
+  const N=8,cx=200,cy=200,R=145;
+  let s='<svg viewBox="0 0 400 430" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;height:auto;">';
+  [20,40,60,80,100].forEach(l=>{const r=R*l/100,pts=[];for(let i=0;i<N;i++){const a=-Math.PI/2+2*Math.PI*i/N;pts.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));}s+='<polygon points="'+pts.join(' ')+'" fill="none" stroke="rgba(108,140,255,0.08)" stroke-width="0.6"/>';});
+  for(let i=0;i<N;i++){const a=-Math.PI/2+2*Math.PI*i/N;s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+R*Math.cos(a)).toFixed(1)+'" y2="'+(cy+R*Math.sin(a)).toFixed(1)+'" stroke="rgba(108,140,255,0.06)" stroke-width="0.5"/>';}
+  const pts=[];for(let i=0;i<N;i++){const a=-Math.PI/2+2*Math.PI*i/N,r=R*dims[i].score/100;pts.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));}
+  s+='<defs><filter id="g"><feGaussianBlur stdDeviation="3"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+  s+='<polygon points="'+pts.join(' ')+'" fill="rgba(91,141,239,0.12)" stroke="#5b8def" stroke-width="2.5" stroke-linejoin="round" filter="url(#g)"/>';
+  for(let i=0;i<N;i++){const a=-Math.PI/2+2*Math.PI*i/N,r=R*dims[i].score/100;s+='<circle cx="'+(cx+r*Math.cos(a)).toFixed(1)+'" cy="'+(cy+r*Math.sin(a)).toFixed(1)+'" r="4.5" fill="'+dims[i].color+'" stroke="#060918" stroke-width="2"/>';}
+  for(let i=0;i<N;i++){const a=-Math.PI/2+2*Math.PI*i/N,lr=R+30,lx=cx+lr*Math.cos(a),ly=cy+lr*Math.sin(a);s+='<text x="'+lx.toFixed(0)+'" y="'+(ly-2).toFixed(0)+'" text-anchor="middle" fill="#6e7899" font-size="10" font-weight="600">'+dims[i].name+'</text><text x="'+lx.toFixed(0)+'" y="'+(ly+12).toFixed(0)+'" text-anchor="middle" fill="'+dims[i].color+'" font-size="14" font-weight="800">'+dims[i].score+'</text>';}
+  s+='</svg>';return s;
+}
+
+function render(data){
+  const {dims,overall,risks}=assess(data);
+  const v=overall>=80?'green':overall>=60?'yellow':'red';
+  const vc=v==='green'?'#2ed573':v==='yellow'?'#f5b642':'#ff5367';
+  const vt=v==='green'?'低风险':v==='yellow'?'中等风险':'高风险';
+  const vd=v==='green'?'材料扎实，通过率较高':v==='yellow'?'存在薄弱环节，建议补齐短板后面签':'多项指标偏低，建议暂缓面签，先优化材料';
+  const circ=2*Math.PI*65,off=circ-(overall/100)*circ;
+
+  // ── Risk Focus HTML ──
+  let riskHTML = '';
+  if (risks.length > 0) {
+    riskHTML = '<div class="risk-focus"><h3>🔴 你的三大风险点</h3>' +
+      risks.map((r, i) => '<div class="risk-item"><div class="risk-num">' + (i + 1) + '</div><div><div class="risk-text"><strong>' + r.text + '</strong></div><div class="risk-action">💡 ' + r.action + '</div></div></div>').join('') +
+      '</div>';
+  }
+
+  // ── Talking Points HTML ──
+  const talkDims = dims.filter(d => d.talk && d.talk.length > 0);
+  let talkHTML = '';
+  if (talkDims.length > 0) {
+    talkHTML = '<div class="talk-section"><h3>🎤 面签话术建议</h3><div class="talk-sub">针对你的薄弱维度，模拟签证官可能的提问和你的最佳回答</div>' +
+      talkDims.map(d =>
+        '<div style="margin-bottom:16px;"><div style="font-size:12px;color:' + d.color + ';font-weight:700;margin-bottom:8px;">' + d.icon + ' ' + d.name + '（' + d.score + '分）</div>' +
+        d.talk.map(t =>
+          '<div class="talk-item"><div class="talk-q">🛂 ' + t.q + '</div><div class="talk-a">✅ ' + t.a + '</div><div class="talk-note">💡 ' + t.note + '</div></div>'
+        ).join('') +
+        '</div>'
+      ).join('') +
+      '</div>';
+  }
+
+  // ── Checklist (tiered: urgent / important / suggested) ──
+  const urgent = [];
+  const important = [];
+  const suggested = [];
+
+  if (overall < 50) urgent.push({ i: '🔴', t: '多个维度严重偏低，建议暂缓预约面签，先集中优化材料' });
+  else if (overall < 60) important.push({ i: '🟠', t: '建议补齐关键短板后再预约面签' });
+
+  // urgent items
+  if (data.passportExpiry) {
+    const e = new Date(data.passportExpiry);
+    const sm = new Date(); sm.setMonth(sm.getMonth() + 6);
+    if (e <= sm) urgent.push({ i: '🛂', t: '【紧急】护照有效期不足6个月！立即换发新护照，否则面签必被拒' });
+  }
+  if (dims[6].score < 40) urgent.push({ i: '🔐', t: '【紧急】安全审查风险极高，准备详细的个人背景说明材料' });
+
+  // important items
+  important.push({ i: '📄', t: '打印 DS-160 确认页 + 面签预约单（各2份，彩色）' });
+  important.push({ i: '📸', t: '签证照片2张（5.1×5.1cm 白底，6个月内近照，不可PS）' });
+  important.push({ i: '🛂', t: '核对护照原件有效期 > 计划回国日后至少6个月' });
+  if (dims[0].score < 60) {
+    const sal = parseInt(data.monthlySalary) || 0;
+    const suggestAmt = sal > 0 ? Math.max(sal * 6, 50000) : 50000;
+    important.push({ i: '📎', t: '准备房产证+在职证明+户口本+银行余额≥¥' + (suggestAmt/10000).toFixed(1) + '万（约6个月工资）' });
+  }
+  if (dims[1].score < 60) important.push({ i: '💰', t: '存款证明¥5万以上 + 近6个月银行流水（余额稳定、无大额临存）+ 近3个月工资单' });
+  if ((data.visaType || '') === 'F1') important.push({ i: '🎓', t: '携带 I-20原件、SEVIS缴费收据（I-901）、录取通知书、财力证明（覆盖第一年学费+生活费）' });
+  if ((data.visaType || '').startsWith('B')) important.push({ i: '📧', t: '邀请函（如有）+ 酒店预订确认单 + 详细行程单（每天安排）+ 在职证明（含准假日期）' });
+  if (dims[6].score < 60) important.push({ i: '📋', t: '如有特殊背景（拒签史/军事/敏感专业），准备1页英文说明信，陈述事实+情况变化' });
+
+  // suggested items
+  suggested.push({ i: '👔', t: '面签当日提前30分钟到达，商务休闲着装' });
+  suggested.push({ i: '🗣️', t: '练习英语自我介绍和面签常见问题（可用面签模拟器）' });
+  suggested.push({ i: '📱', t: '手机调静音，面签窗口仅携带必要文件' });
+  if (overall >= 60) suggested.push({ i: '✅', t: '过签侠祝愿：充分准备，顺利出签！🇺🇸' });
+
+  // Build tiered checklist HTML
+  const clHTML = '<div class="checklist"><h3>📋 面签行动清单</h3>' +
+    (urgent.length > 0 ? '<div class="tl-section"><span class="tl-label tl-urgent">🔴 紧急：面签前必须完成</span>' + urgent.map(ci => '<div class="ci"><span>' + ci.i + '</span><span style="' + (ci.c ? 'color:' + ci.c : '') + '">' + ci.t + '</span></div>').join('') + '</div>' : '') +
+    '<div class="tl-section"><span class="tl-label tl-important">🟡 重要：建议准备</span>' + important.map(ci => '<div class="ci"><span>' + ci.i + '</span><span>' + ci.t + '</span></div>').join('') + '</div>' +
+    '<div class="tl-section"><span class="tl-label" style="background:rgba(91,141,239,0.1);color:var(--accent);">🟢 建议：锦上添花</span>' + suggested.map(ci => '<div class="ci"><span>' + ci.i + '</span><span>' + ci.t + '</span></div>').join('') + '</div>' +
+    '</div>';
+
+  document.getElementById('view').innerHTML=`
+    <div class="hero">
+      <div class="tag">🛡️ 过签侠 · 智能评估引擎 v4.0</div>
+      <h1>面签风险评估报告</h1>
+      <div class="sub">8 维度分析 · 评分公式透明 · 话术建议 · 风险聚焦</div>
+    </div>
+    <div class="score-panel">
+      <div class="gauge-wrap">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="65" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="7"/>
+          <circle cx="80" cy="80" r="65" fill="none" stroke="${vc}" stroke-width="7" stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round" style="filter:drop-shadow(0 0 10px ${vc}40)"/>
+          <circle cx="80" cy="80" r="59" fill="none" stroke="${vc}" stroke-width="1" opacity="0.15"/>
+        </svg>
+        <div class="gauge-num"><div class="gauge-val" style="color:${vc}">${overall}</div><div class="gauge-sub">综合过签指数 / 100</div></div>
+      </div>
+      <div class="verdict-col">
+        <div class="vtag ${v}">${vt}</div>
+        <div class="vdesc">${vd}</div>
+      </div>
+    </div>
+    <div class="stats-bar">
+      ${dims.map(d=>`<div class="stat-chip"><div class="stat-val" style="color:${d.color}">${d.score}</div><div class="stat-label">${d.name}</div></div>`).join('')}
+    </div>
+
+    ${riskHTML}
+
+    <div class="radar-box"><h3>📊 八维雷达图</h3><div>${radarSVG(dims)}</div></div>
+    <div class="dim-grid">
+      ${dims.map(d=>`
+        <div class="dcard">
+          <div class="d-top"><span class="d-icon">${d.icon}</span><span class="d-name">${d.name}</span><span class="d-score ${scoreCls(d.score)}">${d.score}</span></div>
+          <div class="d-bar"><div class="d-fill ${fillCls(d.score)}" style="width:${d.score}%"></div></div>
+          <div class="d-tip">${d.tip}</div>
+          ${d.formula&&d.formula.length>0?`<div class="d-formula">${d.formula.join(' · ')}</div>`:''}
+          ${d.score<60?`<div class="d-alert a-red">⚠️ 这是当前最大短板，优先改进</div>`:''}
+          ${d.score>=80?`<div class="d-alert a-green">✅ 此项表现优秀，继续保持</div>`:''}
+        </div>
+      `).join('')}
+    </div>
+
+    ${talkHTML}
+
+    ${clHTML}
+
+    <div class="actions">
+      <button class="btn btn-prim" onclick="window.print()">🖨️ 打印报告</button>
+      <button class="btn btn-ghost" onclick="shareReport()" style="border-color:rgba(52,211,153,0.4);color:#34d399;">🔗 分享报告</button>
+      <button class="btn btn-ghost" onclick="location.href='interview.html'" style="border-color:rgba(212,168,83,0.4);color:#d4a853;">🎯 面签模拟</button>
+      <button class="btn btn-ghost" onclick="location.href='form.html'">← 返回填表</button>
+    </div>
+    <div class="footer-note">过签侠 v4.0 · 评分透明可解释 · 基于 DS-160 真实数据智能生成 · 最终由签证官独立判断</div>`;
+}
+
+// ═════════════ 一键分享 ═════════════
+function shareReport() {
+  try {
+    const s = localStorage.getItem('ds160_form_data');
+    if (!s) { alert('请先在填表页面填写DS-160数据'); return; }
+    const data = JSON.parse(s);
+    const b64 = btoa(encodeURIComponent(JSON.stringify(data)));
+    const url = location.origin + location.pathname + '?data=' + b64;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('✅ 分享链接已复制到剪贴板！\n\n将此链接发送给他人即可查看你的面签评估报告。');
+      });
+    } else {
+      prompt('复制此链接分享评估报告：', url);
+    }
+  } catch(e) {
+    alert('分享链接生成失败，请重试');
+  }
+}
+
+function showManual(){document.getElementById('qf').innerHTML=[{id:'visaType',label:'签证类型',type:'select',opts:['','F1(留学)','B1/B2(商旅)']},{id:'sex',label:'性别',type:'select',opts:['','男','女']},{id:'age',label:'年龄',type:'number'},{id:'maritalStatus',label:'婚姻',type:'select',opts:['','未婚','已婚','离异']},{id:'occupation',label:'职业',type:'text',ph:'软件工程师'},{id:'monthlySalary',label:'月收入(元)',type:'number',ph:'15000'},{id:'tripPurpose',label:'赴美目的',type:'text',ph:'参加毕业典礼'},{id:'stayLength',label:'停留(天)',type:'number',ph:'14'},{id:'prevUSTravel',label:'去过美国',type:'select',opts:['','否','是']},{id:'relativeInUS',label:'在美亲属',type:'select',opts:['','否','是']}].map(f=>{const i=f.type==='select'?'<select id="q_'+f.id+'" style="width:100%;padding:8px;border:1px solid rgba(108,140,255,0.15);border-radius:8px;background:rgba(255,255,255,0.02);color:var(--text);font-size:12px;">'+(f.opts||[]).map(o=>'<option>'+o+'</option>').join('')+'</select>':'<input id="q_'+f.id+'" type="'+f.type+'" placeholder="'+(f.ph||'')+'" style="width:100%;padding:8px;border:1px solid rgba(108,140,255,0.15);border-radius:8px;background:rgba(255,255,255,0.02);color:var(--text);font-size:12px;">';return'<label>'+f.label+'</label>'+i;}).join('');document.getElementById('mp').style.display='block';}
+
+function runQA(){const d={};['visaType','sex','maritalStatus','occupation','tripPurpose','prevUSTravel','relativeInUS','monthlySalary','stayLength'].forEach(k=>{let v=(document.getElementById('q_'+k)?.value||'').trim();if(v==='否')v='';else if(v==='是')v='yes';if(k==='visaType'&&v.includes('F1'))v='F1';else if(k==='visaType'&&v.includes('B1'))v='B1';if(k==='sex')v=v==='男'?'M':v==='女'?'F':v;if(k==='maritalStatus')v=v==='已婚'?'MARRIED':v==='离异'?'DIVORCED':v==='未婚'?'SINGLE':v;d[k]=v;});const age=parseInt(document.getElementById('q_age')?.value)||0;if(age>0)d.dob=(new Date().getFullYear()-age)+'-01-01';document.getElementById('mp').style.display='none';render(d);}
+
+(function init(){
+  const up=new URLSearchParams(location.search),dp=up.get('data');if(dp){try{render(JSON.parse(decodeURIComponent(atob(dp))));return;}catch(e){}}
+  try{const s=localStorage.getItem('ds160_form_data');if(s){render(JSON.parse(s));return;}}catch(e){}
+  const ks=['surname','givenName','dob','sex','maritalStatus','occupation','monthlySalary','tripPurpose','stayLength','visaType','passportNo','passportExpiry','relativeInUS','prevUSTravel','prevVisa','visaRevoked','tripPayer','contactName','contactOrg','employerName','hadUSVisa','visaRefused','militaryService','specialTraining','countriesVisited'];const d2={};let hd=false;ks.forEach(k=>{const v=localStorage.getItem('ds160_'+k);if(v){d2[k]=v;hd=true;}});if(hd){render(d2);return;}
+  document.getElementById('view').innerHTML='<div class="nod"><div class="icon">🛡️</div><h2>等待 DS-160 数据</h2><p>请先完成填表，数据将自动传入<br>或点击下方手动评估</p><button class="btn btn-prim" onclick="showManual()" style="margin-top:12px;">快速评估</button><div style="margin-top:12px;display:flex;gap:16px;justify-content:center;"><a href="form.html" style="font-size:12px;color:var(--accent);text-decoration:none;">📝 去填表</a><a href="interview.html" style="font-size:12px;color:#d4a853;text-decoration:none;">🎯 面签模拟</a></div></div>';
+})();
+</script>
+
+<nav class="bottom-nav">
+  <a href="index.html">🏠 首页</a>
+  <a href="form.html">📝 填表</a>
+  <a href="interview.html" class="highlight">🎯 面签模拟</a>
+</nav>
+
+</body>
+</html>

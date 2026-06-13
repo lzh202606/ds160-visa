@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS-160 智能填表助手 - 美签纵横团</title>
+<script src="jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-light: #e8f0fe;
+    --danger: #dc2626;
+    --success: #059669;
+    --warning: #f59e0b;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0f172a, #1e3a5f);
+    color: #fff;
+    padding: 32px 20px;
+    text-align: center;
+  }
+  .header h1 { font-size: 26px; margin-bottom: 6px; }
+  .header p { color: #94a3b8; font-size: 14px; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  .progress-bar {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    position: sticky; top: 10px; z-index: 10;
+  }
+  .progress-track {
+    height: 6px; background: var(--border); border-radius: 3px; margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%; background: var(--primary); border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .progress-text { font-size: 13px; color: var(--text-secondary); }
+
+  .section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--primary-light);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; user-select: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header:hover { background: #dbeafe; }
+  .section-num {
+    background: var(--primary); color: #fff; width: 28px; height: 28px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-title { font-weight: 600; font-size: 15px; flex: 1; }
+  .section-status { font-size: 12px; color: var(--text-secondary); }
+  .section-body { padding: 20px; display: none; }
+  .section.open .section-body { display: block; }
+
+  h3 { font-size: 14px; color: var(--primary); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
+
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-size: 13px; font-weight: 500; margin-bottom: 4px; color: var(--text); }
+  .form-group label .required { color: var(--danger); margin-left: 2px; }
+  .form-group label .hint { font-weight: 400; color: var(--text-secondary); font-size: 11px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 6px;
+    font-size: 13px; font-family: inherit; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+  }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+  .form-group input.error, .form-group select.error { border-color: var(--danger); }
+  .form-group .error-msg { color: var(--danger); font-size: 11px; margin-top: 2px; display: none; }
+
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .checkbox-row input[type="checkbox"] { margin-top: 3px; transform: scale(1.1); accent-color: var(--primary); }
+  .checkbox-row label { font-size: 13px; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
+  .btn {
+    padding: 12px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #1a4bc4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,86,219,0.3); }
+  .btn-outline { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-danger { background: #fff; color: var(--danger); border: 2px solid var(--danger); }
+  .btn-danger:hover { background: #fef2f2; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #047857; }
+
+  .preview-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 100; overflow-y: auto; padding: 20px;
+  }
+  .preview-overlay.show { display: block; }
+  .preview-paper {
+    background: #fff; max-width: 820px; margin: 20px auto;
+    padding: 40px; border-radius: 4px; font-family: "Courier New", monospace;
+    font-size: 12px; line-height: 1.6; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .preview-paper h2 { text-align: center; font-size: 14px; margin-bottom: 4px; font-family: inherit; }
+  .preview-paper .subtitle { text-align: center; font-size: 11px; color: #666; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
+  .preview-field { margin-bottom: 2px; }
+  .preview-field .q { font-weight: 700; }
+  .preview-field .a { color: #333; }
+  .close-btn {
+    position: fixed; top: 20px; right: 20px; z-index: 101;
+    background: #fff; border: none; width: 36px; height: 36px; border-radius: 50%;
+    font-size: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+  .alert-info { background: #e8f0fe; color: #1a56db; border: 1px solid #bfdbfe; }
+  .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+  /* Save indicator */
+  .save-indicator { font-size: 11px; padding: 3px 10px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; transition: all 0.3s; }
+  .save-indicator.saved { background: rgba(52,211,153,0.1); color: #34d399; }
+  .save-indicator.saving { background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .save-indicator.draft { background: rgba(248,113,113,0.1); color: #f87171; }
+
+  /* Validation modal */
+  .val-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .val-modal { background: #fff; border-radius: 20px; padding: 28px 32px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .val-modal h2 { font-size: 18px; margin-bottom: 8px; }
+  .val-modal .val-score { font-size: 13px; color: #64748b; margin-bottom: 16px; }
+  .val-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+  .val-item:last-child { border-bottom: none; }
+  .val-item .badge { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .badge-critical { background: #fef2f2; color: #dc2626; }
+  .badge-error { background: #fef2f2; color: #ef4444; }
+  .badge-warning { background: #fffbeb; color: #d97706; }
+  .badge-ok { background: #f0fdf4; color: #16a34a; }
+  .val-close { margin-top: 16px; width: 100%; padding: 12px; border: none; border-radius: 12px; background: #1a56db; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .val-close.all-clear { background: #16a34a; }
+
+  /* ── Chapter Sidebar ── */
+  .sidebar { position: fixed; left: 0; top: 0; width: 200px; height: 100vh; background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; z-index: 100; transition: transform 0.3s; padding: 16px 0; box-shadow: 2px 0 20px rgba(0,0,0,0.04); }
+  .sidebar.collapsed { transform: translateX(-200px); }
+  .sidebar-toggle { position: fixed; left: 200px; top: 50%; transform: translateY(-50%); z-index: 101; width: 24px; height: 48px; background: #fff; border: 1px solid #e2e8f0; border-left: none; border-radius: 0 8px 8px 0; cursor: pointer; font-size: 12px; color: #64748b; transition: left 0.3s; display: flex; align-items: center; justify-content: center; }
+  .sidebar.collapsed ~ .sidebar-toggle { left: 0; }
+  .sidebar-title { font-size: 11px; font-weight: 700; color: #94a3b8; padding: 0 16px 8px; letter-spacing: 1px; text-transform: uppercase; }
+  .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px; font-size: 12px; cursor: pointer; color: #475569; transition: all 0.15s; border-left: 2px solid transparent; }
+  .sidebar-item:hover { background: #f1f5f9; color: #1a56db; }
+  .sidebar-item.active { background: #eff6ff; color: #1a56db; border-left-color: #1a56db; font-weight: 600; }
+  .sidebar-item .s-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; flex-shrink: 0; transition: background 0.3s; }
+  .sidebar-item .s-dot.done { background: #34d399; }
+  .sidebar-item .s-dot.partial { background: #fbbf24; }
+  .sidebar-item .s-num { font-weight: 700; font-size: 10px; color: #94a3b8; width: 18px; }
+  @media (max-width: 900px) { .sidebar { display: none; } .sidebar-toggle { display: none; } }
+
+  /* ── Field Tooltip ── */
+  .field-hint { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #e2e8f0; color: #64748b; font-size: 10px; text-align: center; line-height: 16px; cursor: help; margin-left: 4px; vertical-align: middle; font-weight: 700; }
+  .field-hint:hover { background: #1a56db; color: #fff; }
+  .field-error-live { font-size: 11px; color: var(--danger); margin-top: 3px; display: none; }
+  .field-error-live.show { display: block; }
+
+  /* ── Bottom Nav Bar ── */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; padding: 8px 16px; display: flex; justify-content: center; gap: 20px; z-index: 99; }
+  .bottom-nav a { font-size: 12px; color: #64748b; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+  .bottom-nav a:hover { background: #f1f5f9; color: #1a56db; }
+  .bottom-nav a.highlight { background: rgba(26,86,219,0.08); color: #1a56db; font-weight: 600; }
+  body { padding-left: 200px; padding-bottom: 52px; }
+  @media (max-width: 900px) { body { padding-left: 0; } }
+
+  .tab-bar { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tab { padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1.5px solid var(--border); background: #fff; transition: all 0.2s; }
+  .tab:hover { border-color: var(--primary); }
+  .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  @media print {
+    .header, .progress-bar, .btn-row, .tab-bar, .alert, .close-btn { display: none !important; }
+    .section-header { background: none; border-bottom: 1px solid #000; }
+    .section-body { display: block !important; }
+    body { background: #fff; }
+    .container { max-width: 100%; padding: 0; }
+    .section { box-shadow: none; border: none; margin-bottom: 0; }
+  }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .header h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Token 验证门控 -->
+<div id="tokenGate" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:9999;display:none;align-items:center;justify-content:center;">
+  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:480px;width:90%;text-align:center;color:#fff;">
+    <div style="font-size:48px;margin-bottom:16px;" id="gateIcon">⏱️</div>
+    <h2 style="margin-bottom:8px;" id="gateTitle">链接已失效</h2>
+    <p style="color:#94a3b8;font-size:14px;line-height:1.8;" id="gateMsg">此链接已被使用或无效。</p>
+  </div>
+</div>
+
+<!-- ═══════ 章节侧边导航 ═══════ -->
+<aside class="sidebar" id="chapterNav">
+  <div class="sidebar-title">📑 章节导航</div>
+  <div id="sidebarItems"></div>
+</aside>
+<div class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">◀</div>
+
+<div class="header">
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;">
+    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1A56DB,#2563EB);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌍</div>
+    <div style="text-align:left;">
+      <div style="font-size:12px;color:#94a3b8;letter-spacing:2px;">踏梦寰球之旅 · 美签纵横团出品</div>
+      <h1 style="margin:0;">DS-160 智能填表助手</h1>
+    </div>
+  </div>
+  <p>逐项填写 → 智能校验 → 一键生成DS-160 + 面签评估PDF</p>
+  <div style="margin-top:10px;display:flex;justify-content:center;gap:16px;align-items:center;">
+    <span id="saveIndicator" class="save-indicator draft">📝 未保存</span>
+    <a href="assessment.html" style="font-size:12px;color:#94a3b8;text-decoration:none;">🛡️ 面签评估</a>
+    <a href="interview.html" style="font-size:12px;color:#d4a853;text-decoration:none;">🎯 面签模拟</a>
+    <a href="index.html" style="font-size:12px;color:#94a3b8;text-decoration:none;">🏠 首页</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 进度条 -->
+  <div class="progress-bar">
+    <div class="progress-text">完成进度：<span id="progressPercent">0%</span>（已填 <span id="filledCount">0</span> / 核心字段）</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- 快速导航 -->
+  <div class="tab-bar" id="tabBar"></div>
+
+  <div class="alert alert-info">
+    请按章节顺序填写。标有 <span style="color:var(--danger);font-weight:700;">*</span> 的为必填项。
+    填写完成后点击「生成DS-160预览」查看完整表格，确认无误后可直接打印为PDF。
+  </div>
+
+  <form id="ds160Form">
+    <!-- ============ 第1节：个人信息 1 ============ -->
+    <div class="section open" id="section-1">
+      <div class="section-header" onclick="toggleSection(1)">
+        <span class="section-num">1</span>
+        <span class="section-title">个人信息（一）Personal Information 1</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>姓氏 (Surnames) <span class="required">*</span></label>
+            <input name="surname" placeholder="如：CHEN" data-dsfield="Surnames" required>
+          </div>
+          <div class="form-group">
+            <label>名字 (Given Names) <span class="required">*</span></label>
+            <input name="givenName" placeholder="如：XIAOMING" data-dsfield="Given Names" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>中文姓名 (Full Name in Native Alphabet) <span class="required">*</span></label>
+            <input name="nativeName" placeholder="如：陈小明" data-dsfield="Full Name in Native Alphabet" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>姓氏电码 Surname Telecode</label>
+            <input name="surnameTelecode" placeholder="4位数字电报码（选填）">
+          </div>
+          <div class="form-group">
+            <label>名字电码 Given Name Telecode</label>
+            <input name="givenNameTelecode" placeholder="4位数字电报码（选填）">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>曾用姓氏 Other Surnames</label>
+            <input name="otherSurnames" placeholder="如改过姓氏请填写" data-dsfield="Other Surnames">
+          </div>
+          <div class="form-group">
+            <label>曾用名 (Other Surnames Used) <span class="hint">如无则留空</span></label>
+            <input name="otherSurnames" placeholder="如：CHAN" data-dsfield="Other Surnames">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>性别 (Sex) <span class="required">*</span></label>
+            <select name="sex" data-dsfield="Sex" required>
+              <option value="">-- 请选择 --</option>
+              <option value="Male">男 Male</option>
+              <option value="Female">女 Female</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>婚姻状态 (Marital Status) <span class="required">*</span></label>
+            <select name="maritalStatus" data-dsfield="Marital Status" required>
+              <option value="">-- 请选择 --</option>
+              <option value="Single">未婚 Single</option>
+              <option value="Married">已婚 Married</option>
+              <option value="Widowed">丧偶 Widowed</option>
+              <option value="Divorced">离异 Divorced</option>
+              <option value="Separated">分居 Separated</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>出生日期 (Date of Birth) <span class="required">*</span></label>
+            <input type="date" name="dob" data-dsfield="Date of Birth" required>
+          </div>
+          <div class="form-group">
+            <label>出生城市 (City of Birth) <span class="required">*</span></label>
+            <input name="birthCity" placeholder="如：Fuzhou" data-dsfield="City of Birth" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>出生省份/州 (State/Province of Birth) <span class="required">*</span></label>
+            <input name="birthState" placeholder="如：Fujian" data-dsfield="State/Province of Birth" required>
+          </div>
+          <div class="form-group">
+            <label>出生国家/地区 (Country of Birth) <span class="required">*</span></label>
+            <select name="birthCountry" data-dsfield="Country of Birth" required>
+              <option value="">-- 请选择 --</option>
+              <option value="CHINA" selected>中国 CHINA</option>
+              <option value="TAIWAN">中国台湾 TAIWAN, China</option>
+              <option value="HONG KONG">中国香港 HONG KONG SAR, China</option>
+              <option value="MACAO">中国澳门 MACAU SAR, China</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第2节：个人信息 2 ============ -->
+    <div class="section" id="section-2">
+      <div class="section-header" onclick="toggleSection(2)">
+        <span class="section-num">2</span>
+        <span class="section-title">个人信息（二）Personal Information 2</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>国籍 (Nationality) <span class="required">*</span></label>
+            <select name="nationality" data-dsfield="Nationality" required>
+              <option value="">-- 请选择 --</option>
+              <option value="CHINA" selected>中国 CHINA</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>是否持有其他国籍</label>
+            <select name="otherNationality" data-dsfield="Other Nationality">
+              <option value="No">否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>中国身份证号码 (National ID Number) <span class="hint">中国公民必填</span></label>
+            <input name="nationalId" placeholder="18位身份证号" data-dsfield="National ID Number">
+          </div>
+          <div class="form-group">
+            <label>美国社会安全号 (U.S. SSN)</label>
+            <input name="ssn" placeholder="如无则填 Does Not Apply" data-dsfield="U.S. Social Security Number">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>美国纳税人ID (U.S. Taxpayer ID)</label>
+            <input name="taxpayerId" placeholder="如无则填 Does Not Apply" data-dsfield="U.S. Taxpayer ID">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第3节：地址和联系方式 ============ -->
+    <div class="section" id="section-3">
+      <div class="section-header" onclick="toggleSection(3)">
+        <span class="section-num">3</span>
+        <span class="section-title">地址和联系方式 Address and Phone</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <h3>家庭地址 (Home Address)</h3>
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>详细地址 (Street Address Line 1) <span class="required">*</span></label>
+            <input name="addrLine1" placeholder="如：Room 301, No. 88 Wusi Road, Gulou District" data-dsfield="Home Address Line 1" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>地址第二行 (Address Line 2) <span class="hint">选填</span></label>
+            <input name="addrLine2" placeholder="如：Building 3, Sunshine Garden Community" data-dsfield="Home Address Line 2">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>城市 (City) <span class="required">*</span></label>
+            <input name="addrCity" placeholder="如：Fuzhou" data-dsfield="City" required>
+          </div>
+          <div class="form-group">
+            <label>省份 (State/Province) <span class="required">*</span></label>
+            <input name="addrState" placeholder="如：Fujian" data-dsfield="State/Province" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>邮政编码 (Postal Code) </label>
+            <input name="addrZip" placeholder="如：350001" data-dsfield="Postal Code">
+          </div>
+          <div class="form-group">
+            <label>国家 (Country) <span class="required">*</span></label>
+            <select name="addrCountry" data-dsfield="Country" required>
+              <option value="CHINA" selected>中国 CHINA</option>
+            </select>
+          </div>
+        </div>
+        <h3>联系方式</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>主要手机号 (Primary Phone) <span class="required">*</span></label>
+            <input name="phone" type="tel" placeholder="如：13800138000" data-dsfield="Primary Phone Number" required>
+          </div>
+          <div class="form-group">
+            <label>备用手机号 (Secondary Phone)</label>
+            <input name="phone2" type="tel" placeholder="选填" data-dsfield="Secondary Phone Number">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>电子邮箱 (Email) <span class="required">*</span></label>
+            <input name="email" type="email" placeholder="yourname@email.com" data-dsfield="Email Address" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第4节：护照信息 ============ -->
+    <div class="section" id="section-4">
+      <div class="section-header" onclick="toggleSection(4)">
+        <span class="section-num">4</span>
+        <span class="section-title">护照信息 Passport Information</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>护照类型 (Passport Type) <span class="required">*</span></label>
+            <select name="passportType" data-dsfield="Passport Type" required>
+              <option value="Regular" selected>普通护照 Regular</option>
+              <option value="Official">公务护照 Official</option>
+              <option value="Diplomatic">外交护照 Diplomatic</option>
+              <option value="Service">因公普通护照 Service</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>护照号码 (Passport Number) <span class="required">*</span></label>
+            <input name="passportNo" placeholder="如：E12345678" data-dsfield="Passport Number" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>护照签发国家 (Country of Issuance) <span class="required">*</span></label>
+            <select name="passportCountry" data-dsfield="Country of Issuance" required>
+              <option value="CHINA" selected>中国 CHINA</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>签发城市 (City of Issuance)</label>
+            <input name="passportCity" placeholder="如：Fujian" data-dsfield="City of Issuance">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>签发日期 (Date of Issuance) <span class="required">*</span></label>
+            <input type="date" name="passportIssue" data-dsfield="Date of Issuance" required>
+          </div>
+          <div class="form-group">
+            <label>有效期至 (Expiration Date) <span class="required">*</span></label>
+            <input type="date" name="passportExpiry" data-dsfield="Expiration Date" required>
+          </div>
+        </div>
+        <div class="alert alert-warning" style="margin-top:12px;">
+          护照有效期必须超出计划在美停留日期至少6个月！
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第5节：旅行信息 ============ -->
+    <div class="section" id="section-5">
+      <div class="section-header" onclick="toggleSection(5)">
+        <span class="section-num">5</span>
+        <span class="section-title">旅行信息 Travel Information</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>赴美主要目的 (Purpose of Trip) <span class="required">*</span></label>
+            <select name="tripPurpose" data-dsfield="Purpose of Trip" required id="tripPurpose" onchange="onVisaTypeChange()">
+              <option value="">-- 请选择 --</option>
+              <option value="F1">留学 F1 - 学术学生</option>
+              <option value="B1/B2">商务/旅游 B1/B2</option>
+              <option value="B1">商务 B1</option>
+              <option value="B2">旅游 B2</option>
+              <option value="J1">交流访问 J1</option>
+              <option value="M1">职业培训 M1</option>
+              <option value="H1B">工作 H1B</option>
+              <option value="L1">公司内部调动 L1</option>
+              <option value="O1">杰出人才 O1</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>计划签证类型 <span class="required">*</span></label>
+            <select name="visaType" data-dsfield="Visa Type" required>
+              <option value="">-- 请选择 --</option>
+              <option value="F1">F1 - 学生签证</option>
+              <option value="B1/B2">B1/B2 - 商务/旅游</option>
+              <option value="B1">B1 - 商务</option>
+              <option value="B2">B2 - 旅游</option>
+              <option value="J1">J1 - 交流访问</option>
+              <option value="M1">M1 - 职业培训</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>预期到达美国日期 (Intended Date of Arrival) <span class="required">*</span></label>
+            <input type="date" name="arrivalDate" data-dsfield="Intended Date of Arrival" required>
+          </div>
+          <div class="form-group">
+            <label>预期停留时长 (Length of Stay) <span class="required">*</span></label>
+            <input name="stayLength" placeholder="如：2 weeks / 4 years" data-dsfield="Intended Length of Stay" required>
+          </div>
+        </div>
+        <h3>在美地址 (U.S. Address)</h3>
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>在美街道地址 (Street Address Line 1) <span class="required">*</span></label>
+            <input name="usAddrLine1" placeholder="F签证填学校地址; B签证填酒店地址" data-dsfield="U.S. Address Line 1" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>城市 (City) <span class="required">*</span></label>
+            <input name="usAddrCity" placeholder="如：New York" data-dsfield="U.S. City" required>
+          </div>
+          <div class="form-group">
+            <label>州 (State) <span class="required">*</span></label>
+            <select name="usAddrState" data-dsfield="U.S. State" required>
+              <option value="">-- 请选择 --</option>
+              <option value="CA">CA - California</option>
+              <option value="NY">NY - New York</option>
+              <option value="TX">TX - Texas</option>
+              <option value="MA">MA - Massachusetts</option>
+              <option value="IL">IL - Illinois</option>
+              <option value="FL">FL - Florida</option>
+              <option value="WA">WA - Washington</option>
+              <option value="PA">PA - Pennsylvania</option>
+              <option value="MI">MI - Michigan</option>
+              <option value="OH">OH - Ohio</option>
+              <option value="GA">GA - Georgia</option>
+              <option value="NC">NC - North Carolina</option>
+              <option value="NJ">NJ - New Jersey</option>
+              <option value="VA">VA - Virginia</option>
+              <option value="MD">MD - Maryland</option>
+              <option value="AZ">AZ - Arizona</option>
+              <option value="CO">CO - Colorado</option>
+              <option value="OR">OR - Oregon</option>
+              <option value="CT">CT - Connecticut</option>
+              <option value="IN">IN - Indiana</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>邮政编码 (ZIP Code) <span class="required">*</span></label>
+            <input name="usAddrZip" placeholder="如：10001" data-dsfield="U.S. ZIP Code" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>谁支付旅行费用 (Person Paying for Trip) <span class="required">*</span></label>
+            <select name="tripPayer" data-dsfield="Person Paying for Trip" required>
+              <option value="SELF">本人 Self</option>
+              <option value="OTHER PERSON">其他人 Other Person</option>
+              <option value="COMPANY">公司/组织 Company/Organization</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第6节：旅伴信息 ============ -->
+    <div class="section" id="section-6">
+      <div class="section-header" onclick="toggleSection(6)">
+        <span class="section-num">6</span>
+        <span class="section-title">旅伴信息 Travel Companions</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>是否有同行人</label>
+            <select name="hasCompanion" data-dsfield="Traveling with Others">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="companionNames" style="display:none;">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>同行人姓名及关系</label>
+            <textarea name="companionDetails" placeholder="填写同行人的全名和与你的关系。如：LI SI (spouse)&#10;多个同行人请换行填写" data-dsfield="Companion Details"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第7节：赴美历史 ============ -->
+    <div class="section" id="section-7">
+      <div class="section-header" onclick="toggleSection(7)">
+        <span class="section-num">7</span>
+        <span class="section-title">赴美历史 Previous U.S. Travel</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>是否曾去过美国</label>
+            <select name="prevUSTravel" data-dsfield="Previous US Travel">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="prevTravelDetails" style="display:none;">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>最近5次赴美记录 (日期 + 停留时长)</label>
+            <textarea name="prevTravelRecord" placeholder="如：2022-06-15 to 2022-07-10 (25 days) Tourism" data-dsfield="Previous Travel Record"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>是否曾持有美国驾照</label>
+            <select name="usDriverLicense" data-dsfield="US Driver License">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>是否曾获得美国签证</label>
+            <select name="prevVisa" data-dsfield="Previous US Visa">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>是否有签证被撤销/取消</label>
+            <select name="visaRevoked" data-dsfield="Visa Revoked">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第8节：在美联系人 ============ -->
+    <div class="section" id="section-8">
+      <div class="section-header" onclick="toggleSection(8)">
+        <span class="section-num">8</span>
+        <span class="section-title">在美联系人 U.S. Point of Contact</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>联系人类型 (Contact Type) <span class="required">*</span></label>
+            <select name="contactType" data-dsfield="Contact Type" required>
+              <option value="">-- 请选择 --</option>
+              <option value="SCHOOL OFFICIAL">学校官员 School Official (F签证)</option>
+              <option value="FRIEND">朋友 Friend</option>
+              <option value="RELATIVE">亲属 Relative</option>
+              <option value="BUSINESS CONTACT">商务联系人 Business Contact</option>
+              <option value="HOTEL">酒店 Hotel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>联系人姓名/机构名 <span class="required">*</span></label>
+            <input name="contactName" placeholder="F签证填DSO姓名；B签证填酒店/联系人名" data-dsfield="Contact Name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>组织名称 (Organization Name)</label>
+            <input name="contactOrg" placeholder="F签证填学校全名" data-dsfield="Contact Organization">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>与申请人关系 (Relationship) <span class="required">*</span></label>
+            <select name="contactRelation" data-dsfield="Relationship to You" required>
+              <option value="">-- 请选择 --</option>
+              <option value="SCHOOL OFFICIAL">学校官员 School Official</option>
+              <option value="FRIEND">朋友 Friend</option>
+              <option value="SPOUSE">配偶 Spouse</option>
+              <option value="RELATIVE">亲属 Relative</option>
+              <option value="EMPLOYER">雇主 Employer</option>
+              <option value="BUSINESS ASSOCIATE">商业伙伴 Business Associate</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>联系人地址 (Contact Address)</label>
+            <input name="contactAddr" placeholder="F签证填DSO办公室地址" data-dsfield="Contact Address">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>联系电话 (Phone)</label>
+            <input name="contactPhone" placeholder="联系人/机构电话" data-dsfield="Contact Phone">
+          </div>
+          <div class="form-group">
+            <label>电子邮箱 (Email)</label>
+            <input name="contactEmail" type="email" placeholder="联系人邮箱" data-dsfield="Contact Email">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第9节：家庭信息 ============ -->
+    <div class="section" id="section-9">
+      <div class="section-header" onclick="toggleSection(9)">
+        <span class="section-num">9</span>
+        <span class="section-title">家庭信息 Family Information</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <h3>父亲信息</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>父亲姓氏 (Surname) <span class="required">*</span></label>
+            <input name="fatherSurname" placeholder="如：CHEN" data-dsfield="Father Surname" required>
+          </div>
+          <div class="form-group">
+            <label>父亲名字 (Given Name) <span class="required">*</span></label>
+            <input name="fatherGivenName" placeholder="如：DAWEI" data-dsfield="Father Given Name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>父亲出生日期</label>
+            <input type="date" name="fatherDob" data-dsfield="Father DOB">
+          </div>
+          <div class="form-group">
+            <label>父亲是否在美国</label>
+            <select name="fatherInUS" data-dsfield="Father in US">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+
+        <h3>母亲信息</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>母亲姓氏 (Surname) <span class="required">*</span></label>
+            <input name="motherSurname" placeholder="如：LIN" data-dsfield="Mother Surname" required>
+          </div>
+          <div class="form-group">
+            <label>母亲名字 (Given Name) <span class="required">*</span></label>
+            <input name="motherGivenName" placeholder="如：MEILING" data-dsfield="Mother Given Name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>母亲出生日期</label>
+            <input type="date" name="motherDob" data-dsfield="Mother DOB">
+          </div>
+          <div class="form-group">
+            <label>母亲是否在美国</label>
+            <select name="motherInUS" data-dsfield="Mother in US">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+
+        <h3>美国直系亲属</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>是否有直系亲属在美国</label>
+            <select name="relativeInUS" data-dsfield="Immediate Relatives in US">
+              <option value="No" selected>否 No</option>
+              <option value="Yes">是 Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第10节：工作/教育 ============ -->
+    <div class="section" id="section-10">
+      <div class="section-header" onclick="toggleSection(10)">
+        <span class="section-num">10</span>
+        <span class="section-title">工作/教育信息 Work / Education / Training</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>当前职业状态 (Primary Occupation) <span class="required">*</span></label>
+            <select name="occupation" data-dsfield="Primary Occupation" required>
+              <option value="">-- 请选择 --</option>
+              <option value="STUDENT">学生 Student</option>
+              <option value="EMPLOYED">在职 Employed</option>
+              <option value="SELF-EMPLOYED">自雇 Self-employed</option>
+              <option value="UNEMPLOYED">无业 Unemployed</option>
+              <option value="RETIRED">退休 Retired</option>
+              <option value="HOMEMAKER">家庭主妇/夫 Homemaker</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>当前雇主/学校名称 <span class="required">*</span></label>
+            <input name="employerName" placeholder="如：X Company / Fuzhou University" data-dsfield="Employer/School Name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>雇主/学校地址</label>
+            <input name="employerAddr" placeholder="填写详细地址" data-dsfield="Employer/School Address">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>月薪（人民币）</label>
+            <input name="monthlySalary" type="number" placeholder="如：8000" data-dsfield="Monthly Salary (CNY)">
+          </div>
+          <div class="form-group">
+            <label>工作职责简述</label>
+            <input name="jobDuties" placeholder="如：Software Engineer / Full-time Student" data-dsfield="Job Duties">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第11节：安全与背景 ============ -->
+    <div class="section" id="section-11">
+      <div class="section-header" onclick="toggleSection(11)">
+        <span class="section-num">11</span>
+        <span class="section-title">安全与背景 Security and Background</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="alert alert-warning">
+          以下所有问题必须如实回答。绝大多数申请人所有问题的答案都是"否"(No)。
+          如对任何问题选择了"是"(Yes)，请务必在备注中详细说明原因。
+        </div>
+
+        <div id="securityQuestions"></div>
+      </div>
+    </div>
+
+    <!-- ============ 第12节：护照补充 ============ -->
+    <div class="section" id="section-12">
+      <div class="section-header" onclick="toggleSection(12)">
+        <span class="section-num">12</span>
+        <span class="section-title">护照补充 Passport Additional</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>护照簿编号 Passport Book Number</label>
+            <input name="passportBookNo" placeholder="非中国护照请填写">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>是否曾遗失护照</label>
+            <select name="passportLost"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+        </div>
+        <div class="form-row" id="passportLostDetail" style="display:none;">
+          <div class="form-group flex-2">
+            <label>遗失护照号码</label><input name="passportLostNo" placeholder="如遗失过请填写">
+          </div>
+          <div class="form-group flex-2">
+            <label>遗失国家/城市</label><input name="passportLostPlace" placeholder="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第13节：赴美历史详细 ============ -->
+    <div class="section" id="section-13">
+      <div class="section-header" onclick="toggleSection(13)">
+        <span class="section-num">13</span>
+        <span class="section-title">赴美历史详细 US Travel History</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>是否曾获得美国签证</label>
+            <select name="hadUSVisa"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+          <div class="form-group flex-2">
+            <label>上次获签日期</label>
+            <input type="date" name="lastVisaDate">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>是否曾被拒签</label>
+            <select name="visaRefused"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+          <div class="form-group flex-2" id="visaRefusedDetail" style="display:none;">
+            <label>拒签说明</label>
+            <input name="visaRefusedExplain" placeholder="请说明何时/何地/何原因被拒签">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>是否曾被拒绝入境美国</label>
+            <select name="entryDenied"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+          <div class="form-group flex-2">
+            <label>是否曾逾期停留美国</label>
+            <select name="overstayed"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>是否有移民违规记录</label>
+            <select name="immigrationViolation"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+        </div>
+        <div class="form-row" id="immigrationViolationDetail" style="display:none;">
+          <div class="form-group" style="flex:1;">
+            <label>违规说明</label><textarea name="immigrationViolationExplain" rows="2" placeholder="请详细说明"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第14节：配偶信息 ============ -->
+    <div class="section" id="section-14">
+      <div class="section-header" onclick="toggleSection(14)">
+        <span class="section-num">14</span>
+        <span class="section-title">配偶信息 Spouse Information</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>配偶姓氏 Spouse's Surname</label>
+            <input name="spouseSurname" placeholder="如已婚请填写">
+          </div>
+          <div class="form-group flex-2">
+            <label>配偶名字 Spouse's Given Name</label>
+            <input name="spouseGivenName" placeholder="">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>配偶出生日期</label>
+            <input type="date" name="spouseDob">
+          </div>
+          <div class="form-group flex-2">
+            <label>配偶国籍</label>
+            <input name="spouseNationality" placeholder="China">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>配偶出生城市</label><input name="spouseBirthCity" placeholder="">
+          </div>
+          <div class="form-group flex-2">
+            <label>配偶出生国家</label><input name="spouseBirthCountry" placeholder="China">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>配偶地址（如不同住）</label><input name="spouseAddress" placeholder="同住可不填">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第15节：SEVIS信息（F/M/J签证） ============ -->
+    <div class="section" id="section-15">
+      <div class="section-header" onclick="toggleSection(15)">
+        <span class="section-num">15</span>
+        <span class="section-title">SEVIS 信息 SEVIS Information (F/M/J)</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="alert alert-info">仅 F/M/J 类签证需填写。其他签证类型请跳过。</div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>SEVIS ID</label><input name="sevisId" placeholder="N00XXXXXXXXX">
+          </div>
+          <div class="form-group flex-2">
+            <label>学校/项目名称</label><input name="sevisSchool" placeholder="">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>学校地址</label><input name="sevisSchoolAddr" placeholder="">
+          </div>
+          <div class="form-group flex-2">
+            <label>学习课程/专业</label><input name="sevisMajor" placeholder="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第16节：5年旅行史 ============ -->
+    <div class="section" id="section-16">
+      <div class="section-header" onclick="toggleSection(16)">
+        <span class="section-num">16</span>
+        <span class="section-title">5年旅行史 Countries Visited (5 Years)</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">列出过去5年内访问过的所有国家和地区（不含本国和美国）</p>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>访问过的国家/地区（每行一个）</label>
+            <textarea name="countriesVisited" rows="4" placeholder="Japan, 2024&#10;Thailand, 2023&#10;..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第17节：语言能力 ============ -->
+    <div class="section" id="section-17">
+      <div class="section-header" onclick="toggleSection(17)">
+        <span class="section-num">17</span>
+        <span class="section-title">语言能力 Languages</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>母语/主要语言</label>
+            <select name="primaryLanguage"><option value="">请选择</option><option>Chinese (Mandarin)</option><option>Chinese (Cantonese)</option><option>English</option><option>Spanish</option><option>Other</option></select>
+          </div>
+          <div class="form-group flex-2">
+            <label>英语能力</label>
+            <select name="englishLevel"><option value="">请选择</option><option>Native/Fluent</option><option>Good</option><option>Basic</option><option>None</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第18节：其他在美联系人 ============ -->
+    <div class="section" id="section-18">
+      <div class="section-header" onclick="toggleSection(18)">
+        <span class="section-num">18</span>
+        <span class="section-title">在美额外联系人 Additional US Contacts</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">需提供两位不与你同住的联系人（朋友/同事/亲戚），不一定是美国人</p>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>联系人1 姓名</label><input name="ref1Name" placeholder=""></div>
+          <div class="form-group flex-2"><label>联系人1 电话</label><input name="ref1Phone" placeholder=""></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>联系人1 邮箱</label><input name="ref1Email" placeholder=""></div>
+          <div class="form-group flex-2"><label>与你的关系</label><input name="ref1Relation" placeholder="Friend"></div>
+        </div>
+        <hr style="border-color:#334155;margin:12px 0;">
+        <div class="form-row">
+          <div class="form-group flex-2"><label>联系人2 姓名</label><input name="ref2Name" placeholder=""></div>
+          <div class="form-group flex-2"><label>联系人2 电话</label><input name="ref2Phone" placeholder=""></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>联系人2 邮箱</label><input name="ref2Email" placeholder=""></div>
+          <div class="form-group flex-2"><label>与你的关系</label><input name="ref2Relation" placeholder="Colleague"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第19节：军事服役 ============ -->
+    <div class="section" id="section-19">
+      <div class="section-header" onclick="toggleSection(19)">
+        <span class="section-num">19</span>
+        <span class="section-title">军事服役 Military Service</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>是否曾在军队服役</label>
+            <select name="militaryService"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+        </div>
+        <div id="militaryDetail" style="display:none;">
+          <div class="form-row">
+            <div class="form-group flex-2"><label>国家/地区</label><input name="militaryCountry" placeholder=""></div>
+            <div class="form-group flex-2"><label>军种/兵种</label><input name="militaryBranch" placeholder=""></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-2"><label>军衔/职位</label><input name="militaryRank" placeholder=""></div>
+            <div class="form-group flex-2"><label>服役起止日期</label><input name="militaryDates" placeholder="2010-2012"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第20节：所属组织 ============ -->
+    <div class="section" id="section-20">
+      <div class="section-header" onclick="toggleSection(20)">
+        <span class="section-num">20</span>
+        <span class="section-title">所属组织 Organizations</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>是否属于/资助过任何专业/社会/慈善组织</label>
+            <select name="orgMember"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+        </div>
+        <div class="form-row" id="orgDetail" style="display:none;">
+          <div class="form-group" style="flex:1;">
+            <label>组织名称及性质（每行一个）</label>
+            <textarea name="orgName" rows="2" placeholder="Organization name, purpose"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第21节：特殊技能/培训 ============ -->
+    <div class="section" id="section-21">
+      <div class="section-header" onclick="toggleSection(21)">
+        <span class="section-num">21</span>
+        <span class="section-title">特殊技能 Specialized Skills</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>是否接受过枪支/爆炸物/核/生物/化学相关特殊培训</label>
+            <select name="specialTraining"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+          </div>
+        </div>
+        <div class="form-row" id="specialTrainingDetail" style="display:none;">
+          <div class="form-group" style="flex:1;">
+            <label>培训详情说明</label>
+            <textarea name="specialTrainingExplain" rows="2" placeholder="请详细说明"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第22节：过往工作履历（5年） ============ -->
+    <div class="section" id="section-22">
+      <div class="section-header" onclick="toggleSection(22)">
+        <span class="section-num">22</span>
+        <span class="section-title">过往工作履历 Previous Employment (5 Years)</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">列出过去5年内除现职外的所有工作经历（如无则跳过）</p>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>曾任职1 雇主/学校</label><input name="prevEmployer1" placeholder=""></div>
+          <div class="form-group flex-2"><label>职务</label><input name="prevJob1" placeholder=""></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>起止日期</label><input name="prevEmpDates1" placeholder="2021-2023"></div>
+          <div class="form-group flex-2"><label>地址/电话</label><input name="prevEmpAddr1" placeholder=""></div>
+        </div>
+        <hr style="border-color:#334155;margin:10px 0;">
+        <div class="form-row">
+          <div class="form-group flex-2"><label>曾任职2 雇主/学校</label><input name="prevEmployer2" placeholder=""></div>
+          <div class="form-group flex-2"><label>职务</label><input name="prevJob2" placeholder=""></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>起止日期</label><input name="prevEmpDates2" placeholder=""></div>
+          <div class="form-group flex-2"><label>地址/电话</label><input name="prevEmpAddr2" placeholder=""></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 第23节：教育背景 ============ -->
+    <div class="section" id="section-23">
+      <div class="section-header" onclick="toggleSection(23)">
+        <span class="section-num">23</span>
+        <span class="section-title">教育背景 Education History</span>
+        <span class="section-status"></span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>最高学历 Highest Education Level</label>
+            <select name="eduLevel"><option value="">请选择</option><option>High School</option><option>Associate</option><option>Bachelor's</option><option>Master's</option><option>Doctorate</option><option>Other</option></select>
+          </div>
+          <div class="form-group flex-2">
+            <label>学校/机构名称</label><input name="eduSchool" placeholder="">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>专业/研究方向</label><input name="eduMajor" placeholder="">
+          </div>
+          <div class="form-group flex-2">
+            <label>就读起止年份</label><input name="eduYears" placeholder="如：2018-2022">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 操作按钮 ============ -->
+    <div class="btn-row">
+      <button type="button" class="btn btn-outline" onclick="expandAll()">展开全部章节</button>
+      <button type="button" class="btn btn-outline" onclick="validateForm()">校验填写</button>
+      <button type="button" class="btn btn-primary" onclick="showPreview()">生成 DS-160 预览</button>
+      <button type="button" class="btn btn-success" onclick="printPDF()">下载 PDF 文件</button>
+      <button type="button" class="btn btn-danger" onclick="resetForm()">清空重填</button>
+    </div>
+  </form>
+
+  <!-- ═══════ 底部导航条 ═══════ -->
+  <nav class="bottom-nav">
+    <a href="index.html">🏠 首页</a>
+    <a href="assessment.html" class="highlight">🛡️ 面签评估</a>
+    <a href="interview.html">🎯 面签模拟</a>
+  </nav>  <!-- 预览浮层 -->
+  <div class="preview-overlay" id="previewOverlay">
+    <button class="close-btn" onclick="closePreview()">✕</button>
+    <div class="preview-paper" id="previewContent"></div>
+  </div>
+
+</div>
+
+<script>
+// ═════════════ Token 验证 ═════════════
+const SECRET = 'ds160-secret-key-2026';
+
+async function hmacVerify(message, signature, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
+  );
+  const sigBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  return crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(message));
+}
+
+function getQueryParam(name) {
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+
+// 页面加载时验证Token
+(async function validateToken() {
+  const token = getQueryParam('token');
+  const gate = document.getElementById('tokenGate');
+  const icon = document.getElementById('gateIcon');
+  const title = document.getElementById('gateTitle');
+  const msg = document.getElementById('gateMsg');
+
+  // 无Token → 允许访问（兼容非付费场景）
+  if (!token) return;
+
+  // 解析 Token: id.timestamp.signature
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    gate.style.display = 'flex';
+    icon.textContent = '🚫'; title.textContent = '链接无效'; msg.textContent = 'Token格式错误，请联系服务提供商获取正确链接。';
+    return;
+  }
+
+  const [id, ts, sig] = parts;
+  const payload = `${id}.${ts}`;
+
+  // 验证 HMAC 签名
+  const valid = await hmacVerify(payload, sig, SECRET);
+  if (!valid) {
+    gate.style.display = 'flex';
+    icon.textContent = '🚫'; title.textContent = '链接无效'; msg.textContent = 'Token签名验证失败，链接可能被篡改。';
+    return;
+  }
+
+  // 检查是否已使用（localStorage）
+  const usedKey = 'ds160_used_' + id;
+  if (localStorage.getItem(usedKey)) {
+    gate.style.display = 'flex';
+    icon.textContent = '⏱️'; title.textContent = '链接已使用';
+    msg.innerHTML = '此链接已被使用过。<br>每个链接仅供一人使用一次。<br><br>如需再次使用，请联系服务提供商获取新链接。';
+    return;
+  }
+
+  // Token 有效，注入到页面
+  window.DS160_TOKEN_ID = id;
+  window.DS160_TOKEN = token;
+  // 标记已使用（PDF下载成功时通过 consumeToken() 触发）
+  window.consumeToken = function() {
+    localStorage.setItem(usedKey, new Date().toISOString());
+  };
+})();
+
+// ========== 安全背景问题列表 ==========
+const securityQuestions = [
+  "是否患有传染性疾病、精神或身体障碍？",
+  "是否曾因违法行为被逮捕或定罪？",
+  "是否曾涉及毒品买卖或使用？",
+  "是否曾从事卖淫或组织卖淫？",
+  "是否曾参与或计划参与恐怖活动？",
+  "是否曾违反美国移民法？",
+  "是否曾企图以虚假信息获取美国签证？",
+  "是否曾被美国驱逐出境？",
+  "是否曾绑架或以其他方式扣留儿童？",
+  "是否曾参与种族灭绝或酷刑？",
+];
+
+// 生成安全背景问题
+(function() {
+  const container = document.getElementById('securityQuestions');
+  securityQuestions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'form-row';
+    div.style.cssText = 'margin-bottom:8px;';
+    div.innerHTML = `
+      <div class="form-group" style="grid-column: 1/-1; flex-direction: row; align-items: center; gap: 12px;">
+        <span style="flex:1; font-size:13px;">${i+1}. ${q}</span>
+        <select name="security_q${i}" data-dsfield="${q}" style="width:120px;">
+          <option value="No" selected>否 No</option>
+          <option value="Yes">是 Yes</option>
+        </select>
+        <input name="security_explain${i}" placeholder="如选'是'请说明" style="width:200px; display:none;" data-dsfield="${q} Explanation">
+      </div>`;
+    container.appendChild(div);
+  });
+})();
+
+// ========== 折叠展开 ==========
+function toggleSection(n) {
+  document.getElementById('section-'+n).classList.toggle('open');
+}
+function expandAll() {
+  document.querySelectorAll('.section').forEach(s => s.classList.add('open'));
+}
+
+// ========== 动态联动 ==========
+document.querySelector('[name="hasCompanion"]').addEventListener('change', function() {
+  document.getElementById('companionNames').style.display = this.value === 'Yes' ? 'grid' : 'none';
+});
+document.querySelector('[name="prevUSTravel"]').addEventListener('change', function() {
+  document.getElementById('prevTravelDetails').style.display = this.value === 'Yes' ? 'grid' : 'none';
+});
+
+document.querySelectorAll('#securityQuestions select').forEach(sel => {
+  sel.addEventListener('change', function() {
+    const explain = this.parentElement.querySelector('input');
+    if (explain) explain.style.display = this.value === 'Yes' ? 'inline-block' : 'none';
+  });
+});
+
+// ========== 签证类型联动 (F签证提示) ==========
+function onVisaTypeChange() {
+  const v = document.getElementById('tripPurpose').value;
+  const isF = v === 'F1' || v === 'J1' || v === 'M1';
+  const isB = v === 'B1' || v === 'B2' || v === 'B1/B2';
+
+  // F/M/J: auto-set school official contact + show SEVIS
+  if (isF) {
+    const ct = document.querySelector('[name="contactType"]');
+    const cr = document.querySelector('[name="contactRelation"]');
+    if (ct) ct.value = 'SCHOOL OFFICIAL';
+    if (cr) cr.value = 'SCHOOL OFFICIAL';
+  }
+
+  // Show/hide visa-specific sections
+  const fOnlySections = [15]; // SEVIS
+  const bOnlySections = [];   // B-specific (none for now)
+  const allSections = [12,13,14,16,17,18,19,20,21,22,23]; // Common extras
+
+  // F/M/J sections
+  fOnlySections.forEach(n => {
+    const el = document.getElementById('section-'+n);
+    if (!el) return;
+    if (!isF && v!=='J1' && v!=='M1') {
+      el.style.opacity = '0.5';
+      el.style.pointerEvents = 'none';
+      // Show hint if visa type selected but not F/J/M
+      if (v) {
+        let hint = el.querySelector('.visa-hint');
+        if (!hint) {
+          hint = document.createElement('div');
+          hint.className = 'visa-hint';
+          hint.style.cssText = 'font-size:11px;color:#d97706;margin-top:4px;';
+          el.querySelector('.section-header').appendChild(hint);
+        }
+        hint.textContent = '仅 F/J/M 签证需填写此节';
+      }
+    } else {
+      el.style.opacity = '';
+      el.style.pointerEvents = '';
+      const hint = el.querySelector('.visa-hint');
+      if (hint) hint.remove();
+    }
+  });
+
+  // B sections
+  bOnlySections.forEach(n => {
+    const el = document.getElementById('section-'+n);
+    if (el) el.style.display = isB ? '' : 'none';
+  });
+
+  // Common sections: always show, just mark as "needs visa type"
+  let notice = document.getElementById('visa-type-notice');
+  if (!v) {
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'visa-type-notice';
+      notice.style.cssText = 'text-align:center;padding:12px;margin:12px 0;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:13px;color:#92400e;';
+      notice.innerHTML = '⚠️ 请先在 <b>第5节 - 旅行信息</b> 中选择签证类型，以激活下方补充信息章节';
+      const s11 = document.getElementById('section-11');
+      if (s11) s11.after(notice);
+    }
+    notice.style.display = '';
+  } else {
+    if (notice) notice.style.display = 'none';
+  }
+
+  allSections.forEach(n => {
+    const el = document.getElementById('section-'+n);
+    if (!el) return;
+    if (!v) {
+      el.style.opacity = '0.5';
+      el.style.pointerEvents = 'none';
+    } else {
+      el.style.opacity = '';
+      el.style.pointerEvents = '';
+    }
+  });
+}
+
+// Conditional field listeners
+(function addConditionalListeners() {
+  function watch(name, onChange) {
+    const el = document.querySelector('[name="'+name+'"]');
+    if (el) el.addEventListener('change', onChange);
+  }
+  watch('passportLost', function(){ document.getElementById('passportLostDetail').style.display = this.value==='Yes'?'flex':'none'; });
+  watch('visaRefused', function(){ document.getElementById('visaRefusedDetail').style.display = this.value==='Yes'?'flex':'none'; });
+  watch('immigrationViolation', function(){ document.getElementById('immigrationViolationDetail').style.display = this.value==='Yes'?'flex':'none'; });
+  watch('militaryService', function(){ document.getElementById('militaryDetail').style.display = this.value==='Yes'?'block':'none'; });
+  watch('orgMember', function(){ document.getElementById('orgDetail').style.display = this.value==='Yes'?'flex':'none'; });
+  watch('specialTraining', function(){ document.getElementById('specialTrainingDetail').style.display = this.value==='Yes'?'flex':'none'; });
+})();
+
+// ========== 进度条 ==========
+const coreFields = 80;
+setInterval(() => {
+  const inputs = document.querySelectorAll('input, select, textarea');
+  let filled = 0;
+  inputs.forEach(el => { if (el.value && el.value !== '') filled++; });
+  const pct = Math.min(100, Math.round(filled / coreFields * 100));
+  document.getElementById('progressPercent').textContent = pct + '%';
+  document.getElementById('filledCount').textContent = filled;
+  document.getElementById('progressFill').style.width = pct + '%';
+}, 500);
+
+// ========== 表单校验 ==========
+function validateForm() {
+  const criticals = [];
+  const errors = [];
+  const warnings = [];
+  const oks = [];
+
+  // 0. Gather all data
+  const form = document.getElementById('ds160Form');
+  const fd = new FormData(form);
+  const d = {}; for (let [k,v] of fd) d[k] = (v||'').toString().trim();
+
+  // Clear previous error highlights
+  document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+
+  // 1. Required fields check
+  const required = document.querySelectorAll('[required]');
+  let missingCount = 0;
+  required.forEach(el => {
+    if (!el.value) {
+      el.classList.add('error');
+      const label = (el.closest('.form-group')?.querySelector('label')?.textContent || '').replace('*','').trim();
+      errors.push({ text: '缺失: ' + (label || el.name), el: el });
+      missingCount++;
+    }
+  });
+
+  // 2. Name checks
+  if (d.surname && d.givenName) {
+    const nameStr = (d.surname + d.givenName).toUpperCase();
+    if (/[^A-Z\s]/.test(nameStr)) {
+      warnings.push({ text: '姓名拼音含非英文字符，请确认与护照完全一致（如 "张"→"ZHANG"）' });
+    }
+    if (d.surname.length < 2 || d.givenName.length < 1) {
+      warnings.push({ text: '姓名过短，请填写完整的护照拼音姓名' });
+    }
+  } else {
+    if (!d.surname) errors.push({ text: '缺失: 姓氏（Surname）必须填写' });
+    if (!d.givenName) errors.push({ text: '缺失: 名字（Given Name）必须填写' });
+  }
+
+  // 3. DOB checks
+  if (d.dob) {
+    const dob = new Date(d.dob);
+    const now = new Date();
+    if (dob >= now) {
+      criticals.push({ text: '出生日期在未来日期，这是不可能的！请修正' });
+    } else {
+      const age = (now - dob) / (365.25 * 24 * 3600 * 1000);
+      if (age < 1) criticals.push({ text: '年龄不足1岁，请确认出生日期正确' });
+      else if (age > 120) criticals.push({ text: '年龄超过120岁，请确认出生日期正确' });
+      else oks.push({ text: '出生日期验证通过（' + Math.floor(age) + '岁）' });
+    }
+  }
+
+  // 4. Passport cross-checks (THE MOST IMPORTANT)
+  if (d.passportExpiry) {
+    const exp = new Date(d.passportExpiry);
+    const now = new Date();
+
+    // 4a. Already expired?
+    if (exp <= now) {
+      criticals.push({ text: '护照已过期！必须换发新护照后才能申请签证' });
+    }
+
+    // 4b. Expiry within 6 months from today
+    const sixMoFromNow = new Date(); sixMoFromNow.setMonth(sixMoFromNow.getMonth() + 6);
+    if (exp > now && exp <= sixMoFromNow) {
+      warnings.push({ text: '护照有效期不足6个月，强烈建议先换发新护照再申请' });
+    }
+
+    // 4c. Expiry vs planned trip (departure + stay)
+    if (d.arrivalDate) {
+      const arrival = new Date(d.arrivalDate);
+      // Parse stay length (text → days)
+      const stayText = d.stayLength || '';
+      const stayDays = parseStayDays(stayText);
+      if (stayDays > 0) {
+        const returnDate = new Date(arrival);
+        returnDate.setDate(returnDate.getDate() + stayDays);
+        const requiredExpiry = new Date(returnDate);
+        requiredExpiry.setMonth(requiredExpiry.getMonth() + 6);
+
+        if (exp <= requiredExpiry) {
+          criticals.push({
+            text: '护照在计划回国日期后不足6个月！出发' + d.arrivalDate + ' + 停留' + stayDays + '天 + 6月缓冲 = 需要有效期至少到 ' +
+              requiredExpiry.toISOString().split('T')[0] + '，当前仅到 ' + d.passportExpiry
+          });
+        } else {
+          oks.push({ text: '护照有效期覆盖行程 + 6个月缓冲 ✓' });
+        }
+      }
+    }
+
+    // 4d. Passport issue vs DOB (must be issued after birth)
+    if (d.passportIssue && d.dob) {
+      const issue = new Date(d.passportIssue);
+      const dob = new Date(d.dob);
+      if (issue <= dob) {
+        criticals.push({ text: '护照签发日期早于或等于出生日期，不可能！请修正' });
+      }
+    }
+  } else {
+    errors.push({ text: '缺失: 护照有效期（必须填写）' });
+  }
+
+  // 5. Passport number format (Chinese passport)
+  if (d.passportNo) {
+    const pn = d.passportNo.toUpperCase();
+    if (!/^[EGDPS]\d{7,8}$/.test(pn) && !/^[A-Z]{2}\d{6,7}$/.test(pn)) {
+      warnings.push({ text: '护照号码格式可能不正确（中国护照通常E/G/D开头+7-8位数字），请核实' });
+    }
+  }
+
+  // 6. SEVIS ID (F/M/J visas)
+  const vType = d.tripPurpose || d.visaType || '';
+  if (vType === 'F1' || vType === 'J1' || vType === 'M1') {
+    if (d.sevisId) {
+      if (!/^[Nn]\d{10}$/.test(d.sevisId.replace(/\s/g, ''))) {
+        errors.push({ text: 'SEVIS ID 格式不正确，必须为 N 开头 + 10位数字（如 N0012345678），当前: ' + d.sevisId });
+      } else {
+        oks.push({ text: 'SEVIS ID 格式正确 ✓' });
+      }
+    } else {
+      warnings.push({ text: 'F/J/M 签证必须填写 SEVIS ID（来自 I-20 或 DS-2019 表）' });
+    }
+  }
+
+  // 7. Contact info
+  if (!d.email && !d.phone) {
+    warnings.push({ text: '未填写邮箱或电话，领馆无法联系您通知面签结果（建议至少填一项）' });
+  }
+  if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) {
+    errors.push({ text: '邮箱格式不正确: ' + d.email + '（缺少@或域名后缀）' });
+  }
+  if (d.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) {
+    oks.push({ text: '邮箱格式正确 ✓' });
+  }
+
+  // 8. Security questions
+  let secAnswered = 0;
+  for (let i = 0; i < 10; i++) {
+    if (d['security_q' + i]) secAnswered++;
+  }
+  if (secAnswered === 0) {
+    errors.push({ text: '安全背景问题（第11节）必须全部回答（共10道 Yes/No 题）' });
+  } else if (secAnswered < 10) {
+    errors.push({ text: '安全背景问题未完全回答（已完成 ' + secAnswered + '/10），剩余必须勾选' });
+  } else {
+    oks.push({ text: '安全背景问题全部回答 ✓' });
+  }
+
+  // 9. Build result modal
+  const totalIssues = criticals.length + errors.length + warnings.length;
+  const allItems = [
+    ...criticals.map(i => ({ ...i, level: 'critical' })),
+    ...errors.map(i => ({ ...i, level: 'error' })),
+    ...warnings.map(i => ({ ...i, level: 'warning' })),
+    ...oks.map(i => ({ ...i, level: 'ok' })),
+  ];
+
+  const badgeMap = { critical: '🔴 致命', error: '❌ 必须修', warning: '🟡 建议', ok: '✅ 通过' };
+  const badgeClass = { critical: 'badge-critical', error: 'badge-error', warning: 'badge-warning', ok: 'badge-ok' };
+
+  const itemsHTML = allItems.map(i =>
+    '<div class="val-item"><span class="badge ' + badgeClass[i.level] + '">' + badgeMap[i.level] + '</span><span>' + i.text + '</span></div>'
+  ).join('');
+
+  const allClear = criticals.length === 0 && errors.length === 0 && warnings.length === 0;
+  const title = allClear
+    ? '🎉 智能校验全部通过'
+    : totalIssues + ' 个问题需处理';
+  const scoreText = '必填缺失: ' + missingCount + ' | 致命: ' + criticals.length + ' | 错误: ' + errors.length + ' | 建议: ' + warnings.length;
+
+  showValModal(title, scoreText, itemsHTML, allClear);
+
+  // Scroll to first error field
+  if (!allClear) {
+    const firstErr = document.querySelector('.error');
+    if (firstErr) {
+      const section = firstErr.closest('.section');
+      if (section) section.classList.add('open');
+      setTimeout(() => firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    }
+  }
+}
+
+function parseStayDays(text) {
+  if (!text) return 0;
+  const num = parseInt(text.match(/\d+/)?.[0] || '0');
+  if (num === 0) return 0;
+  const lower = text.toLowerCase();
+  if (/year|年/.test(lower)) return num * 365;
+  if (/month|月/.test(lower)) return num * 30;
+  if (/week|周|星期/.test(lower)) return num * 7;
+  if (/day|天|日/.test(lower)) return num;
+  // If no unit, assume days
+  if (/^\d+$/.test(text.trim())) return num;
+  return num * 7; // default to weeks for ambiguous
+}
+
+function showValModal(title, score, items, allClear) {
+  // Remove existing
+  const existing = document.querySelector('.val-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'val-overlay';
+  overlay.innerHTML = '<div class="val-modal">' +
+    '<h2>' + title + '</h2>' +
+    '<div class="val-score">' + score + '</div>' +
+    '<div>' + items + '</div>' +
+    '<button class="val-close' + (allClear ? ' all-clear' : '') + '" onclick="this.closest(\'.val-overlay\').remove()">' +
+    (allClear ? '✅ 确认，开始生成 PDF' : '知道了，我去修改') +
+    '</button></div>';
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
+}
+
+// ========== 自动保存 ==========
+let saveTimer = null;
+const SAVE_DRAFT_KEY = 'ds160_form_draft';
+
+function autoSave() {
+  const el = document.getElementById('saveIndicator');
+  if (!el) return;
+  el.textContent = '💾 保存中...';
+  el.className = 'save-indicator saving';
+
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      const form = document.getElementById('ds160Form');
+      if (!form) return;
+      const fd = new FormData(form);
+      const data = {};
+      for (let [k, v] of fd) {
+        if (v && v.toString().trim()) data[k] = v.toString().trim();
+      }
+      localStorage.setItem(SAVE_DRAFT_KEY, JSON.stringify(data));
+      localStorage.setItem(SAVE_DRAFT_KEY + '_ts', Date.now().toString());
+
+      // Also sync individual fields for assessment page
+      for (let [k, v] of fd) {
+        if (v && v.toString().trim()) {
+          localStorage.setItem('ds160_' + k, v.toString().trim());
+        }
+      }
+
+      const t = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      el.textContent = '✅ 已保存 ' + t;
+      el.className = 'save-indicator saved';
+    } catch (e) {
+      el.textContent = '⚠️ 保存失败';
+      el.className = 'save-indicator draft';
+    }
+  }, 800);
+}
+
+function getSaveTime() {
+  try {
+    const ts = parseInt(localStorage.getItem(SAVE_DRAFT_KEY + '_ts'));
+    if (!ts) return '未知时间';
+    const d = new Date(ts);
+    const now = new Date();
+    const diffMin = Math.round((now - d) / 60000);
+    if (diffMin < 1) return '刚刚';
+    if (diffMin < 60) return diffMin + '分钟前';
+    const h = Math.round(diffMin / 60);
+    if (h < 24) return h + '小时前';
+    return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) { return '未知时间'; }
+}
+
+function restoreDraftPrompt() {
+  try {
+    const raw = localStorage.getItem(SAVE_DRAFT_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || Object.keys(data).length === 0) return;
+
+    const t = getSaveTime();
+    const fields = Object.keys(data).length;
+    if (confirm('📋 检测到上次填写的数据（' + fields + '个字段，' + t + '）\n\n是否恢复继续填写？')) {
+      for (let [k, v] of Object.entries(data)) {
+        const el = document.querySelector('[name="' + k + '"]');
+        if (el && !el.value) {
+          if (el.type === 'checkbox') el.checked = v === 'on' || v === 'true';
+          else el.value = v;
+        }
+      }
+      const el = document.getElementById('saveIndicator');
+      if (el) { el.textContent = '✅ 已恢复 ' + fields + '个字段'; el.className = 'save-indicator saved'; }
+    } else {
+      // User declined, clear draft
+      localStorage.removeItem(SAVE_DRAFT_KEY);
+      localStorage.removeItem(SAVE_DRAFT_KEY + '_ts');
+    }
+  } catch (e) {
+    // corrupted data, ignore
+  }
+}
+
+// Attach auto-save listeners
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('ds160Form');
+  if (form) {
+    form.addEventListener('input', autoSave);
+    form.addEventListener('change', autoSave);
+  }
+  // Restore prompt after a short delay
+  setTimeout(restoreDraftPrompt, 500);
+});
+
+// ========== 生成DS-160预览 ==========
+function showPreview() {
+  const form = document.getElementById('ds160Form');
+  const fd = new FormData(form);
+  const data = {};
+  for (let [k,v] of fd) { data[k] = v || '(未填写)'; }
+
+  const fields = [];
+  const el = document.querySelectorAll('[data-dsfield]');
+  el.forEach(e => {
+    if (e.name && data[e.name] && data[e.name] !== '(未填写)') {
+      fields.push({ label: e.dataset.dsfield, value: data[e.name] });
+    }
+  });
+
+  let html = `
+<h2>U.S. DEPARTMENT of STATE</h2>
+<h2>CONSULAR ELECTRONIC APPLICATION CENTER</h2>
+<p class="subtitle">Online Nonimmigrant Visa Application (DS-160) — Preview Generated by 美签纵横团</p>
+<p class="subtitle">Application - Sensitive But Unclassified (SBU) — FOR REFERENCE ONLY</p>
+`;
+
+  fields.forEach(f => {
+    html += `<div class="preview-field"><span class="q">${f.label}:</span> <span class="a">${f.value}</span></div>`;
+  });
+
+  html += `<p style="margin-top:30px;font-size:10px;color:#999;text-align:center;">
+    此预览由美签纵横团DS-160智能填表助手生成 | 生成时间: ${new Date().toLocaleString('zh-CN')} |
+    请以官方DS-160网站 (ceac.state.gov) 上的实际填写为准
+  </p>`;
+
+  document.getElementById('previewContent').innerHTML = html;
+  document.getElementById('previewOverlay').classList.add('show');
+}
+
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('show');
+}
+
+// ========== 导出PDF (jsPDF一键下载 + Token消耗) ==========
+async function printPDF() {
+  const token = window.DS160_TOKEN;
+  // 如果带Token则验证，无Token则允许免费模式
+  if (token) {
+    try {
+      const checkRes = await fetch('/api/check?token=' + token);
+      const checkData = await checkRes.json();
+      if (!checkData.valid) {
+        alert('您的链接已失效（可能已被使用或过期），请联系服务提供商获取新链接。');
+        return;
+      }
+    } catch(e) {
+      // 网络问题，继续允许使用（离线降级）
+    }
+  }
+
+  const form = document.getElementById('ds160Form');
+  const fd = new FormData(form);
+  const data = {};
+  for (let [k,v] of fd) { data[k] = v || ''; }
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = 190;
+    const margin = 10;
+    let y = 12;
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('U.S. DEPARTMENT of STATE', 105, y, { align: 'center' }); y += 5;
+    doc.text('CONSULAR ELECTRONIC APPLICATION CENTER', 105, y, { align: 'center' }); y += 6;
+    doc.setFontSize(10);
+    doc.text('Online Nonimmigrant Visa Application (DS-160)', 105, y, { align: 'center' }); y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(100);
+    doc.text('Preview generated by ' + new Date().toLocaleString('zh-CN'), 105, y, { align: 'center' }); y += 3;
+    doc.text('FOR REFERENCE ONLY — Submit at ceac.state.gov', 105, y, { align: 'center' });
+    doc.setTextColor(0);
+    y += 6;
+
+    function drawLine() { y += 0.5; doc.setDrawColor(180); doc.line(margin, y, margin + pageW, y); y += 1; }
+    function newPage() { doc.addPage(); y = 12; }
+
+    function section(title) {
+      if (y > 260) newPage();
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setFillColor(235, 240, 255);
+      doc.rect(margin, y, pageW, 5, 'F');
+      doc.setTextColor(26, 86, 219);
+      doc.text(title, margin + 2, y + 3.5);
+      doc.setTextColor(0);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+    }
+
+    function field(label, value) {
+      if (!value) value = 'N/A';
+      if (y > 270) newPage();
+      const labelW = 65;
+      // Truncate value if too long
+      const maxLen = 80;
+      if (value.length > maxLen) value = value.substring(0, maxLen) + '...';
+
+      doc.setFont('helvetica', 'bold');
+      doc.text(label + ':', margin + 2, y + 3);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value.substring(0, 85), margin + 2 + labelW, y + 3);
+      y += 4.5;
+    }
+
+    function spacer() { y += 3; }
+
+    // ===== Section 1 =====
+    section('1. Personal Information 1');
+    field('Surnames', data.surname);
+    field('Given Names', data.givenName);
+    field('Full Name in Native Alphabet', data.nativeName);
+    if (data.otherSurnames) field('Other Surnames', data.otherSurnames);
+    field('Sex', data.sex);
+    field('Marital Status', data.maritalStatus);
+    field('Date of Birth', data.dob);
+    field('Place of Birth', (data.birthCity||'') + ', ' + (data.birthState||'') + ', ' + (data.birthCountry||''));
+    spacer();
+
+    // ===== Section 2 =====
+    section('2. Personal Information 2');
+    field('Nationality', data.nationality);
+    field('Other Nationalities', data.otherNationality || 'No');
+    field('National ID Number', data.nationalId || 'N/A');
+    field('U.S. Social Security Number', data.ssn || 'Does Not Apply');
+    field('U.S. Taxpayer ID', data.taxpayerId || 'Does Not Apply');
+    spacer();
+
+    // ===== Section 3 =====
+    section('3. Address and Phone');
+    field('Home Address', data.addrLine1);
+    if (data.addrLine2) field('Address Line 2', data.addrLine2);
+    field('City', data.addrCity);
+    field('State/Province', data.addrState);
+    field('Postal Code', data.addrZip);
+    field('Country', data.addrCountry);
+    field('Primary Phone', data.phone);
+    if (data.phone2) field('Secondary Phone', data.phone2);
+    field('Email', data.email);
+    spacer();
+
+    // ===== Section 4 =====
+    section('4. Passport Information');
+    field('Passport Type', data.passportType);
+    field('Passport Number', data.passportNo);
+    field('Country of Issuance', data.passportCountry);
+    field('City of Issuance', data.passportCity);
+    field('Issuance Date', data.passportIssue);
+    field('Expiration Date', data.passportExpiry);
+    spacer();
+
+    // ===== Section 5 =====
+    section('5. Travel Information');
+    field('Purpose of Trip', data.tripPurpose);
+    field('Visa Type', data.visaType);
+    field('Intended Arrival Date', data.arrivalDate);
+    field('Length of Stay', data.stayLength);
+    field('U.S. Address', data.usAddrLine1);
+    field('U.S. City', data.usAddrCity);
+    field('U.S. State', data.usAddrState);
+    field('U.S. ZIP Code', data.usAddrZip);
+    field('Trip Payer', data.tripPayer);
+    spacer();
+
+    // ===== Section 6 =====
+    section('6. Travel Companions');
+    field('Traveling with Others', data.hasCompanion || 'No');
+    if (data.companionDetails) field('Companion Details', data.companionDetails);
+    spacer();
+
+    // ===== Section 7 =====
+    section('7. Previous U.S. Travel');
+    field('Previously in the U.S.', data.prevUSTravel || 'No');
+    if (data.prevTravelRecord) field('Previous Travel Record', data.prevTravelRecord);
+    field('U.S. Driver License', data.usDriverLicense || 'No');
+    field('Previous U.S. Visa', data.prevVisa || 'No');
+    field('Visa Ever Revoked', data.visaRevoked || 'No');
+    spacer();
+
+    // ===== Section 8 =====
+    section('8. U.S. Point of Contact');
+    field('Contact Type', data.contactType);
+    field('Contact Name', data.contactName);
+    if (data.contactOrg) field('Organization', data.contactOrg);
+    field('Relationship', data.contactRelation);
+    if (data.contactAddr) field('Contact Address', data.contactAddr);
+    if (data.contactPhone) field('Contact Phone', data.contactPhone);
+    if (data.contactEmail) field('Contact Email', data.contactEmail);
+    spacer();
+
+    // ===== Section 9 =====
+    section('9. Family Information');
+    field('Father', (data.fatherSurname||'') + ' ' + (data.fatherGivenName||''));
+    field('Father DOB', data.fatherDob || 'N/A');
+    field('Father in U.S.', data.fatherInUS || 'No');
+    field('Mother', (data.motherSurname||'') + ' ' + (data.motherGivenName||''));
+    field('Mother DOB', data.motherDob || 'N/A');
+    field('Mother in U.S.', data.motherInUS || 'No');
+    field('Immediate Relatives in U.S.', data.relativeInUS || 'No');
+    spacer();
+
+    // ===== Section 10 =====
+    section('10. Work / Education / Training');
+    field('Primary Occupation', data.occupation);
+    field('Employer / School', data.employerName);
+    if (data.employerAddr) field('Address', data.employerAddr);
+    if (data.monthlySalary) field('Monthly Salary (CNY)', data.monthlySalary);
+    if (data.jobDuties) field('Duties', data.jobDuties);
+    spacer();
+
+    // ===== Section 11 =====
+    section('11. Security and Background');
+    const secQuestions = [
+      'Communicable disease, physical or mental disorder',
+      'Arrested or convicted for offense or crime',
+      'Illegal drug trade, production, or use',
+      'Prostitution or procurement of prostitutes',
+      'Terrorist activities involvement',
+      'Violated U.S. immigration law',
+      'Attempted to obtain visa by fraud',
+      'Deported from the United States',
+      'Abducted or detained a child',
+      'Participated in genocide or torture',
+    ];
+    let allNo = true;
+    for (let i = 0; i < secQuestions.length; i++) {
+      const ans = data['security_q' + i] || 'No';
+      if (ans === 'Yes') allNo = false;
+      field((i+1) + '. ' + secQuestions[i], ans);
+    }
+    if (allNo) {
+      if (y > 260) newPage();
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(7);
+      doc.setTextColor(100);
+      doc.text('All security and background questions answered: No', margin + 2, y + 3);
+      doc.setTextColor(0);
+      y += 5;
+    }
+
+    // ===== Section 12: Passport Additional =====
+    if (data.passportBookNo || data.passportLost) {
+      if (y > 250) { doc.addPage(); y = 12; }
+      section('12. Passport Additional Information');
+      if (data.passportBookNo) field('Passport Book Number', data.passportBookNo);
+      field('Ever Lost Passport', data.passportLost || 'No');
+      if ((data.passportLost||'') === 'Yes') {
+        if (data.passportLostNo) field('Lost Passport Number', data.passportLostNo);
+        if (data.passportLostPlace) field('Lost Passport Place', data.passportLostPlace);
+      }
+      spacer();
+    }
+
+    // ===== Section 13: US Travel History Detailed =====
+    if (y > 250) { doc.addPage(); y = 12; }
+    section('13. Previous US Travel History');
+    field('Had US Visa Before', data.hadUSVisa || 'N/A');
+    if (data.lastVisaDate) field('Last Visa Issue Date', data.lastVisaDate);
+    field('Ever Refused Visa', data.visaRefused || 'No');
+    if ((data.visaRefused||'') === 'Yes' && data.visaRefusedExplain) field('Refusal Explanation', data.visaRefusedExplain);
+    field('Ever Denied Entry', data.entryDenied || 'No');
+    field('Ever Overstayed', data.overstayed || 'No');
+    field('Immigration Violation', data.immigrationViolation || 'No');
+    if ((data.immigrationViolation||'') === 'Yes' && data.immigrationViolationExplain) field('Violation Explanation', data.immigrationViolationExplain);
+    spacer();
+
+    // ===== Section 14: Spouse Info =====
+    if (data.spouseSurname || data.spouseGivenName) {
+      if (y > 250) { doc.addPage(); y = 12; }
+      section('14. Spouse Information');
+      field('Spouse Name', (data.spouseSurname||'') + ' ' + (data.spouseGivenName||''));
+      if (data.spouseDob) field('Spouse DOB', data.spouseDob);
+      if (data.spouseNationality) field('Spouse Nationality', data.spouseNationality);
+      if (data.spouseBirthCity) field('Spouse Birth Place', (data.spouseBirthCity||'') + ', ' + (data.spouseBirthCountry||''));
+      if (data.spouseAddress) field('Spouse Address', data.spouseAddress);
+      spacer();
+    }
+
+    // ===== Section 15: SEVIS =====
+    if (data.sevisId) {
+      if (y > 250) { doc.addPage(); y = 12; }
+      section('15. SEVIS Information');
+      field('SEVIS ID', data.sevisId);
+      if (data.sevisSchool) field('School/Program', data.sevisSchool);
+      if (data.sevisSchoolAddr) field('School Address', data.sevisSchoolAddr);
+      if (data.sevisMajor) field('Major/Course', data.sevisMajor);
+      spacer();
+    }
+
+    // ===== Section 16: Countries Visited =====
+    if (data.countriesVisited) {
+      if (y > 240) { doc.addPage(); y = 12; }
+      section('16. Countries Visited (Past 5 Years)');
+      const cvList = data.countriesVisited.split('\n').filter(l=>l.trim());
+      cvList.forEach(c => { if (y > 270) { doc.addPage(); y = 12; } doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.text('• ' + c.trim(), margin+4, y+2); y += 4.5; });
+      spacer();
+    }
+
+    // ===== Section 17: Languages =====
+    if (data.primaryLanguage || data.englishLevel) {
+      if (y > 260) { doc.addPage(); y = 12; }
+      section('17. Languages');
+      if (data.primaryLanguage) field('Primary Language', data.primaryLanguage);
+      if (data.englishLevel) field('English Proficiency', data.englishLevel);
+      spacer();
+    }
+
+    // ===== Section 18: Additional Contacts =====
+    if (data.ref1Name || data.ref2Name) {
+      if (y > 250) { doc.addPage(); y = 12; }
+      section('18. Additional US Contacts');
+      if (data.ref1Name) {
+        field('Contact 1', data.ref1Name + ' | ' + (data.ref1Relation||'N/A') + ' | ' + (data.ref1Phone||'') + ' | ' + (data.ref1Email||''));
+      }
+      if (data.ref2Name) {
+        if (y > 270) { doc.addPage(); y = 12; }
+        field('Contact 2', data.ref2Name + ' | ' + (data.ref2Relation||'N/A') + ' | ' + (data.ref2Phone||'') + ' | ' + (data.ref2Email||''));
+      }
+      spacer();
+    }
+
+    // ===== Section 19-21: Military, Orgs, Skills =====
+    if ((data.militaryService||'') === 'Yes' || (data.orgMember||'') === 'Yes' || (data.specialTraining||'') === 'Yes') {
+      if (y > 250) { doc.addPage(); y = 12; }
+      section('19-21. Military / Organizations / Special Skills');
+      field('Military Service', data.militaryService || 'No');
+      if ((data.militaryService||'') === 'Yes') {
+        if (data.militaryCountry) field('  Country', data.militaryCountry);
+        if (data.militaryBranch) field('  Branch', data.militaryBranch);
+        if (data.militaryRank) field('  Rank', data.militaryRank);
+        if (data.militaryDates) field('  Service Dates', data.militaryDates);
+      }
+      field('Organization Member', data.orgMember || 'No');
+      if ((data.orgMember||'') === 'Yes' && data.orgName) field('  Org Details', data.orgName);
+      field('Special Training', data.specialTraining || 'No');
+      if ((data.specialTraining||'') === 'Yes' && data.specialTrainingExplain) field('  Training Details', data.specialTrainingExplain);
+      spacer();
+    }
+
+    // ===== Section 22: Previous Employment =====
+    if (data.prevEmployer1) {
+      if (y > 240) { doc.addPage(); y = 12; }
+      section('22. Previous Employment (Past 5 Years)');
+      field('Employer 1', (data.prevEmployer1||'') + ' | ' + (data.prevJob1||'') + ' | ' + (data.prevEmpDates1||''));
+      if (data.prevEmpAddr1) field('  Address/Phone', data.prevEmpAddr1);
+      if (data.prevEmployer2) {
+        if (y > 270) { doc.addPage(); y = 12; }
+        field('Employer 2', (data.prevEmployer2||'') + ' | ' + (data.prevJob2||'') + ' | ' + (data.prevEmpDates2||''));
+        if (data.prevEmpAddr2) field('  Address/Phone', data.prevEmpAddr2);
+      }
+      spacer();
+    }
+
+    // ===== Section 23: Education =====
+    if (data.eduLevel || data.eduSchool) {
+      if (y > 255) { doc.addPage(); y = 12; }
+      section('23. Education History');
+      if (data.eduLevel) field('Highest Education Level', data.eduLevel);
+      if (data.eduSchool) field('Institution', data.eduSchool);
+      if (data.eduMajor) field('Major/Field', data.eduMajor);
+      if (data.eduYears) field('Years Attended', data.eduYears);
+      spacer();
+    }
+
+    // ═════════════ 面签风险评估 (内联，捕获printPDF作用域) ═════════════
+    (function(){
+      // --- 评分引擎 ---
+      let age=0; if(data.dob){const d=new Date(data.dob); if(!isNaN(d.getTime())){age=new Date().getFullYear()-d.getFullYear();const n=new Date();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))age--;}}
+      const occ=(data.occupation||'').toLowerCase(), marRaw=(data.maritalStatus||''), mar=marRaw.toLowerCase();
+      const sx=(data.sex||'').toLowerCase(), sal=parseInt(data.monthlySalary)||0;
+      const vType=(data.visaType||'').trim(), relUS=(data.relativeInUS||'').toLowerCase();
+      const isMarried=mar==='married'||marRaw==='已婚'||marRaw==='MARRIED';
+      const isFemale=sx==='female'||sx==='f'||sx==='女';
+      const hasJob=occ!=='unemployed'&&occ!=='retired'&&occ!=='无业'&&occ!=='退休'&&occ!=='学生'&&occ!=='student';
+      const isStudent=occ==='学生'||occ==='student';
+      const hasRelUS=relUS==='yes'||relUS==='是';
+
+      let s1=30; if(hasJob)s1+=15; else if(isStudent)s1+=10; if(isMarried)s1+=15; if(hasRelUS)s1-=20;
+      let s2=25; if(sal>=20000)s2+=25; else if(sal>=10000)s2+=20; else if(sal>=5000)s2+=10; if((data.tripPayer||'')==='SELF')s2+=10; if(data.employerName)s2+=10;
+      let s3=30; if((data.prevUSTravel||data.prevVisa||'').toLowerCase()==='yes')s3+=25; if((data.countriesVisited||'').trim().length>0)s3+=15; if((data.visaRevoked||'').toLowerCase()==='yes')s3-=30;
+      let s4=40; if(age>=35)s4+=20; else if(age>=25)s4+=15; else if(age>=18)s4+=5; if(isMarried)s4+=10; if(isFemale&&age<30&&!isMarried)s4-=5;
+      let s5=35; if(vType==='F1'||vType==='F2')s5+=15; else if(vType==='B1'||vType==='B2'||vType==='B1/B2')s5+=10;
+      const tp=(data.tripPurpose||''); if(tp.length>=10)s5+=20; else if(tp.length>=3)s5+=10;
+      const days=parseInt(data.stayLength)||0; if(days>0&&days<=30)s5+=10; else if(days>30&&days<=90)s5+=5;
+      let s6=40; const cf=['surname','givenName','dob','passportNo','tripPurpose','contactName','occupation']; const filled=cf.filter(f=>data[f]&&data[f].toString().trim()).length; s6+=Math.round(filled/cf.length*30);
+      if(data.passportExpiry){const exp=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(exp>sm)s6+=10;}
+      const dims=[
+        {name:'国内约束力',score:Math.max(0,Math.min(100,s1))},
+        {name:'财务能力',score:Math.max(0,Math.min(100,s2))},
+        {name:'旅行史',score:Math.max(0,Math.min(100,s3))},
+        {name:'背景稳定性',score:Math.max(0,Math.min(100,s4))},
+        {name:'目的合理性',score:Math.max(0,Math.min(100,s5))},
+        {name:'材料完整度',score:Math.max(0,Math.min(100,s6))}
+      ];
+      let s7=50; // Social media / security review risk
+      const hadVisaBefore = (data.hadUSVisa||'').toLowerCase()==='yes';
+      const visaRefused = (data.visaRefused||'').toLowerCase()==='yes';
+      const military = (data.militaryService||'').toLowerCase()==='yes';
+      const specTrain = (data.specialTraining||'').toLowerCase()==='yes';
+      if(hadVisaBefore && !visaRefused) s7+=15;
+      if(visaRefused) s7-=20;
+      if(military) s7-=10; // May trigger additional security review
+      if(specTrain) s7-=15;
+      if((data.countriesVisited||'').length > 0) s7+=5;
+
+      let s8=50; // Timing / seasonality risk
+      const now = new Date(); const month = now.getMonth();
+      // Summer (Jun-Aug): peak season, higher scrutiny
+      if(month>=5 && month<=7) s8-=10;
+      // Winter holiday (Nov-Dec): high volume
+      else if(month>=10) s8-=5;
+      // Off-peak (Jan-Apr, Sep-Oct): better chances
+      else s8+=10;
+      if(hadVisaBefore) s8+=10; // Returning travelers = lower timing risk
+
+      dims.push({name:'安全审查风险',score:Math.max(0,Math.min(100,s7))});
+      dims.push({name:'时间节点风险',score:Math.max(0,Math.min(100,s8))});
+      dims.forEach(d=>{if(d.score>=80)d.color=[52,211,153]; else if(d.score>=60)d.color=[251,191,36]; else d.color=[248,113,113];});
+      const overall=Math.round(dims.reduce((s,d)=>s+d.score,0)/8);
+
+      // --- 渲染到PDF ---
+      y=12; doc.addPage();
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(26,86,219);
+      doc.text('面签风险评估报告',105,y,{align:'center'}); y+=5;
+      doc.setFontSize(7); doc.setTextColor(100);
+      doc.text('Visa Interview Risk Assessment',105,y,{align:'center'}); y+=4; doc.setTextColor(0); y+=3;
+
+      let rc=[52,211,153],rl='低风险',rd='材料整体扎实，面签通过率较高。';
+      if(overall<60){rc=[248,113,113];rl='高风险';rd='多项指标偏低，建议先优化再预约面签。';}
+      else if(overall<80){rc=[251,191,36];rl='中等风险';rd='存在薄弱环节，建议补充材料并加强应答准备。';}
+
+      doc.setFillColor(...rc); doc.circle(margin+15,y+8,12,'F');
+      doc.setTextColor(255); doc.setFontSize(14); doc.setFont('helvetica','bold');
+      doc.text(String(overall),margin+15,y+9,{align:'center'}); doc.setTextColor(0);
+      doc.setFontSize(8); doc.text('综合过签指数',margin+35,y+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('面相评估：'+rl,margin+35,y+12);
+      doc.setFont('helvetica','normal'); y+=22; y+=2; doc.setFontSize(6.5); doc.setTextColor(80);
+      doc.text(rd,margin+2,y+2,{maxWidth:pageW-4}); doc.setTextColor(0); y+=10; y+=2;
+
+      dims.forEach(d=>{
+        if(y>260){doc.addPage(); y=12;}
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text(d.name,margin+2,y+2);
+        doc.setFont('helvetica','normal'); doc.text(d.score+'',margin+48,y+2);
+        doc.setFillColor(235,235,235); doc.rect(margin+56,y+1,120,3.5,'F');
+        doc.setFillColor(...d.color); doc.rect(margin+56,y+1,120*d.score/100,3.5,'F'); y+=6;
+      });
+
+      y+=4;
+      const sug=[];
+      if(dims[0].score<60)sug.push([true,'国内约束力不足——请准备房产证、在职证明、家庭关系证明']);
+      if(hasRelUS)sug.push([true,'在美有直系亲属属高风险，需额外准备回国约束力材料']);
+      if(dims[1].score<60)sug.push([true,'财务能力偏弱——准备银行存款证明+近6个月银行流水']);
+      if(dims[4].score<50)sug.push([true,'赴美目的不够明确——务必详细描述行程计划和在美安排']);
+      if(dims[3].score<50)sug.push([false,'年轻单身申请人属较高审查群体，请准备充分的经济来源证明']);
+      if(data.passportExpiry){const exp=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(exp<=sm)sug.push([true,'⚠️ 护照有效期不足6个月！请先换发新护照再预约面签']);}
+      if(sug.length===0)sug.push([false,'各项指标良好，按标准流程准备即可。保持自信！']);
+
+      sug.forEach(s=>{
+        if(y>260){doc.addPage(); y=12;}
+        doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+        doc.setTextColor(s[0]?200:100,s[0]?50:100,s[0]?50:100);
+        doc.text((s[0]?'⚠️ ':'✅ ')+s[1],margin+2,y+2,{maxWidth:pageW-4}); doc.setTextColor(0); y+=5;
+      });
+
+      y+=4; doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.text('下一步行动清单:',margin+2,y); y+=4;
+      const cl=['打印 DS-160 确认页+面签预约单','准备签证照片（5.1×5.1cm 白底）','核对护照有效期 > 6个月'];
+      if(overall<60)cl.unshift('优先补充薄弱环节材料，暂缓预约面签');
+      cl.forEach(item=>{if(y>270){doc.addPage(); y=12;} doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.text('☐  '+item,margin+4,y+2); y+=4.5;});
+      y+=3; doc.setFontSize(5.5); doc.setTextColor(150);
+      doc.text('过签侠 · 面签风险评估引擎 v2.0 | 仅供参考，最终由签证官独立判断',105,y,{align:'center'});
+      doc.setTextColor(0);
+    })();
+
+    // ═════════════ DS-160 确认页模拟 ═════════════
+    newPage();
+    y=12;
+    // Confirmation page header
+    doc.setFillColor(245,245,255);
+    doc.rect(margin-2, y-2, pageW+4, 30, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,86,219);
+    doc.text('U.S. Department of State', 105, y+5, {align:'center'});
+    doc.setFontSize(8); doc.setTextColor(80);
+    doc.text('NONIMMIGRANT VISA APPLICATION', 105, y+12, {align:'center'}); y+=22;
+    doc.setTextColor(0);
+
+    // Barcode placeholder
+    doc.setDrawColor(200); doc.setLineDash([2,2], 0);
+    doc.rect(margin+40, y, pageW-80, 25);
+    doc.setLineDash([], 0);
+    doc.setFontSize(6); doc.setTextColor(140);
+    doc.text('[ 条形码 — 提交至 ceac.state.gov 后由系统自动生成 ]', 105, y+13, {align:'center'}); y+=30;
+    doc.setFontSize(7); doc.setTextColor(0);
+
+    // Application summary
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.text('Application Summary', margin, y); y+=5;
+    doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    field('Confirmation Number', 'AA' + Math.random().toString(36).toUpperCase().substring(2,12));
+    field('Applicant Name', (data.surname||'') + ', ' + (data.givenName||''));
+    field('Visa Type', data.visaType || data.tripPurpose || 'N/A');
+    field('Passport Number', data.passportNo || 'N/A');
+    field('Date Generated', new Date().toLocaleString('zh-CN'));
+    y += 4;
+
+    // Warning box
+    doc.setDrawColor(200,50,50); doc.rect(margin, y, pageW, 14);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(200,50,50);
+    doc.text('IMPORTANT: This is a PREVIEW generated for reference only.', margin+2, y+3); y+=5;
+    doc.setFont('helvetica','normal');
+    doc.text('Submit your application at https://ceac.state.gov. Bring the official confirmation page to your interview.', margin+2, y+3); y+=14;
+    doc.setTextColor(0);
+
+    // Footer
+    if (y > 240) newPage();
+    y += 5;
+    doc.setDrawColor(0);
+    doc.line(margin, y, margin + pageW, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(130);
+    doc.text('This document was generated by DS-160 Form Filler + 过签侠面签评估 | Not an official U.S. Department of State document', 105, y, { align: 'center' });
+    y += 3.5;
+    doc.text('Submit your application online at: https://ceac.state.gov', 105, y, { align: 'center' });
+    doc.setTextColor(0);
+
+    // 下载PDF - 通用兼容方案
+    const filename = 'DS160_' + (data.surname || 'APPLICATION') + '_' + (data.givenName || '') + '_面签评估.pdf';
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2000);
+
+    // 保存表单数据到localStorage（供面签评估页面使用）
+    try {
+      const form = document.getElementById('ds160Form');
+      const fd = new FormData(form);
+      const saveData = {};
+      for (let [k,v] of fd) { if(v) saveData[k] = v; }
+      localStorage.setItem('ds160_form_data', JSON.stringify(saveData));
+      // 也存关键字段（可被其他页面读取）
+      Object.keys(saveData).forEach(k => {
+        localStorage.setItem('ds160_'+k, saveData[k]);
+      });
+    } catch(e) {}
+
+    // 消耗Token - 标记此链接已被使用
+    if (window.consumeToken) window.consumeToken();
+
+    // 服务端消耗（部署了Express后端时生效）
+    try {
+      await fetch('/api/consume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: window.DS160_TOKEN || '' })
+      });
+    } catch(e) {
+      // 服务端不可用时，仅靠localStorage消耗（纯前端模式）
+    }
+
+    // 客户数据留存
+    saveCustomerRecord(data);
+
+    // 显示面签评估入口
+    showAssessmentPrompt();
+  } catch(e) {
+    // jsPDF失败：降级为浏览器打印
+    alert('PDF生成失败，改为浏览器打印。\n请按 Ctrl+P 或使用浏览器的打印功能保存为PDF。');
+    showPreview();
+    setTimeout(() => { window.print(); }, 800);
+  }
+}
+
+
+// ========== 下载预览HTML ==========
+function downloadHTML() {
+  showPreview();
+  const content = document.getElementById('previewContent').innerHTML;
+  const blob = new Blob(['<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DS-160 Preview</title><style>body{font-family:"Courier New",monospace;font-size:12px;line-height:1.6;padding:40px;}h2{text-align:center;}</style></head><body>' + content + '</body></html>'], {type: 'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'DS160_Preview.html';
+  a.click();
+}
+
+// ========== 客户数据留存 ==========
+function saveCustomerRecord(data) {
+  try {
+    const record = {
+      time: new Date().toISOString(),
+      name: (data.surname||'') + ' ' + (data.givenName||''),
+      email: data.email || '',
+      phone: data.phone || '',
+      visaType: data.visaType || data.tripPurpose || '',
+      passportNo: (data.passportNo||'').substring(0,4) + '****',
+      occupation: data.occupation || '',
+    };
+    // Save to localStorage customer log
+    const existing = JSON.parse(localStorage.getItem('ds160_customers') || '[]');
+    existing.push(record);
+    localStorage.setItem('ds160_customers', JSON.stringify(existing.slice(-200))); // Keep last 200
+  } catch(e) {}
+}
+
+// ========== 面签风险评估入口 ==========
+function showAssessmentPrompt() {
+  const existing = document.getElementById('assessmentPrompt');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'assessmentPrompt';
+  banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9998;background:linear-gradient(135deg,#1a56db,#0f172a);border:1px solid #2563eb;border-radius:16px;padding:16px 24px;color:#fff;text-align:center;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:slideUp 0.5s ease;';
+  banner.innerHTML = `
+    <div style="font-size:28px;margin-bottom:4px;">🛡️</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;">PDF已生成！查看面签风险评估</div>
+    <div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">过签侠根据你的DS-160数据，从8个维度分析面签通过率</div>
+    <button onclick="openAssessment()" style="padding:8px 20px;background:#34d399;color:#0f172a;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">🔍 查看评估报告</button>
+    <button onclick="document.getElementById('assessmentPrompt').remove()" style="padding:8px 20px;background:transparent;color:#94a3b8;border:1px solid #475569;border-radius:8px;font-size:13px;cursor:pointer;margin-left:8px;">稍后</button>
+  `;
+  document.body.appendChild(banner);
+
+  // Add slideUp animation
+  const style = document.createElement('style');
+  style.textContent = '@keyframes slideUp{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}';
+  document.head.appendChild(style);
+}
+
+function openAssessment() {
+  const base = window.location.pathname.replace(/[^/]*$/, '');
+  location.href = base + 'assessment.html';
+}
+
+// ========== 清空 ==========
+function resetForm() {
+  if (confirm('确定要清空所有已填内容吗？此操作不可撤销！')) {
+    document.getElementById('ds160Form').reset();
+    document.querySelectorAll('.error').forEach(e => e.classList.remove('error'));
+    document.getElementById('companionNames').style.display = 'none';
+    document.getElementById('prevTravelDetails').style.display = 'none';
+  }
+}
+
+// 关闭预览的键盘快捷键
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+// ═════════════ 章节导航 + 实时校验 ═════════════
+const CHAPTERS = [
+  {id:1, name:'个人信息(一)', fields:['surname','givenName']},
+  {id:2, name:'个人信息(二)', fields:['dob','sex','maritalStatus','birthCity','birthProvince']},
+  {id:3, name:'地址和联系方式', fields:['homeAddr','homeCity','homePhone','email']},
+  {id:4, name:'护照信息', fields:['passportType','passportNo','passportIssue','passportExpiry']},
+  {id:5, name:'旅行信息', fields:['tripPurpose','visaType','arrivalDate','stayLength']},
+  {id:6, name:'旅伴信息', fields:['companions','companionNames']},
+  {id:7, name:'赴美历史', fields:['prevUSTravel','prevVisa','visaRefused','visaRevoked']},
+  {id:8, name:'在美联系人', fields:['contactName','contactOrg','contactPhone','contactEmail']},
+  {id:9, name:'家庭信息', fields:['fatherName','motherName','spouseName']},
+  {id:10, name:'工作/教育', fields:['occupation','employerName','employerAddr','monthlySalary']},
+  {id:11, name:'安全背景', fields:['security_q0','security_q9']},
+  {id:12, name:'护照补充', fields:['passportLost','passportCountry']},
+  {id:13, name:'赴美详细', fields:['hadUSVisa','visaRefusedDetail']},
+  {id:14, name:'配偶信息', fields:['spouseDOB','spouseNationality']},
+  {id:15, name:'SEVIS', fields:['sevisId','sevisSchool']},
+  {id:16, name:'5年旅行史', fields:['countriesVisited']},
+  {id:17, name:'语言能力', fields:['primaryLanguage','englishLevel']},
+  {id:18, name:'额外联系人', fields:['ref1Name','ref2Name']},
+  {id:19, name:'军事服役', fields:['militaryService']},
+  {id:20, name:'所属组织', fields:['organization']},
+  {id:21, name:'特殊技能', fields:['specialTraining']},
+  {id:22, name:'工作履历', fields:['prevEmployer','prevJobTitle']},
+  {id:23, name:'教育背景', fields:['eduSchool','eduMajor','eduYears']},
+];
+
+function buildSidebar() {
+  const el = document.getElementById('sidebarItems');
+  if (!el) return;
+  el.innerHTML = CHAPTERS.map(c =>
+    '<div class="sidebar-item" data-chapter="' + c.id + '" onclick="jumpToChapter(' + c.id + ')">' +
+    '<span class="s-dot" id="sdot' + c.id + '"></span>' +
+    '<span class="s-num">' + c.id + '</span>' +
+    '<span>' + c.name + '</span></div>'
+  ).join('');
+  updateSidebarStatus();
+}
+
+function jumpToChapter(id) {
+  const section = document.getElementById('section-' + id);
+  if (!section) return;
+  section.classList.add('open');
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  const item = document.querySelector('.sidebar-item[data-chapter="' + id + '"]');
+  if (item) item.classList.add('active');
+}
+
+function updateSidebarStatus() {
+  CHAPTERS.forEach(c => {
+    const dot = document.getElementById('sdot' + c.id);
+    if (!dot) return;
+    const filled = c.fields.filter(f => {
+      const el = document.querySelector('[name="' + f + '"]');
+      if (!el) return false;
+      if (el.type === 'radio' || el.type === 'checkbox') return el.checked;
+      return el.value && el.value.trim();
+    }).length;
+    const total = c.fields.length;
+    dot.className = 's-dot' + (filled === total ? ' done' : filled > 0 ? ' partial' : '');
+  });
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('chapterNav');
+  const toggle = document.getElementById('sidebarToggle');
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  toggle.textContent = isCollapsed ? '▶' : '◀';
+}
+
+// ═════════════ 实时字段校验 ═════════════
+function liveValidate(el) {
+  const name = el.name;
+  const value = el.value.trim();
+  const existing = el.parentElement.querySelector('.field-error-live');
+  if (existing) existing.classList.remove('show');
+
+  if (!value) return;
+
+  let msg = '';
+  if (name === 'passportExpiry') {
+    const exp = new Date(value);
+    const now = new Date();
+    if (exp <= now) msg = '⚠️ 护照已过期！';
+    else {
+      const sixMo = new Date(); sixMo.setMonth(sixMo.getMonth() + 6);
+      if (exp <= sixMo) msg = '⚠️ 有效期不足6个月！';
+    }
+  } else if (name === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    msg = '⚠️ 邮箱格式不正确';
+  } else if (name === 'sevisId' && value && !/^[Nn]\d{10}$/.test(value.replace(/\s/g,''))) {
+    msg = '⚠️ SEVIS ID 格式：N开头+10位数字';
+  } else if (name === 'passportIssue') {
+    const dobEl = document.querySelector('[name="dob"]');
+    if (dobEl && dobEl.value) {
+      if (new Date(value) <= new Date(dobEl.value)) msg = '⚠️ 护照签发日不能早于出生日';
+    }
+  }
+
+  if (msg) {
+    let errEl = el.parentElement.querySelector('.field-error-live');
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.className = 'field-error-live';
+      el.parentElement.appendChild(errEl);
+    }
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  }
+}
+
+// Attach live validation to key fields
+document.addEventListener('DOMContentLoaded', function() {
+  buildSidebar();
+  ['passportExpiry','email','sevisId','passportIssue','passportNo'].forEach(name => {
+    const el = document.querySelector('[name="' + name + '"]');
+    if (el) el.addEventListener('blur', function() { liveValidate(this); });
+  });
+  // Update sidebar on any input
+  const form = document.getElementById('ds160Form');
+  if (form) {
+    form.addEventListener('input', function() { setTimeout(updateSidebarStatus, 100); });
+    form.addEventListener('change', function() { setTimeout(updateSidebarStatus, 100); });
+  }
+  // Scroll-aware chapter highlighting
+  window.addEventListener('scroll', function() {
+    let activeId = 1;
+    CHAPTERS.forEach(c => {
+      const section = document.getElementById('section-' + c.id);
+      if (section && section.getBoundingClientRect().top < 200) activeId = c.id;
+    });
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    const item = document.querySelector('.sidebar-item[data-chapter="' + activeId + '"]');
+    if (item) item.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

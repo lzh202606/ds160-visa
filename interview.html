@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面签模拟器 · 踏梦寰球之旅</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --card: #13131f;
+  --glass: rgba(20,20,40,0.85);
+  --border: rgba(255,255,255,0.06);
+  --text: #e0e0e0;
+  --muted: #888;
+  --accent: #4f8cff;
+  --green: #34d399;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --officer-bg: #1a1a2e;
+  --user-bg: #1e2a3a;
+  --gold: #d4a853;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated background */
+.bg-anim {
+  position: fixed; inset:0; pointer-events:none; z-index:0;
+  overflow: hidden;
+}
+.bg-orbs { position:absolute; border-radius:50%; filter:blur(120px); opacity:0.08; animation: float 20s infinite ease-in-out; }
+.bg-orbs:nth-child(1) { width:600px; height:600px; background:var(--accent); top:-200px; left:-100px; animation-delay:0s; }
+.bg-orbs:nth-child(2) { width:400px; height:400px; background:var(--green); bottom:-100px; right:-50px; animation-delay:-7s; }
+.bg-orbs:nth-child(3) { width:300px; height:300px; background:var(--gold); top:40%; left:50%; animation-delay:-14s; }
+@keyframes float {
+  0%,100% { transform:translate(0,0) scale(1); }
+  33% { transform:translate(30px,-20px) scale(1.05); }
+  66% { transform:translate(-20px,30px) scale(0.95); }
+}
+
+/* Header */
+.header {
+  position: relative; z-index:1;
+  text-align: center; padding: 30px 20px 10px;
+}
+.header .brand {
+  font-size: 13px; letter-spacing: 3px; color: var(--muted);
+  text-transform: uppercase;
+}
+.header h1 {
+  font-size: 28px; font-weight: 700; margin:8px 0;
+  background: linear-gradient(135deg, #fff, #a0c0ff);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.header .sub {
+  font-size: 14px; color: var(--muted);
+}
+
+/* Main container */
+.container {
+  position: relative; z-index:1;
+  max-width: 800px; margin:0 auto; padding:0 20px 60px;
+}
+
+/* Card */
+.card {
+  background: var(--glass);
+  border:1px solid var(--border);
+  border-radius: 20px; padding: 32px;
+  backdrop-filter: blur(20px);
+  margin-bottom: 20px;
+}
+
+/* === STEP 1: Setup === */
+.setup-title {
+  text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 24px;
+}
+.visa-type-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom: 24px;
+}
+.visa-type-btn {
+  background: var(--card); border:2px solid var(--border);
+  border-radius: 16px; padding: 20px 12px; cursor:pointer;
+  text-align: center; transition: all 0.3s; color: var(--text);
+}
+.visa-type-btn:hover { border-color: var(--accent); transform:translateY(-2px); }
+.visa-type-btn.active { border-color: var(--accent); background: rgba(79,140,255,0.1); box-shadow:0 0 30px rgba(79,140,255,0.15); }
+.visa-type-btn .icon { font-size: 32px; display:block; margin-bottom:8px; }
+.visa-type-btn .label { font-size: 15px; font-weight: 600; display:block; }
+.visa-type-btn .desc { font-size: 11px; color: var(--muted); display:block; margin-top:4px; }
+
+.mode-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom: 24px;
+}
+.mode-btn {
+  background: var(--card); border:2px solid var(--border);
+  border-radius: 16px; padding: 20px; cursor:pointer;
+  text-align: center; transition: all 0.3s; color: var(--text);
+}
+.mode-btn:hover { border-color: var(--accent); }
+.mode-btn.active { border-color: var(--accent); background: rgba(79,140,255,0.1); }
+.mode-btn .icon { font-size: 28px; display:block; margin-bottom:8px; }
+.mode-btn .label { font-size: 16px; font-weight: 600; display:block; }
+.mode-btn .desc { font-size: 12px; color: var(--muted); margin-top:4px; }
+
+.btn-start {
+  width: 100%; padding: 16px; border:none; border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  color: #fff; font-size: 18px; font-weight: 700; cursor:pointer;
+  transition: all 0.3s; letter-spacing: 1px;
+}
+.btn-start:hover { transform:translateY(-2px); box-shadow:0 10px 40px rgba(79,140,255,0.3); }
+.btn-start:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* === STEP 2: Interview Chat === */
+.interview-header {
+  display: flex; align-items:center; gap:12px; padding-bottom:16px;
+  border-bottom:1px solid var(--border); margin-bottom:20px;
+}
+.officer-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a5f, #2d5a8e);
+  display: flex; align-items:center; justify-content:center;
+  font-size: 22px; flex-shrink: 0;
+}
+.officer-info .name { font-weight: 700; font-size: 15px; }
+.officer-info .title { font-size: 12px; color: var(--muted); }
+
+.interview-stats {
+  margin-left: auto; display: flex; gap:16px; font-size: 13px; color: var(--muted);
+}
+.interview-stats span { display:flex; align-items:center; gap:4px; }
+
+.chat-area {
+  max-height: 420px; overflow-y: auto; padding-right: 8px;
+  display: flex; flex-direction: column; gap: 16px;
+  scroll-behavior: smooth;
+}
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-track { background: transparent; }
+.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.chat-msg {
+  display: flex; gap: 10px; animation: fadeIn 0.3s ease;
+  max-width: 85%;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.chat-msg.officer { align-self: flex-start; }
+.chat-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items:center; justify-content:center; font-size: 16px;
+}
+.chat-msg.officer .msg-avatar { background: linear-gradient(135deg, #1e3a5f, #2d5a8e); }
+.chat-msg.user .msg-avatar { background: linear-gradient(135deg, #4f8cff, #6366f1); }
+
+.msg-bubble {
+  padding: 12px 18px; border-radius: 18px; font-size: 14px; line-height: 1.6;
+  position: relative;
+}
+.chat-msg.officer .msg-bubble {
+  background: var(--officer-bg); border:1px solid rgba(255,255,255,0.08);
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.user .msg-bubble {
+  background: var(--user-bg);
+  border-bottom-right-radius: 4px;
+}
+.msg-category {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--accent); margin-bottom: 4px;
+}
+.msg-translation {
+  font-size: 12px; color: var(--muted); margin-top: 6px;
+  font-style: italic;
+}
+
+.typing-indicator {
+  display: flex; gap:4px; padding: 14px 18px; align-items:center;
+}
+.typing-indicator span {
+  width:6px; height:6px; border-radius:50%; background:var(--muted);
+  animation: typing 1.4s infinite ease-in-out;
+}
+.typing-indicator span:nth-child(2) { animation-delay:0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay:0.4s; }
+@keyframes typing { 0%,60%,100% { transform:translateY(0); opacity:0.4; } 30% { transform:translateY(-6px); opacity:1; } }
+
+.input-area {
+  display: flex; gap:12px; margin-top: 16px; padding-top: 16px;
+  border-top:1px solid var(--border);
+}
+.input-area textarea {
+  flex:1; padding: 14px 18px; border-radius: 14px;
+  background: var(--card); border:1px solid var(--border);
+  color: var(--text); font-size: 15px; font-family: inherit;
+  resize: none; outline:none; transition:border 0.3s;
+  min-height: 48px; max-height: 120px;
+}
+.input-area textarea:focus { border-color: var(--accent); }
+.input-area textarea::placeholder { color: var(--muted); }
+
+.btn-send {
+  padding: 0 24px; border:none; border-radius: 14px;
+  background: var(--accent); color: #fff; font-size: 15px;
+  font-weight: 600; cursor:pointer; transition: all 0.3s;
+  white-space: nowrap;
+}
+.btn-send:hover { background: #3d7be6; }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.feedback-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  margin-top: 8px;
+}
+.feedback-badge.good { background: rgba(52,211,153,0.15); color: var(--green); }
+.feedback-badge.ok { background: rgba(251,191,36,0.15); color: var(--yellow); }
+.feedback-badge.poor { background: rgba(248,113,113,0.15); color: var(--red); }
+
+.feedback-tip {
+  font-size: 12px; color: var(--muted); margin-top: 4px;
+  padding: 8px 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+}
+
+/* === STEP 3: Results === */
+.result-header {
+  text-align: center; padding: 20px 0;
+}
+.result-score-ring {
+  width: 140px; height: 140px; margin: 0 auto 16px;
+  border-radius: 50%; display: flex; align-items:center; justify-content:center;
+  position: relative;
+  font-size: 42px; font-weight: 800;
+}
+.result-score-ring::before {
+  content:''; position:absolute; inset:6px; border-radius:50%;
+  border:6px solid; animation: ringPulse 2s infinite;
+}
+@keyframes ringPulse {
+  0%,100% { opacity:0.6; transform:scale(1); }
+  50% { opacity:1; transform:scale(1.03); }
+}
+.result-verdict {
+  font-size: 24px; font-weight: 700; margin-bottom: 4px;
+}
+.result-sub { font-size: 14px; color: var(--muted); }
+
+.category-scores {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap:10px;
+  margin-top: 20px;
+}
+.cat-score {
+  background: var(--card); border-radius: 12px; padding: 14px;
+  border:1px solid var(--border);
+}
+.cat-score .cat-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.cat-score .cat-bar {
+  height: 6px; border-radius: 3px; background: var(--border);
+  overflow: hidden;
+}
+.cat-score .cat-fill {
+  height: 100%; border-radius: 3px; transition: width 0.8s ease;
+}
+.cat-score .cat-val { font-size: 12px; color: var(--muted); margin-top: 4px; text-align:right; }
+
+.question-review {
+  margin-top: 20px;
+}
+.question-review h3 {
+  font-size: 16px; margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.review-item {
+  background: var(--card); border-radius: 12px; padding: 16px;
+  margin-bottom: 10px; border:1px solid var(--border);
+}
+.review-item .q { font-size: 13px; color: var(--accent); margin-bottom: 6px; font-weight: 600; }
+.review-item .a { font-size: 14px; margin-bottom: 8px; }
+.review-item .score-line { display:flex; align-items:center; gap:8px; font-size:12px; }
+
+.btn-row {
+  display: flex; gap: 12px; margin-top: 20px;
+}
+.btn-retry, .btn-assess {
+  flex:1; padding: 14px; border:none; border-radius: 14px;
+  font-size: 15px; font-weight: 600; cursor:pointer; transition: all 0.3s;
+}
+.btn-retry { background: var(--card); color: var(--text); border:1px solid var(--border); }
+.btn-retry:hover { border-color: var(--accent); }
+.btn-assess { background: linear-gradient(135deg, #34d399, #059669); color: #000; }
+.btn-assess:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(52,211,153,0.3); }
+
+/* Countdown timer */
+.timer-bar {
+  height: 3px; border-radius: 2px; background: var(--border);
+  margin-bottom: 12px; overflow: hidden;
+}
+.timer-fill {
+  height: 100%; border-radius: 2px; background: var(--accent);
+  transition: width 0.1s linear;
+}
+.timer-fill.warning { background: var(--yellow); }
+.timer-fill.danger { background: var(--red); }
+
+/* Skip button */
+.btn-skip {
+  background: transparent; border:1px solid var(--border); color: var(--muted);
+  padding: 8px 16px; border-radius: 10px; font-size: 13px; cursor:pointer;
+  transition: all 0.3s;
+}
+.btn-skip:hover { border-color: var(--yellow); color: var(--yellow); }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .visa-type-grid { grid-template-columns: 1fr; }
+  .mode-grid { grid-template-columns: 1fr; }
+  .category-scores { grid-template-columns: 1fr; }
+  .container { padding: 0 12px; }
+  .card { padding: 20px 16px; }
+  .chat-msg { max-width: 90%; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="bg-orbs"></div>
+  <div class="bg-orbs"></div>
+  <div class="bg-orbs"></div>
+</div>
+
+<div class="header">
+  <div class="brand">踏梦寰球之旅 · 美签纵横团</div>
+  <h1>面签模拟器</h1>
+  <div class="sub">模拟真实美国大使馆面签场景，助你从容应对</div>
+</div>
+
+<div class="container" id="app"></div>
+
+<script>
+// ============ QUESTION BANK ============
+const questionBank = {
+  'B1/B2': [
+    {
+      id: 'b1', category: '旅行目的',
+      en: "What's the purpose of your visit to the United States?",
+      zh: '你去美国的目的？',
+      keywords: ['tourism','visit','sightseeing','vacation','business','meeting','conference','family','travel','观光','旅游','商务','探亲','度假'],
+      tip: '回答要具体明确，说出城市、景点或会议名称。模糊的"旅游"会让签证官怀疑真实目的。'
+    },
+    {
+      id: 'b2', category: '停留时间',
+      en: "How long do you plan to stay in the United States?",
+      zh: '计划在美国停留多久？',
+      keywords: ['week','weeks','day','days','month','specific','return','周','天','月','回程'],
+      tip: '给出精确天数（如14天），而非模糊的"几个星期"。说明已经有回程计划。'
+    },
+    {
+      id: 'b3', category: '行程安排',
+      en: "Where will you be staying during your visit?",
+      zh: '你在美国会住在哪里？',
+      keywords: ['hotel','friend','relative','address','booking','reservation','酒店','朋友','亲戚','地址','预订'],
+      tip: '有酒店预订或具体地址是最好的。说"住朋友家"可能引发更多追问。'
+    },
+    {
+      id: 'b4', category: '财务能力',
+      en: "Who is paying for this trip?",
+      zh: '这次旅行谁出钱？',
+      keywords: ['myself','savings','company','employer','salary','income','自己','存款','公司','工资','收入'],
+      tip: '自己承担最好。如果是公司出资，准备好解释和证明材料。'
+    },
+    {
+      id: 'b5', category: '国内约束力',
+      en: "What do you do for a living in China?",
+      zh: '你在国内做什么工作？',
+      keywords: ['job','company','position','years','manager','engineer','business','工作','公司','职位','年'],
+      tip: '详细描述工作内容、职位、年限。稳定工作 = 强约束力。'
+    },
+    {
+      id: 'b6', category: '家庭关系',
+      en: "Do you have any family in the United States?",
+      zh: '你在美国有亲属吗？',
+      keywords: ['relative','family','aunt','uncle','cousin','sibling','parent','child','亲属','阿姨','叔叔','表亲'],
+      tip: '如实回答。有直系亲属在美会大大增加移民倾向评估。'
+    },
+    {
+      id: 'b7', category: '旅行记录',
+      en: "Have you traveled to other countries before?",
+      zh: '你之前去过其他国家吗？',
+      keywords: ['japan','korea','thailand','europe','singapore','australia','日本','韩国','泰国','欧洲','新加坡','澳大利亚'],
+      tip: '有过发达国家旅行记录非常加分。列出具体国家和年份。'
+    },
+    {
+      id: 'b8', category: '回国计划',
+      en: "What will make you return to China after your trip?",
+      zh: '什么会让你旅行结束后回中国？',
+      keywords: ['job','family','business','career','children','parents','responsibility','工作','家庭','事业','孩子','父母','责任'],
+      tip: '这是最关键的约束力问题！必须强调具体的工作、家庭、财产等约束。'
+    },
+    {
+      id: 'b9', category: '婚姻状况',
+      en: "Are you married? Does your spouse live with you?",
+      zh: '你结婚了吗？配偶和你住一起吗？',
+      keywords: ['married','spouse','wife','husband','together','结婚','配偶','妻子','丈夫','一起'],
+      tip: '已婚且有配偶在国内 = 强约束力。未婚需用其他约束力弥补。'
+    },
+    {
+      id: 'b10', category: '工作细节',
+      en: "How long have you been at your current job?",
+      zh: '你在现在的公司工作多久了？',
+      keywords: ['years','year','months','since','promotion','年','月','从','晋升'],
+      tip: '工作时间越长越好。刚换工作的话准备好解释原因。'
+    }
+  ],
+  'F1': [
+    {
+      id: 'f1', category: '留学动机',
+      en: "Why do you want to study in the United States?",
+      zh: '你为什么想去美国留学？',
+      keywords: ['education','quality','research','program','university','academic','教育','质量','研究','项目','大学','学术'],
+      tip: '强调美国在所选领域的学术优势，对比国内的选择。避免说"美国生活好"。'
+    },
+    {
+      id: 'f2', category: '学校选择',
+      en: "Why did you choose this university?",
+      zh: '你为什么选择这所大学？',
+      keywords: ['professor','research','ranking','program','lab','faculty','教授','研究','排名','项目','实验室','师资'],
+      tip: '说出具体教授名字、实验室、课程。证明你做过深入调研。'
+    },
+    {
+      id: 'f3', category: '专业规划',
+      en: "What's your intended major and why?",
+      zh: '你想学什么专业？为什么？',
+      keywords: ['major','field','interest','career','goal','industry','专业','领域','兴趣','职业','目标','行业'],
+      tip: '清晰描述专业选择和未来职业规划的关联。'
+    },
+    {
+      id: 'f4', category: '资金来源',
+      en: "Who will be funding your education?",
+      zh: '谁资助你的教育费用？',
+      keywords: ['parents','savings','scholarship','assistantship','loan','父母','存款','奖学金','助教','贷款'],
+      tip: '有父母资金证明+银行存款最好。奖学金更是加分项。'
+    },
+    {
+      id: 'f5', category: '回国计划',
+      en: "What are your plans after graduation?",
+      zh: '毕业后你有什么计划？',
+      keywords: ['return','china','job','career','family','industry','回国','工作','事业','家庭','行业'],
+      tip: 'F1签证最核心问题！必须明确表明毕业后回国，说出具体行业和职位规划。'
+    },
+    {
+      id: 'f6', category: '国内联系',
+      en: "Do you have family in the United States?",
+      zh: '你在美国有亲属吗？',
+      keywords: ['relative','family','aunt','uncle','cousin','亲属','阿姨','叔叔'],
+      tip: '如实回答。有亲属可能增加移民倾向疑虑。'
+    },
+    {
+      id: 'f7', category: '学术背景',
+      en: "What did you study in your undergraduate program?",
+      zh: '你本科读的是什么？',
+      keywords: ['bachelor','undergraduate','gpa','thesis','project','本科','绩点','论文','项目'],
+      tip: '描述之前的学习经历和成就，展示学术连贯性。'
+    },
+    {
+      id: 'f8', category: '英语能力',
+      en: "Have you taken the TOEFL or IELTS? What's your score?",
+      zh: '你考过托福或雅思吗？分数多少？',
+      keywords: ['toefl','ielts','score','english','language','托福','雅思','分数','英语','语言'],
+      tip: '直接报分数。如果分数刚够线，准备解释英语提升计划。'
+    },
+    {
+      id: 'f9', category: '学校申请',
+      en: "How many universities did you apply to?",
+      zh: '你申请了多少所大学？',
+      keywords: ['applied','admission','accept','offer','reject','申请','录取','offer'],
+      tip: '列出申请学校名单。只申请一所会显得规划不足。'
+    },
+    {
+      id: 'f10', category: '经济担保',
+      en: "Can you tell me about your financial sponsor's situation?",
+      zh: '能说说你经济担保人的情况吗？',
+      keywords: ['income','annual','salary','assets','bank','statement','收入','年薪','资产','银行','证明'],
+      tip: '准备说出担保人的年收入、职业、与你的关系。'
+    }
+  ],
+  'J1': [
+    {
+      id: 'j1', category: '交流目的',
+      en: "What's the purpose of your exchange program?",
+      zh: '你的交流项目目的是什么？',
+      keywords: ['exchange','research','training','internship','cultural','交流','研究','培训','实习','文化'],
+      tip: '描述项目的具体内容和你的角色。'
+    },
+    {
+      id: 'j2', category: '项目细节',
+      en: "Can you describe your exchange program in detail?",
+      zh: '能详细描述你的交流项目吗？',
+      keywords: ['program','sponsor','duration','host','institution','项目','资助方','时长','接待方','机构'],
+      tip: '说出项目名称、时长、美国接待机构。'
+    },
+    {
+      id: 'j3', category: '回国要求',
+      en: "Are you aware of the two-year home residency requirement?",
+      zh: '你知道J1签证的两年回国居住要求吗？',
+      keywords: ['residency','requirement','return','waiver','居住','要求','回国','豁免'],
+      tip: '表明了解并愿意遵守两年回国居住规定。'
+    },
+    {
+      id: 'j4', category: '资金来源',
+      en: "Who is funding your exchange program?",
+      zh: '谁资助你的交流项目？',
+      keywords: ['government','university','scholarship','self-funded','政府','大学','奖学金','自费'],
+      tip: '如实说明资金来源。政府资助项目需特别注意。'
+    },
+    {
+      id: 'j5', category: '职业规划',
+      en: "What do you plan to do after completing the program?",
+      zh: '项目结束后你打算做什么？',
+      keywords: ['return','job','career','apply','回国','工作','事业','学以致用'],
+      tip: '强调将所学带回国内应用。'
+    }
+  ]
+};
+
+// Additional generic questions for extended mock interviews
+const extraQuestions = [
+  {
+    id: 'ex1', category: '绑定问题',
+    en: "Have you ever been refused a US visa before?",
+    zh: '你之前被美国拒签过吗？',
+    keywords: ['never','no','refused','denied','before','从未','拒签','没有'],
+    tip: '如实回答。如果有拒签史，准备好解释情况变化。'
+  },
+  {
+    id: 'ex2', category: '旅行记录',
+    en: "Have you ever been to the United States before?",
+    zh: '你之前去过美国吗？',
+    keywords: ['yes','no','before','visit','去过','没有','之前'],
+    tip: '有良好赴美记录非常加分。'
+  },
+  {
+    id: 'ex3', category: '财产',
+    en: "Do you own property or a car in China?",
+    zh: '你在国内有房产或车吗？',
+    keywords: ['house','apartment','car','property','own','房','车','财产','拥有'],
+    tip: '固定资产是强约束力证据，有就说。'
+  },
+  {
+    id: 'ex4', category: '同行人员',
+    en: "Are you traveling with anyone?",
+    zh: '你和谁一起去？',
+    keywords: ['alone','family','spouse','friend','group','独自','家人','配偶','朋友','团'],
+    tip: '独自旅行需更强的个人约束力证明。'
+  },
+  {
+    id: 'ex5', category: '收入',
+    en: "What's your monthly income?",
+    zh: '你的月收入是多少？',
+    keywords: ['yuan','rmb','salary','income','monthly','元','月薪','收入','工资'],
+    tip: '收入和旅行预算匹配很重要。报数字要准确。'
+  }
+];
+
+// ============ SCORING ENGINE ============
+function scoreAnswer(answer, question) {
+  if (!answer || answer.trim().length < 3) return { score: 0, level: 'poor', feedback: '回答太短，需要给出具体信息' };
+
+  const text = answer.toLowerCase();
+  let score = 20; // base score for responding
+
+  // Length score (max 30)
+  const len = text.length;
+  if (len >= 80) score += 30;
+  else if (len >= 50) score += 22;
+  else if (len >= 30) score += 14;
+  else if (len >= 15) score += 8;
+  else score += 3;
+
+  // Keyword match (max 30)
+  if (question.keywords) {
+    const matches = question.keywords.filter(k => text.includes(k.toLowerCase()));
+    const matchRate = Math.min(matches.length / Math.min(question.keywords.length, 5), 1);
+    score += Math.round(matchRate * 30);
+  }
+
+  // Specificity bonus (numbers, dates, names = max 20)
+  const hasNumber = /\d/.test(text);
+  const hasDate = /\b(20\d{2}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d+年|\d+月)\b/i.test(text);
+  const hasName = /[A-Z][a-z]+\s[A-Z][a-z]+/.test(text);
+  if (hasNumber) score += 7;
+  if (hasDate) score += 7;
+  if (hasName) score += 6;
+
+  // Confidence signals (max 10)
+  const confidenceWords = ['definitely','certainly','absolutely','of course','sure','plan to','will','当然','肯定','一定','计划'];
+  const hasConfidence = confidenceWords.some(w => text.includes(w));
+  if (hasConfidence) score += 10;
+
+  // Cap at 100
+  score = Math.min(score, 100);
+
+  let level, feedback;
+  if (score >= 75) {
+    level = 'good';
+    feedback = '回答具体且有说服力！继续保持。';
+  } else if (score >= 50) {
+    level = 'ok';
+    const tip = question.tip || '可以更具体一些。';
+    feedback = '还不错，但' + tip;
+  } else {
+    level = 'poor';
+    feedback = '需要改进：' + (question.tip || '回答应该更详细、更具体。');
+  }
+
+  return { score, level, feedback };
+}
+
+// ============ APP STATE ============
+let state = {
+  step: 'setup', // setup | interview | results
+  visaType: null,
+  mode: null, // practice | mock
+  questions: [],
+  currentQ: 0,
+  history: [], // {q, a, score, feedback}
+  timerInterval: null,
+  timeLeft: 0,
+  mockTotalTime: 0,
+};
+
+// ============ RENDER ============
+function render() {
+  const app = document.getElementById('app');
+  if (state.step === 'setup') renderSetup(app);
+  else if (state.step === 'interview') renderInterview(app);
+  else if (state.step === 'results') renderResults(app);
+}
+
+function renderSetup(app) {
+  const { visaType, mode } = state;
+  const canStart = visaType && mode;
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="setup-title">选择签证类型和练习模式</div>
+
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600;">签证类型</div>
+      <div class="visa-type-grid">
+        <div class="visa-type-btn ${visaType === 'B1/B2' ? 'active' : ''}" onclick="selectVisa('B1/B2')">
+          <span class="icon">🧳</span>
+          <span class="label">B1/B2</span>
+          <span class="desc">旅游/商务签证</span>
+        </div>
+        <div class="visa-type-btn ${visaType === 'F1' ? 'active' : ''}" onclick="selectVisa('F1')">
+          <span class="icon">🎓</span>
+          <span class="label">F1</span>
+          <span class="desc">学生签证</span>
+        </div>
+        <div class="visa-type-btn ${visaType === 'J1' ? 'active' : ''}" onclick="selectVisa('J1')">
+          <span class="icon">🤝</span>
+          <span class="label">J1</span>
+          <span class="desc">交流访问学者</span>
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600;">练习模式</div>
+      <div class="mode-grid">
+        <div class="mode-btn ${mode === 'practice' ? 'active' : ''}" onclick="selectMode('practice')">
+          <span class="icon">📝</span>
+          <span class="label">练习模式</span>
+          <span class="desc">即时反馈，每题有评分和建议</span>
+        </div>
+        <div class="mode-btn ${mode === 'mock' ? 'active' : ''}" onclick="selectMode('mock')">
+          <span class="icon">⏱️</span>
+          <span class="label">模拟模式</span>
+          <span class="desc">限时连续作答，模拟真实压力</span>
+        </div>
+      </div>
+
+      <button class="btn-start" ${canStart ? '' : 'disabled'} onclick="startInterview()">
+        ${canStart ? '开始面签模拟' : '请选择签证类型和模式'}
+      </button>
+    </div>
+  `;
+}
+
+function renderInterview(app) {
+  const { questions, currentQ, history, mode, timeLeft, visaType } = state;
+  const q = questions[currentQ];
+  const total = questions.length;
+  const progress = Math.round((currentQ / total) * 100);
+
+  // Chat messages
+  const chatHTML = history.map(h => {
+    const fbBadge = h.score !== undefined
+      ? `<div class="feedback-badge ${h.level}">${h.level === 'good' ? '优秀' : h.level === 'ok' ? '尚可' : '需改进'} · ${h.score}分</div>
+         <div class="feedback-tip">💡 ${h.feedback}</div>`
+      : '';
+    return `
+      <div class="chat-msg officer">
+        <div class="msg-avatar">🛂</div>
+        <div class="msg-bubble">
+          <div class="msg-category">${h.q.category}</div>
+          ${h.q.en}
+          <div class="msg-translation">${h.q.zh}</div>
+        </div>
+      </div>
+      ${h.a ? `
+      <div class="chat-msg user">
+        <div class="msg-avatar">😊</div>
+        <div class="msg-bubble">
+          ${h.a}
+          ${fbBadge}
+        </div>
+      </div>` : ''}
+    `;
+  }).join('');
+
+  // Current question (not yet answered)
+  const currentHTML = !q ? '' : `
+    <div class="chat-msg officer">
+      <div class="msg-avatar">🛂</div>
+      <div class="msg-bubble">
+        <div class="msg-category">${q.category}</div>
+        ${q.en}
+        <div class="msg-translation">${q.zh}</div>
+      </div>
+    </div>
+  `;
+
+  // Mock mode timer
+  const timerHTML = mode === 'mock' ? `
+    <div class="timer-bar">
+      <div class="timer-fill ${timeLeft < 15 ? 'danger' : timeLeft < 30 ? 'warning' : ''}" id="timerFill" style="width:${Math.max((timeLeft / 180) * 100, 0)}%"></div>
+    </div>
+  ` : '';
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="interview-header">
+        <div class="officer-avatar">🛂</div>
+        <div class="officer-info">
+          <div class="name">Visa Officer</div>
+          <div class="title">U.S. Embassy · ${visaType} | ${mode === 'practice' ? '练习' : '模拟'}</div>
+        </div>
+        <div class="interview-stats">
+          <span>📋 ${currentQ + 1}/${total}</span>
+          ${mode === 'mock' ? `<span id="timerDisplay">⏱ ${timeLeft}s</span>` : ''}
+        </div>
+      </div>
+
+      <div style="height:2px;background:var(--border);border-radius:1px;margin-bottom:16px;">
+        <div style="height:100%;width:${progress}%;background:var(--accent);border-radius:1px;transition:width 0.3s;"></div>
+      </div>
+
+      ${timerHTML}
+
+      <div class="chat-area" id="chatArea">
+        ${chatHTML}
+        ${currentHTML}
+        ${mode === 'mock' && currentQ > 0 && history[history.length - 1]?.a === undefined ? '' : ''}
+      </div>
+
+      ${currentQ < total ? `
+      <form onsubmit="submitAnswer(event)" style="margin:0;">
+        <div class="input-area">
+          <textarea id="answerInput" placeholder="用英文或中文回答..." rows="2" autofocus
+            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();submitAnswer(event);}"></textarea>
+          <button type="submit" class="btn-send" id="btnSend">发送</button>
+        </div>
+        ${mode === 'practice' ? `<div style="text-align:right;margin-top:8px;"><button type="button" class="btn-skip" onclick="skipQuestion()">跳过此题 ⏭</button></div>` : ''}
+      </form>
+      ` : `
+      <div style="text-align:center;padding:40px 0;">
+        <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px;">模拟面签完成！</div>
+        <div style="color:var(--muted);margin-bottom:24px;">共回答 ${history.length} 道问题</div>
+        <button class="btn-start" onclick="showResults()">查看评估结果</button>
+      </div>
+      `}
+    </div>
+  `;
+
+  // Scroll chat to bottom
+  setTimeout(() => {
+    const ca = document.getElementById('chatArea');
+    if (ca) ca.scrollTop = ca.scrollHeight;
+    const inp = document.getElementById('answerInput');
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function renderResults(app) {
+  const { history, visaType, mode } = state;
+  const answered = history.filter(h => h.score !== undefined);
+  const overallScore = answered.length > 0
+    ? Math.round(answered.reduce((s, h) => s + h.score, 0) / answered.length)
+    : 0;
+
+  // Category scores
+  const catMap = {};
+  answered.forEach(h => {
+    if (!catMap[h.q.category]) catMap[h.q.category] = { total: 0, count: 0 };
+    catMap[h.q.category].total += h.score;
+    catMap[h.q.category].count++;
+  });
+
+  const catScores = Object.entries(catMap).map(([cat, d]) => ({
+    name: cat,
+    score: Math.round(d.total / d.count),
+    count: d.count,
+  })).sort((a, b) => a.score - b.score);
+
+  // Verdict
+  let verdictColor, verdictEmoji, verdictText, verdictSub;
+  if (overallScore >= 80) {
+    verdictColor = 'var(--green)'; verdictEmoji = '✅'; verdictText = '准备充分'; verdictSub = '你的回答清晰有力，面签通过概率很高';
+  } else if (overallScore >= 60) {
+    verdictColor = 'var(--yellow)'; verdictEmoji = '⚠️'; verdictText = '基本合格'; verdictSub = '有一些薄弱环节需要加强准备';
+  } else {
+    verdictColor = 'var(--red)'; verdictEmoji = '❌'; verdictText = '需要加强'; verdictSub = '多个维度回答不足，建议重新练习后再面签';
+  }
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="result-header">
+        <div class="result-score-ring" style="color:${verdictColor};--ring-color:${verdictColor};">
+          ${overallScore}
+        </div>
+        <div class="result-verdict">${verdictEmoji} ${verdictText}</div>
+        <div class="result-sub">${verdictSub}</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--muted);">
+          ${visaType} 签证 · ${mode === 'practice' ? '练习模式' : '模拟模式'} · 共${answered.length}题
+        </div>
+      </div>
+
+      <h3 style="font-size:15px;margin-bottom:12px;color:var(--muted);">各维度评分</h3>
+      <div class="category-scores">
+        ${catScores.map(c => {
+          let barColor = c.score >= 75 ? 'var(--green)' : c.score >= 55 ? 'var(--yellow)' : 'var(--red)';
+          return `
+          <div class="cat-score">
+            <div class="cat-name">${c.name} (${c.count}题)</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:${c.score}%;background:${barColor};"></div></div>
+            <div class="cat-val">${c.score}分</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="question-review">
+        <h3>逐题回顾</h3>
+        ${history.filter(h => h.score !== undefined).map((h, i) => {
+          const lvlEmoji = h.level === 'good' ? '🟢' : h.level === 'ok' ? '🟡' : '🔴';
+          return `
+          <div class="review-item">
+            <div class="q">Q${i + 1} · ${h.q.category}: ${h.q.en}</div>
+            <div class="a">答：${h.a}</div>
+            <div class="score-line">${lvlEmoji} <strong>${h.score}分</strong> · ${h.feedback}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-retry" onclick="resetAll()">🔄 重新练习</button>
+        <button class="btn-assess" onclick="window.open('assessment.html','_self')">📊 完整面签评估</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============ ACTIONS ============
+function selectVisa(type) {
+  state.visaType = type;
+  render();
+}
+
+function selectMode(mode) {
+  state.mode = mode;
+  render();
+}
+
+function startInterview() {
+  if (!state.visaType || !state.mode) return;
+
+  // Build question list
+  const base = [...(questionBank[state.visaType] || [])];
+  // Add extra questions for mock mode or to pad
+  if (state.mode === 'mock') {
+    const shuffled = [...extraQuestions].sort(() => Math.random() - 0.5);
+    base.push(...shuffled.slice(0, 5));
+  }
+  // Shuffle questions
+  const shuffled = base.sort(() => Math.random() - 0.5);
+  state.questions = shuffled.slice(0, state.mode === 'mock' ? 8 : 6);
+  state.currentQ = 0;
+  state.history = [];
+  state.step = 'interview';
+
+  if (state.mode === 'mock') {
+    state.timeLeft = 180; // 3 minutes total
+    startTimer();
+  }
+
+  render();
+  saveSession();
+}
+
+function submitAnswer(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('answerInput');
+  if (!input) return;
+  const answer = input.value.trim();
+  if (!answer) return;
+
+  const q = state.questions[state.currentQ];
+  const result = scoreAnswer(answer, q);
+
+  state.history.push({
+    q,
+    a: answer,
+    score: result.score,
+    level: result.level,
+    feedback: result.feedback,
+  });
+
+  state.currentQ++;
+
+  if (state.currentQ >= state.questions.length) {
+    if (state.mode === 'mock') stopTimer();
+    if (state.mode === 'mock') {
+      // Auto redirect to results
+      state.step = 'results';
+      render();
+      saveSession();
+      return;
+    }
+  }
+
+  render();
+  saveSession();
+}
+
+function skipQuestion() {
+  const q = state.questions[state.currentQ];
+  state.history.push({
+    q,
+    a: '(已跳过)',
+    score: 0,
+    level: 'poor',
+    feedback: '跳过了此题。建议回来练习这道题。',
+  });
+  state.currentQ++;
+  render();
+  saveSession();
+}
+
+function showResults() {
+  state.step = 'results';
+  render();
+  saveSession();
+}
+
+function resetAll() {
+  state.step = 'setup';
+  state.visaType = null;
+  state.mode = null;
+  state.questions = [];
+  state.currentQ = 0;
+  state.history = [];
+  state.timeLeft = 0;
+  stopTimer();
+  render();
+}
+
+// ============ TIMER ============
+function startTimer() {
+  stopTimer();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const td = document.getElementById('timerDisplay');
+    if (td) td.textContent = '⏱ ' + state.timeLeft + 's';
+    const tf = document.getElementById('timerFill');
+    if (tf) {
+      tf.style.width = Math.max((state.timeLeft / 180) * 100, 0) + '%';
+      if (state.timeLeft < 15) tf.className = 'timer-fill danger';
+      else if (state.timeLeft < 30) tf.className = 'timer-fill warning';
+      else tf.className = 'timer-fill';
+    }
+    if (state.timeLeft <= 0) {
+      stopTimer();
+      state.step = 'results';
+      render();
+      saveSession();
+      alert('⏰ 时间到！模拟面签已结束。');
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+// ============ PERSISTENCE ============
+function saveSession() {
+  try {
+    const data = {
+      visaType: state.visaType,
+      mode: state.mode,
+      questions: state.questions,
+      currentQ: state.currentQ,
+      history: state.history,
+      step: state.step,
+      timeLeft: state.timeLeft,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem('visa_interview_session', JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem('visa_interview_session');
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    // Expire after 2 hours
+    if (Date.now() - data.timestamp > 2 * 60 * 60 * 1000) return false;
+    state.visaType = data.visaType;
+    state.mode = data.mode;
+    state.questions = data.questions;
+    state.currentQ = data.currentQ;
+    state.history = data.history;
+    state.step = data.step;
+    state.timeLeft = data.timeLeft || 0;
+    if (state.step === 'interview' && state.mode === 'mock') {
+      startTimer();
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ============ INIT ============
+if (!loadSession()) {
+  state.step = 'setup';
+}
+render();
+
+// Cleanup on unload
+window.addEventListener('beforeunload', () => stopTimer());
+</script>
+
+<style>
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,15,0.95); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.06); padding: 8px 16px; display: flex; justify-content: center; gap: 20px; z-index: 99; }
+.bottom-nav a { font-size: 12px; color: #888; text-decoration: none; padding: 6px 16px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+.bottom-nav a:hover { background: rgba(255,255,255,0.05); color: #4f8cff; }
+.bottom-nav a.highlight { color: #34d399; font-weight: 600; }
+@media (max-width: 600px) { body { padding-bottom: 56px; } }
+</style>
+
+<nav class="bottom-nav">
+  <a href="form.html">📝 DS-160填表</a>
+  <a href="assessment.html" class="highlight">🛡️ 面签评估</a>
+  <a href="index.html">🏠 首页</a>
+</nav>
+
+</body>
+</html>
