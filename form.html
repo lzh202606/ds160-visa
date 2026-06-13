@@ -2234,9 +2234,8 @@ async function printPDF() {
       spacer();
     }
 
-    // ═════════════ 面签风险评估 (内联，捕获printPDF作用域) ═════════════
+    // ═════════════ 面签风险评估 v3.0 (完整版) ═════════════
     (function(){
-      // --- 评分引擎 ---
       let age=0; if(data.dob){const d=new Date(data.dob); if(!isNaN(d.getTime())){age=new Date().getFullYear()-d.getFullYear();const n=new Date();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))age--;}}
       const occ=(data.occupation||'').toLowerCase(), marRaw=(data.maritalStatus||''), mar=marRaw.toLowerCase();
       const sx=(data.sex||'').toLowerCase(), sal=parseInt(data.monthlySalary)||0;
@@ -2246,49 +2245,73 @@ async function printPDF() {
       const hasJob=occ!=='unemployed'&&occ!=='retired'&&occ!=='无业'&&occ!=='退休'&&occ!=='学生'&&occ!=='student';
       const isStudent=occ==='学生'||occ==='student';
       const hasRelUS=relUS==='yes'||relUS==='是';
+      const hadVisaBefore=(data.hadUSVisa||'').toLowerCase()==='yes';
+      const visaRefused=(data.visaRefused||'').toLowerCase()==='yes';
+      const military=(data.militaryService||'').toLowerCase()==='yes';
+      const specTrain=(data.specialTraining||'').toLowerCase()==='yes';
 
+      // 8维度评分
       let s1=30; if(hasJob)s1+=15; else if(isStudent)s1+=10; if(isMarried)s1+=15; if(hasRelUS)s1-=20;
-      let s2=25; if(sal>=20000)s2+=25; else if(sal>=10000)s2+=20; else if(sal>=5000)s2+=10; if((data.tripPayer||'')==='SELF')s2+=10; if(data.employerName)s2+=10;
-      let s3=30; if((data.prevUSTravel||data.prevVisa||'').toLowerCase()==='yes')s3+=25; if((data.countriesVisited||'').trim().length>0)s3+=15; if((data.visaRevoked||'').toLowerCase()==='yes')s3-=30;
-      let s4=40; if(age>=35)s4+=20; else if(age>=25)s4+=15; else if(age>=18)s4+=5; if(isMarried)s4+=10; if(isFemale&&age<30&&!isMarried)s4-=5;
+      let s2=25; if(sal>=30000)s2+=30; else if(sal>=20000)s2+=25; else if(sal>=10000)s2+=20; else if(sal>=5000)s2+=10; if((data.tripPayer||'')==='SELF')s2+=10; if(data.employerName)s2+=10;
+      let s3=30; if((data.prevUSTravel||data.prevVisa||'').toLowerCase()==='yes')s3+=25; else if((data.countriesVisited||'').trim().length>0)s3+=15; if((data.visaRevoked||'').toLowerCase()==='yes')s3-=30; if(hadVisaBefore&&!(data.visaRevoked||'').toLowerCase()==='yes')s3+=10;
+      let s4=40; if(age>=40)s4+=25; else if(age>=35)s4+=20; else if(age>=25)s4+=15; else if(age>=18)s4+=5; if(isMarried)s4+=10; if(isFemale&&age<30&&!isMarried)s4-=5;
       let s5=35; if(vType==='F1'||vType==='F2')s5+=15; else if(vType==='B1'||vType==='B2'||vType==='B1/B2')s5+=10;
       const tp=(data.tripPurpose||''); if(tp.length>=10)s5+=20; else if(tp.length>=3)s5+=10;
       const days=parseInt(data.stayLength)||0; if(days>0&&days<=30)s5+=10; else if(days>30&&days<=90)s5+=5;
-      let s6=40; const cf=['surname','givenName','dob','passportNo','tripPurpose','contactName','occupation']; const filled=cf.filter(f=>data[f]&&data[f].toString().trim()).length; s6+=Math.round(filled/cf.length*30);
+      let s6=40; const cf=['surname','givenName','dob','passportNo','tripPurpose','contactName','occupation']; const filledF=cf.filter(f=>data[f]&&data[f].toString().trim()).length; s6+=Math.round(filledF/cf.length*30);
       if(data.passportExpiry){const exp=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(exp>sm)s6+=10;}
+      if(data.email)s6+=5;
+      let s7=50; if(hadVisaBefore&&!visaRefused)s7+=15; if(visaRefused)s7-=20; if(military)s7-=10; if(specTrain)s7-=15; if((data.countriesVisited||'').length>0)s7+=5; if(data.organization)s7-=5;
+      let s8=50; const mo=new Date().getMonth(); if(mo>=5&&mo<=7)s8-=10; else if(mo>=10)s8-=5; else s8+=10; if(hadVisaBefore)s8+=10;
       const dims=[
         {name:'国内约束力',score:Math.max(0,Math.min(100,s1))},
         {name:'财务能力',score:Math.max(0,Math.min(100,s2))},
-        {name:'旅行史',score:Math.max(0,Math.min(100,s3))},
-        {name:'背景稳定性',score:Math.max(0,Math.min(100,s4))},
-        {name:'目的合理性',score:Math.max(0,Math.min(100,s5))},
-        {name:'材料完整度',score:Math.max(0,Math.min(100,s6))}
+        {name:'旅行记录',score:Math.max(0,Math.min(100,s3))},
+        {name:'背景稳定',score:Math.max(0,Math.min(100,s4))},
+        {name:'目的合理',score:Math.max(0,Math.min(100,s5))},
+        {name:'材料完整',score:Math.max(0,Math.min(100,s6))},
+        {name:'安全审查',score:Math.max(0,Math.min(100,s7))},
+        {name:'时间节点',score:Math.max(0,Math.min(100,s8))}
       ];
-      let s7=50; // Social media / security review risk
-      const hadVisaBefore = (data.hadUSVisa||'').toLowerCase()==='yes';
-      const visaRefused = (data.visaRefused||'').toLowerCase()==='yes';
-      const military = (data.militaryService||'').toLowerCase()==='yes';
-      const specTrain = (data.specialTraining||'').toLowerCase()==='yes';
-      if(hadVisaBefore && !visaRefused) s7+=15;
-      if(visaRefused) s7-=20;
-      if(military) s7-=10; // May trigger additional security review
-      if(specTrain) s7-=15;
-      if((data.countriesVisited||'').length > 0) s7+=5;
+      dims.forEach(d=>{if(d.score>=80)d.color=[46,213,115]; else if(d.score>=60)d.color=[255,174,66]; else d.color=[255,83,103];});
 
-      let s8=50; // Timing / seasonality risk
-      const now = new Date(); const month = now.getMonth();
-      // Summer (Jun-Aug): peak season, higher scrutiny
-      if(month>=5 && month<=7) s8-=10;
-      // Winter holiday (Nov-Dec): high volume
-      else if(month>=10) s8-=5;
-      // Off-peak (Jan-Apr, Sep-Oct): better chances
-      else s8+=10;
-      if(hadVisaBefore) s8+=10; // Returning travelers = lower timing risk
+      // Tips
+      const tips=[];
+      if(hasRelUS)tips[0]='在美有亲属，需强化国内约束力'; else if(dims[0].score<80)tips[0]='约束力尚可，可继续优化'; else tips[0]='国内约束力牢固';
+      if(dims[1].score<60)tips[1]='需准备存款证明与银行流水'; else if(dims[1].score<80)tips[1]='财务达标，可补充资金证明'; else tips[1]='财务能力优秀';
+      if(dims[2].score<40)tips[2]='无赴美记录属正常'; else if(dims[2].score<80)tips[2]='有一定出行记录'; else tips[2]='良好出入境记录';
+      if(isFemale&&age<30&&!isMarried)tips[3]='年轻单身女性需加强材料'; else if(dims[3].score<60)tips[3]='需补充稳定性证明'; else tips[3]='背景条件良好';
+      if(dims[4].score<60)tips[4]='赴美目的需更详细明确'; else tips[4]='目的明确计划清晰';
+      if(data.passportExpiry){const e=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(e<=sm)tips[5]='⚠️ 护照有效期不足6个月！'; else tips[5]='材料填写完整';} else tips[5]='材料填写完整';
+      if(visaRefused)tips[6]='有拒签史，需针对性准备'; else if(dims[6].score<60)tips[6]='安全审查风险偏高'; else tips[6]='安全审查低风险';
+      if(dims[7].score<60)tips[7]='当前是签证高峰期'; else if(dims[7].score<80)tips[7]='时间节点正常'; else tips[7]='时机适宜';
 
-      dims.push({name:'安全审查风险',score:Math.max(0,Math.min(100,s7))});
-      dims.push({name:'时间节点风险',score:Math.max(0,Math.min(100,s8))});
-      dims.forEach(d=>{if(d.score>=80)d.color=[52,211,153]; else if(d.score>=60)d.color=[251,191,36]; else d.color=[248,113,113];});
       const overall=Math.round(dims.reduce((s,d)=>s+d.score,0)/8);
+
+      // Risk items
+      const risks=[];
+      if(data.passportExpiry){const e=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(e<=sm)risks.push({t:'护照有效期不足6个月',a:'这是面签硬伤，立即换发新护照'});}
+      if(visaRefused)risks.push({t:'有美国签证拒签史',a:'准备好解释"情况有何变化"的有力回答'});
+      if(hasRelUS)risks.push({t:'在美有亲属',a:'主动强调国内约束力—工作、配偶、子女、房产'});
+      if(isFemale&&age<30&&!isMarried)risks.push({t:'年轻单身女性',a:'展示稳定工作、家庭纽带、清晰回国计划'});
+      if(military||specTrain)risks.push({t:'军事/特殊技能背景',a:'可能触发行政审查，准备详细说明材料'});
+      if(dims[0].score<50&&!hasRelUS)risks.push({t:'国内约束力不足',a:'加强工作证明、房产证、家庭关系等材料'});
+      const topRisks=risks.slice(0,3);
+
+      // Checklist
+      const urgent=[], important=[], suggested=[];
+      if(data.passportExpiry){const e=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(e<=sm)urgent.push('立即换发新护照（有效期不足6个月）');}
+      if(dims[6].score<40)urgent.push('准备详细个人背景说明材料');
+      important.push('打印 DS-160 确认页 + 面签预约单（各2份，彩色）');
+      important.push('签证照片2张（5.1x5.1cm白底，6个月内近照）');
+      important.push('核对护照原件有效期 > 计划回国日后至少6个月');
+      if(dims[0].score<60){const amt=sal>0?Math.max(sal*6,50000):50000;important.push('房产证+在职证明+户口本+银行余额≥¥'+(amt/10000).toFixed(1)+'万');}
+      if(dims[1].score<60)important.push('存款证明¥5万以上 + 近6个月银行流水 + 近3个月工资单');
+      if(vType==='F1')important.push('携带I-20原件、SEVIS缴费收据、录取通知书');
+      if(vType.startsWith('B'))important.push('邀请函+酒店预订+详细行程单+在职证明');
+      suggested.push('面签当日提前30分钟到达，商务休闲着装');
+      suggested.push('练习英语自我介绍和面签常见问题');
+      if(overall>=60)suggested.push('充分准备，顺利出签！');
 
       // --- 渲染到PDF ---
       y=12; doc.addPage();
@@ -2297,50 +2320,53 @@ async function printPDF() {
       doc.setFontSize(7); doc.setTextColor(100);
       doc.text('Visa Interview Risk Assessment',105,y,{align:'center'}); y+=4; doc.setTextColor(0); y+=3;
 
-      let rc=[52,211,153],rl='低风险',rd='材料整体扎实，面签通过率较高。';
-      if(overall<60){rc=[248,113,113];rl='高风险';rd='多项指标偏低，建议先优化再预约面签。';}
-      else if(overall<80){rc=[251,191,36];rl='中等风险';rd='存在薄弱环节，建议补充材料并加强应答准备。';}
+      let rc=[46,213,115], rl='低风险', rd='材料整体扎实，面签通过率较高。';
+      if(overall<60){rc=[255,83,103];rl='高风险';rd='多项指标偏低，建议先优化材料再预约面签。';}
+      else if(overall<80){rc=[255,174,66];rl='中等风险';rd='存在薄弱环节，建议补充材料并加强应答准备。';}
 
       doc.setFillColor(...rc); doc.circle(margin+15,y+8,12,'F');
       doc.setTextColor(255); doc.setFontSize(14); doc.setFont('helvetica','bold');
       doc.text(String(overall),margin+15,y+9,{align:'center'}); doc.setTextColor(0);
       doc.setFontSize(8); doc.text('综合过签指数',margin+35,y+6);
-      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('面相评估：'+rl,margin+35,y+12);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('评估结果：'+rl,margin+35,y+12);
       doc.setFont('helvetica','normal'); y+=22; y+=2; doc.setFontSize(6.5); doc.setTextColor(80);
       doc.text(rd,margin+2,y+2,{maxWidth:pageW-4}); doc.setTextColor(0); y+=10; y+=2;
 
-      dims.forEach(d=>{
+      // 8维度评分带tips
+      dims.forEach((d,i)=>{
         if(y>260){doc.addPage(); y=12;}
         doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text(d.name,margin+2,y+2);
         doc.setFont('helvetica','normal'); doc.text(d.score+'',margin+48,y+2);
         doc.setFillColor(235,235,235); doc.rect(margin+56,y+1,120,3.5,'F');
         doc.setFillColor(...d.color); doc.rect(margin+56,y+1,120*d.score/100,3.5,'F'); y+=6;
+        if(i<8){doc.setFontSize(5.5);doc.setTextColor(130);doc.text((tips[i]||''),margin+56,y-3,{maxWidth:120});doc.setTextColor(0);}
       });
+      y+=2;
 
-      y+=4;
-      const sug=[];
-      if(dims[0].score<60)sug.push([true,'国内约束力不足——请准备房产证、在职证明、家庭关系证明']);
-      if(hasRelUS)sug.push([true,'在美有直系亲属属高风险，需额外准备回国约束力材料']);
-      if(dims[1].score<60)sug.push([true,'财务能力偏弱——准备银行存款证明+近6个月银行流水']);
-      if(dims[4].score<50)sug.push([true,'赴美目的不够明确——务必详细描述行程计划和在美安排']);
-      if(dims[3].score<50)sug.push([false,'年轻单身申请人属较高审查群体，请准备充分的经济来源证明']);
-      if(data.passportExpiry){const exp=new Date(data.passportExpiry);const sm=new Date();sm.setMonth(sm.getMonth()+6);if(exp<=sm)sug.push([true,'⚠️ 护照有效期不足6个月！请先换发新护照再预约面签']);}
-      if(sug.length===0)sug.push([false,'各项指标良好，按标准流程准备即可。保持自信！']);
+      // 风险聚焦
+      if(topRisks.length>0){
+        if(y>240){doc.addPage(); y=12;}
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(220,50,50);
+        doc.text('主要风险点',margin+2,y+2); doc.setTextColor(0); y+=6;
+        topRisks.forEach((r,i)=>{
+          if(y>265){doc.addPage(); y=12;}
+          doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+          doc.text((i+1)+'. '+r.t,margin+4,y+2);
+          doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(100);
+          doc.text(r.a,margin+4,y+6,{maxWidth:pageW-8}); doc.setTextColor(0); y+=10;
+        });
+        y+=2;
+      }
 
-      sug.forEach(s=>{
-        if(y>260){doc.addPage(); y=12;}
-        doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
-        doc.setTextColor(s[0]?200:100,s[0]?50:100,s[0]?50:100);
-        doc.text((s[0]?'⚠️ ':'✅ ')+s[1],margin+2,y+2,{maxWidth:pageW-4}); doc.setTextColor(0); y+=5;
-      });
+      // 行动清单
+      if(y>240){doc.addPage(); y=12;}
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text('面签行动清单',margin+2,y); y+=5;
+      if(urgent.length>0){doc.setFontSize(5.5);doc.setTextColor(200,50,50);urgent.forEach(item=>{if(y>270){doc.addPage();y=12;}doc.text('🔴 '+item,margin+4,y+2);y+=4;});doc.setTextColor(0);y+=1;}
+      doc.setFontSize(5.5);doc.setTextColor(180,130,30);important.forEach(item=>{if(y>270){doc.addPage();y=12;}doc.text('🟡 '+item,margin+4,y+2);y+=4;});doc.setTextColor(0);y+=1;
+      doc.setFontSize(5.5);doc.setTextColor(100,160,100);suggested.forEach(item=>{if(y>270){doc.addPage();y=12;}doc.text('🟢 '+item,margin+4,y+2);y+=4;});doc.setTextColor(0);
 
-      y+=4; doc.setFont('helvetica','bold'); doc.setFontSize(7);
-      doc.text('下一步行动清单:',margin+2,y); y+=4;
-      const cl=['打印 DS-160 确认页+面签预约单','准备签证照片（5.1×5.1cm 白底）','核对护照有效期 > 6个月'];
-      if(overall<60)cl.unshift('优先补充薄弱环节材料，暂缓预约面签');
-      cl.forEach(item=>{if(y>270){doc.addPage(); y=12;} doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.text('☐  '+item,margin+4,y+2); y+=4.5;});
       y+=3; doc.setFontSize(5.5); doc.setTextColor(150);
-      doc.text('过签侠 · 面签风险评估引擎 v2.0 | 仅供参考，最终由签证官独立判断',105,y,{align:'center'});
+      doc.text('过签侠 · 面签风险评估引擎 v3.0 | 仅供参考，最终由签证官独立判断',105,y,{align:'center'});
       doc.setTextColor(0);
     })();
 
