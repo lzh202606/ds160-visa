@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DS-160 智能填表助手 - 美签纵横团</title>
 <script src="jspdf.umd.min.js"></script>
+<script src="api-config.js"></script>
 <style>
   :root {
     --primary: #1a56db;
@@ -1863,7 +1864,7 @@ async function printPDF() {
   // 如果带Token则验证，无Token则允许免费模式
   if (token) {
     try {
-      const checkRes = await fetch('/api/check?token=' + token);
+      const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + token);
       const checkData = await checkRes.json();
       if (!checkData.valid) {
         alert('您的链接已失效（可能已被使用或过期），请联系服务提供商获取新链接。');
@@ -2387,7 +2388,7 @@ async function printPDF() {
 
     // 服务端消耗（部署了Express后端时生效）
     try {
-      await fetch('/api/consume', {
+      await fetch((window.API_BASE||'') + '/api/consume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: window.DS160_TOKEN || '' })

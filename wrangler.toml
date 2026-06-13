@@ -1,0 +1,8 @@
+name = "ds160-api"
+main = "api/worker.js"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "TOKENS"
+id = "YOUR_KV_NAMESPACE_ID"
+preview_id = "YOUR_KV_NAMESPACE_ID"
