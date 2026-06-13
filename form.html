@@ -215,6 +215,38 @@
     .form-row { grid-template-columns: 1fr; }
     .header h1 { font-size: 20px; }
   }
+
+  /* ── 面签评估内嵌面板 ── */
+  #assessPanel { margin-top: 32px; padding: 28px 24px; border-radius: 16px; background: #0f172a; color: #dce2f0; display: none; }
+  #assessPanel .as-score { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 16px; }
+  .as-gauge { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 900; flex-shrink: 0; }
+  .as-gauge.hi { background: rgba(46,213,115,0.12); color: #2ed573; border: 3px solid #2ed573; }
+  .as-gauge.md { background: rgba(255,174,66,0.12); color: #ffae42; border: 3px solid #ffae42; }
+  .as-gauge.lo { background: rgba(255,83,103,0.12); color: #ff5367; border: 3px solid #ff5367; }
+  .as-verdict { font-size: 14px; font-weight: 700; }
+  .as-verdict .vhi { color: #2ed573; } .as-verdict .vmd { color: #ffae42; } .as-verdict .vlo { color: #ff5367; }
+  .as-verdict p { font-size: 11px; color: #6e7899; margin-top: 2px; }
+  .as-dims { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .as-dim { background: rgba(255,255,255,0.03); border: 1px solid rgba(108,140,255,0.08); border-radius: 10px; padding: 10px 12px; font-size: 12px; }
+  .as-dim .ad-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .as-dim .ad-score { font-weight: 900; font-size: 18px; }
+  .as-dim .ad-bar { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+  .as-dim .ad-fill { height: 100%; border-radius: 2px; transition: width 1s; }
+  .as-dim .ad-tip { font-size: 10px; color: #6e7899; margin-top: 4px; }
+  .as-risks { background: rgba(255,83,103,0.06); border: 1px solid rgba(255,83,103,0.2); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .as-risks h4 { color: #ff5367; font-size: 13px; margin-bottom: 8px; }
+  .as-risks .ar-item { font-size: 11px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .as-risks .ar-item:last-child { border: none; }
+  .as-risks .ar-act { color: #5b8def; font-size: 10px; margin-top: 1px; }
+  .as-checklist { margin-bottom: 14px; }
+  .as-checklist h4 { color: #5b8def; font-size: 13px; margin-bottom: 6px; }
+  .as-checklist .cl-item { font-size: 11px; padding: 3px 0; color: #94a3b8; }
+  .as-checklist .cl-urgent { color: #ff5367; }
+  .as-checklist .cl-important { color: #ffae42; }
+  #assessBtn { padding: 12px 32px; border: none; border-radius: 10px; background: linear-gradient(135deg, #1a56db, #4870e0); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.3s; }
+  #assessBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(26,86,219,0.4); }
+  .as-full-link { display: block; text-align: center; font-size: 12px; color: #5b8def; text-decoration: none; margin-top: 12px; }
+  .as-full-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -1259,6 +1291,15 @@
       <button type="button" class="btn btn-danger" onclick="resetForm()">清空重填</button>
     </div>
   </form>
+
+  <!-- ═══════ 面签评估（内嵌） ═══════ -->
+  <div style="text-align:center; margin-top: 32px;">
+    <button id="assessBtn" onclick="runAssess()">🛡️ 生成面签评估报告</button>
+  </div>
+  <div id="assessPanel">
+    <div id="assessContent"></div>
+    <a class="as-full-link" href="assessment.html" target="_blank">📊 查看完整详细报告 →</a>
+  </div>
 
   <!-- ═══════ 底部导航条 ═══════ -->
   <nav class="bottom-nav">
@@ -2480,6 +2521,127 @@ function resetForm() {
 
 // 关闭预览的键盘快捷键
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+// ═════════════ 面签评估引擎（嵌入form.html） ═════════════
+function scoreCls(s){return s>=80?'d-hi':s>=60?'d-md':'d-lo';}
+function fillCls(s){return s>=80?'b-hi':s>=60?'b-md':'b-lo';}
+function asCls(s){return s>=80?'hi':s>=60?'md':'lo';}
+
+function runAssess() {
+  const form = document.getElementById('ds160Form');
+  const fd = new FormData(form);
+  const data = {};
+  for (let [k, v] of fd) { data[k] = v || ''; }
+  
+  // 判断是否有数据
+  const hasData = Object.values(data).some(v => v && v.trim());
+  if (!hasData) { alert('请先填写DS-160表格数据'); return; }
+
+  // 评分引擎（精简版）
+  const o = (data.occupation || '').toLowerCase();
+  const mR = (data.maritalStatus || ''), m = mR.toLowerCase();
+  const sx = (data.sex || '').toLowerCase();
+  const sal = parseInt(data.monthlySalary) || 0;
+  const v = (data.visaType || '').trim();
+  const rUS = (data.relativeInUS || '').toLowerCase();
+  const im = !!(m === 'married' || mR === '已婚' || mR === 'MARRIED');
+  const iF = sx === 'female' || sx === 'f' || sx === '女';
+  const hasJ = !!(o && o !== 'unemployed' && o !== 'retired' && o !== '无业' && o !== '退休' && o !== '学生' && o !== 'student');
+  const hasRel = rUS === 'yes' || rUS === '是';
+  let age = 0;
+  if (data.dob) { const d = new Date(data.dob); if (!isNaN(d.getTime())) { age = new Date().getFullYear() - d.getFullYear(); const n = new Date(); if (n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate())) age--; } }
+
+  const dims = [
+    { name: '国内约束力', icon: '🏠', score: 30 + (hasJ ? 15 : 0) + (im ? 15 : 0) - (hasRel ? 20 : 0), tip: '' },
+    { name: '财务能力', icon: '💰', score: 25 + (sal >= 30000 ? 30 : sal >= 20000 ? 25 : sal >= 10000 ? 20 : sal >= 5000 ? 10 : 0) + ((data.tripPayer || '').toLowerCase() === 'self' ? 10 : 0) + (data.employerName ? 10 : 0), tip: '' },
+    { name: '旅行记录', icon: '✈️', score: 30 + ((data.prevUSTravel || data.prevVisa || '').toLowerCase() === 'yes' ? 25 : ((data.countriesVisited || '').split(/[\n,，]/).filter(Boolean).length > 0 ? 15 : 0)) + ((data.visaRevoked || '').toLowerCase() === 'yes' ? -30 : 0) + ((data.hadUSVisa || '').toLowerCase() === 'yes' && (data.visaRevoked || '').toLowerCase() !== 'yes' ? 10 : 0), tip: '' },
+    { name: '背景稳定', icon: '🧭', score: 40 + (age >= 40 ? 25 : age >= 35 ? 20 : age >= 25 ? 15 : age >= 18 ? 5 : 0) + (im ? 10 : 0) - (iF && age < 30 && !im ? 5 : 0), tip: '' },
+    { name: '目的合理', icon: '🎯', score: 35 + (v === 'F1' || v === 'F2' ? 15 : v === 'B1' || v === 'B2' || v === 'B1/B2' ? 10 : 0) + ((data.tripPurpose || '').length >= 10 ? 20 : (data.tripPurpose || '').length >= 3 ? 10 : 0) + ((parseInt(data.stayLength) > 0 && parseInt(data.stayLength) <= 30) ? 10 : (parseInt(data.stayLength) > 30 && parseInt(data.stayLength) <= 90) ? 5 : 0), tip: '' },
+    { name: '材料完整', icon: '📋', score: 40 + Math.round(['surname', 'givenName', 'dob', 'passportNo', 'tripPurpose', 'contactName', 'occupation'].filter(k => data[k] && data[k].toString().trim()).length / 7 * 30) + (data.passportExpiry ? (new Date(data.passportExpiry) > new Date(Date.now() + 180 * 86400000) ? 10 : 0) : 0) + (data.email ? 5 : 0), tip: '' },
+    { name: '安全审查', icon: '🔐', score: 50 + ((data.hadUSVisa || '').toLowerCase() === 'yes' && (data.visaRefused || '').toLowerCase() !== 'yes' ? 15 : 0) + ((data.visaRefused || '').toLowerCase() === 'yes' ? -20 : 0) + ((data.militaryService || '').toLowerCase() === 'yes' ? -10 : 0) + ((data.specialTraining || '').toLowerCase() === 'yes' ? -15 : 0) + ((data.countriesVisited || '').length > 0 ? 5 : 0) + (data.organization ? -5 : 0), tip: '' },
+    { name: '时间节点', icon: '📅', score: 50 + ([5, 6, 7].includes(new Date().getMonth()) ? -10 : [10, 11].includes(new Date().getMonth()) ? -5 : 10) + ((data.hadUSVisa || '').toLowerCase() === 'yes' ? 10 : 0), tip: '' }
+  ];
+  dims.forEach(d => { d.score = Math.max(0, Math.min(100, d.score)); d.color = d.score >= 80 ? '#2ed573' : d.score >= 60 ? '#ffae42' : '#ff5367'; });
+
+  // Tips
+  if (hasRel) dims[0].tip = '在美有亲属，需强化国内约束力';
+  else if (dims[0].score < 80) dims[0].tip = '约束力尚可，可继续优化';
+  else dims[0].tip = '国内约束力牢固 ✅';
+  if (dims[1].score < 60) dims[1].tip = '需准备存款证明与银行流水';
+  else if (dims[1].score < 80) dims[1].tip = '财务达标，可补充资金证明';
+  else dims[1].tip = '财务能力优秀 ✅';
+  if (dims[2].score < 40) dims[2].tip = '无赴美记录属正常';
+  else if (dims[2].score < 80) dims[2].tip = '有一定出行记录';
+  else dims[2].tip = '良好出入境记录 ✅';
+  if (iF && age < 30 && !im) dims[3].tip = '年轻单身女性需加强材料';
+  else if (dims[3].score < 60) dims[3].tip = '背景需补充稳定性证明';
+  else dims[3].tip = '背景条件良好 ✅';
+  if (dims[4].score < 60) dims[4].tip = '赴美目的需更详细明确';
+  else dims[4].tip = '目的明确计划清晰 ✅';
+  if (data.passportExpiry) { const e = new Date(data.passportExpiry); const sm = new Date(); sm.setMonth(sm.getMonth() + 6); if (e <= sm) dims[5].tip = '⚠️ 护照有效期不足6个月！'; else dims[5].tip = '材料填写完整 ✅'; } else dims[5].tip = '材料填写完整 ✅';
+  const vR = (data.visaRefused || '').toLowerCase() === 'yes';
+  if (vR) dims[6].tip = '⚠️ 有拒签史，需针对性准备';
+  else if (dims[6].score < 60) dims[6].tip = '安全审查风险偏高';
+  else dims[6].tip = '安全审查低风险 ✅';
+  if (dims[7].score < 60) dims[7].tip = '当前是签证高峰期';
+  else if (dims[7].score < 80) dims[7].tip = '时间节点正常';
+  else dims[7].tip = '当前时机适宜 ✅';
+
+  const overall = Math.round(dims.reduce((s, d) => s + d.score, 0) / 8);
+  const vc = overall >= 80 ? '#2ed573' : overall >= 60 ? '#ffae42' : '#ff5367';
+  const vt = overall >= 80 ? '低风险' : overall >= 60 ? '中等风险' : '高风险';
+  const vd = overall >= 80 ? '材料扎实，通过率较高' : overall >= 60 ? '存在薄弱环节，建议补齐短板后面签' : '多项指标偏低，建议暂缓面签';
+
+  // Risks
+  const risks = [];
+  if (data.passportExpiry) { const e = new Date(data.passportExpiry); const sm = new Date(); sm.setMonth(sm.getMonth() + 6); if (e <= sm) risks.push({ text: '护照有效期不足6个月', action: '立即换发新护照，否则面签必被拒' }); }
+  if (vR) risks.push({ text: '有美国签证拒签史', action: '准备好解释"情况有何变化"的有力回答' });
+  if (hasRel) risks.push({ text: '在美有亲属', action: '主动强调国内约束力——工作、配偶、子女、房产' });
+  if (iF && age < 30 && !im) risks.push({ text: '年轻单身女性', action: '展示稳定工作、家庭纽带、清晰回国计划' });
+  if ((data.militaryService || '').toLowerCase() === 'yes' || (data.specialTraining || '').toLowerCase() === 'yes') risks.push({ text: '军事/特殊技能背景', action: '可能触发行政审查，准备详细说明材料' });
+  if (dims[0].score < 50 && !hasRel) risks.push({ text: '国内约束力不足', action: '加强工作证明、房产证、家庭关系等材料' });
+  const topRisks = risks.slice(0, 3);
+
+  // Checklist
+  const urgent = [], important = [], suggested = [];
+  if (data.passportExpiry) { const e = new Date(data.passportExpiry); const sm = new Date(); sm.setMonth(sm.getMonth() + 6); if (e <= sm) urgent.push('🛂 立即换发新护照（有效期不足6个月）'); }
+  if (dims[6].score < 40) urgent.push('🔐 准备详细个人背景说明材料');
+  important.push('📄 打印DS-160确认页 + 面签预约单（各2份，彩色）');
+  important.push('📸 签证照片2张（5.1×5.1cm白底，6个月内近照）');
+  important.push('🛂 核对护照原件有效期 > 计划回国日后至少6个月');
+  if (dims[0].score < 60) { const amt = sal > 0 ? Math.max(sal * 6, 50000) : 50000; important.push('📎 房产证+在职证明+户口本+银行余额≥¥' + (amt / 10000).toFixed(1) + '万'); }
+  if (dims[1].score < 60) important.push('💰 存款证明¥5万以上 + 近6个月银行流水');
+  if (v === 'F1') important.push('🎓 携带 I-20原件、SEVIS缴费收据、录取通知书');
+  if ((v || '').startsWith('B')) important.push('📧 邀请函+酒店预订+详细行程单+在职证明');
+  suggested.push('👔 面签当日提前30分钟到达，商务休闲着装');
+  suggested.push('🗣️ 练习英语自我介绍和面签常见问题');
+  if (overall >= 60) suggested.push('✅ 充分准备，顺利出签！🇺🇸');
+
+  // Render
+  document.getElementById('assessPanel').style.display = 'block';
+  document.getElementById('assessContent').innerHTML = `
+    <div class="as-score">
+      <div class="as-gauge ${asCls(overall)}">${overall}</div>
+      <div class="as-verdict">
+        <span class="v${asCls(overall)}" style="font-size:18px;display:block;">${vt}</span>
+        <p style="margin-top:2px;">${vd}</p>
+      </div>
+    </div>
+    ${topRisks.length > 0 ? `<div class="as-risks"><h4>🔴 主要风险点</h4>${topRisks.map((r,i) => `<div class="ar-item"><strong>${i+1}. ${r.text}</strong><div class="ar-act">💡 ${r.action}</div></div>`).join('')}</div>` : ''}
+    <div class="as-dims">${dims.map(d => `
+      <div class="as-dim">
+        <div class="ad-top"><span>${d.icon}</span><span style="flex:1;font-weight:600;">${d.name}</span><span class="ad-score" style="color:${d.color}">${d.score}</span></div>
+        <div class="ad-bar"><div class="ad-fill" style="width:${d.score}%;background:${d.color}"></div></div>
+        <div class="ad-tip">${d.tip}</div>
+      </div>`).join('')}</div>
+    <div class="as-checklist">
+      <h4>📋 面签行动清单</h4>
+      ${urgent.length ? urgent.map(i => `<div class="cl-item cl-urgent">🔴 ${i}</div>`).join('') : ''}
+      ${important.map(i => `<div class="cl-item cl-important">🟡 ${i}</div>`).join('')}
+      ${suggested.map(i => `<div class="cl-item">🟢 ${i}</div>`).join('')}
+    </div>`;
+  document.getElementById('assessPanel').scrollIntoView({ behavior: 'smooth' });
+}
 
 // ═════════════ 章节导航 + 实时校验 ═════════════
 const CHAPTERS = [
