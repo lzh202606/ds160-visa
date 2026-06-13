@@ -154,51 +154,34 @@ async function hmacSign(message, secret) {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// ═════════════ 生成链接 (通过 Cloudflare Worker API) ═════════════
+// ═════════════ 生成链接 (本地 HMAC 签名) ═════════════
 async function generateLinks() {
   const count = parseInt(document.getElementById('genCount').value) || 1;
   const label = document.getElementById('genLabel').value.trim();
-  const status = document.getElementById('genStatus');
-  if (status) status.textContent = '正在生成...';
 
-  try {
-    const apiBase = window.API_BASE || '';
-    const res = await fetch(apiBase + '/api/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: ADMIN_PASS, count, label }),
-    });
-    const data = await res.json();
-    
-    if (!data.success) {
-      if (status) status.textContent = '错误: ' + (data.error || '未知');
-      return;
-    }
-
+  const links = [];
+  for (let i = 0; i < count; i++) {
+    const id = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
+    const ts = Date.now();
+    const payload = `${id}.${ts}`;
+    const sig = await hmacSign(payload, SECRET);
+    const token = `${payload}.${sig}`;
     const baseUrl = getFormUrl();
-    const links = data.tokens.map(t => ({
-      ...t,
-      url: baseUrl + '?token=' + t.token,
-      created: new Date().toISOString()
-    }));
-
-    const html = links.map((l, i) => `
-      <div class="link-item">
-        <div class="token">Token #${i+1}: ${l.token.substring(0, 20)}...</div>
-        <div class="url">${l.url}</div>
-        <div class="meta">${l.label || '无标签'} | ${l.created}
-          <span class="copy-btn" onclick="copyToClipboard('${l.url.replace(/'/g, "\\'")}')">📋 复制链接</span>
-        </div>
-      </div>
-    `).join('');
-
-    document.getElementById('generatedLinks').innerHTML =
-      '<h3 style="font-size:14px;margin-bottom:8px;color:#34d399;">✅ 已生成 ' + links.length + ' 个一次性链接（服务器验证）：</h3>' + html;
-    
-    if (status) status.textContent = '';
-  } catch (e) {
-    if (status) status.textContent = 'API 连接失败: ' + e.message;
+    links.push({ token, label, url: `${baseUrl}?token=${token}`, created: new Date().toISOString() });
   }
+
+  const html = links.map((l, i) => `
+    <div class="link-item">
+      <div class="token">Token #${i+1}: ${l.token.substring(0, 20)}...</div>
+      <div class="url">${l.url}</div>
+      <div class="meta">${l.label || '无标签'} | ${l.created}
+        <span class="copy-btn" onclick="copyToClipboard('${l.url.replace(/'/g, "\\'")}')">📋 复制链接</span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('generatedLinks').innerHTML =
+    '<h3 style="font-size:14px;margin-bottom:8px;color:#34d399;">✅ 已生成 ' + count + ' 个一次性链接：</h3>' + html;
 }
 
 function getFormUrl() {
