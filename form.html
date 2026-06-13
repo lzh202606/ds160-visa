@@ -247,6 +247,12 @@
   #assessBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(26,86,219,0.4); }
   .as-full-link { display: block; text-align: center; font-size: 12px; color: #5b8def; text-decoration: none; margin-top: 12px; }
   .as-full-link:hover { text-decoration: underline; }
+  @media (max-width: 600px) {
+    #assessPanel { padding: 16px 12px; }
+    .as-dims { grid-template-columns: 1fr; }
+    .as-gauge { width: 72px; height: 72px; font-size: 28px; }
+    .as-verdict span { font-size: 15px !important; }
+  }
 </style>
 </head>
 <body>
@@ -2425,7 +2431,17 @@ async function printPDF() {
         showAssessmentPrompt();
       };
 
-      html2canvas(assessEl,{scale:1.5,backgroundColor:'#ffffff',logging:false}).then(_saveFn).catch(function(e){
+      // Show loading overlay
+      var loadTip=document.createElement('div');
+      loadTip.id='__pdfLoading';loadTip.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#fff;padding:20px 32px;border-radius:12px;font-size:14px;z-index:9999;text-align:center;';
+      loadTip.innerHTML='⏳ 正在生成评估报告...<br><span style=\"font-size:11px;color:#aaa;\">请稍候</span>';
+      document.body.appendChild(loadTip);
+
+      html2canvas(assessEl,{scale:1.5,backgroundColor:'#ffffff',logging:false}).then(function(canvas){
+        var tip=document.getElementById('__pdfLoading');if(tip)tip.remove();
+        _saveFn(canvas);
+      }).catch(function(e){
+        var tip=document.getElementById('__pdfLoading');if(tip)tip.remove();
         document.body.removeChild(tmpDiv);
         alert('评估报告生成失败: '+e.message);
         doc.save('DS160_'+(data.surname||'APPLICATION')+'_'+(data.givenName||'')+'.pdf');
@@ -2556,6 +2572,9 @@ function fillCls(s){return s>=80?'b-hi':s>=60?'b-md':'b-lo';}
 function asCls(s){return s>=80?'hi':s>=60?'md':'lo';}
 
 function runAssess() {
+  const btn = document.getElementById('assessBtn');
+  if (btn) { btn.textContent = '⏳ 正在评估...'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  
   const form = document.getElementById('ds160Form');
   const fd = new FormData(form);
   const data = {};
@@ -2563,7 +2582,7 @@ function runAssess() {
   
   // 判断是否有数据
   const hasData = Object.values(data).some(v => v && v.trim());
-  if (!hasData) { alert('请先填写DS-160表格数据'); return; }
+  if (!hasData) { if (btn) { btn.textContent = '🛡️ 生成面签评估报告'; btn.disabled = false; btn.style.opacity = ''; } alert('请先填写DS-160表格数据'); return; }
 
   // 评分引擎（精简版）
   const o = (data.occupation || '').toLowerCase();
@@ -2669,6 +2688,7 @@ function runAssess() {
       ${suggested.map(i => `<div class="cl-item">🟢 ${i}</div>`).join('')}
     </div>`;
   document.getElementById('assessPanel').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(function(){ var btn=document.getElementById('assessBtn'); if(btn){ btn.textContent='🛡️ 刷新评估报告'; btn.disabled=false; btn.style.opacity=''; } }, 300);
 }
 
 // ═════════════ 章节导航 + 实时校验 ═════════════
