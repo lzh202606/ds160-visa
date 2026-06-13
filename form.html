@@ -2313,61 +2313,85 @@ async function printPDF() {
       suggested.push('练习英语自我介绍和面签常见问题');
       if(overall>=60)suggested.push('充分准备，顺利出签！');
 
-      // --- 渲染到PDF ---
-      y=12; doc.addPage();
-      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(26,86,219);
-      doc.text('面签风险评估报告',105,y,{align:'center'}); y+=5;
-      doc.setFontSize(7); doc.setTextColor(100);
-      doc.text('Visa Interview Risk Assessment',105,y,{align:'center'}); y+=4; doc.setTextColor(0); y+=3;
-
-      let rc=[46,213,115], rl='低风险', rd='材料整体扎实，面签通过率较高。';
-      if(overall<60){rc=[255,83,103];rl='高风险';rd='多项指标偏低，建议先优化材料再预约面签。';}
-      else if(overall<80){rc=[255,174,66];rl='中等风险';rd='存在薄弱环节，建议补充材料并加强应答准备。';}
-
-      doc.setFillColor(...rc); doc.circle(margin+15,y+8,12,'F');
-      doc.setTextColor(255); doc.setFontSize(14); doc.setFont('helvetica','bold');
-      doc.text(String(overall),margin+15,y+9,{align:'center'}); doc.setTextColor(0);
-      doc.setFontSize(8); doc.text('综合过签指数',margin+35,y+6);
-      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('评估结果：'+rl,margin+35,y+12);
-      doc.setFont('helvetica','normal'); y+=22; y+=2; doc.setFontSize(6.5); doc.setTextColor(80);
-      doc.text(rd,margin+2,y+2,{maxWidth:pageW-4}); doc.setTextColor(0); y+=10; y+=2;
-
-      // 8维度评分带tips
-      dims.forEach((d,i)=>{
-        if(y>260){doc.addPage(); y=12;}
-        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text(d.name,margin+2,y+2);
-        doc.setFont('helvetica','normal'); doc.text(d.score+'',margin+48,y+2);
-        doc.setFillColor(235,235,235); doc.rect(margin+56,y+1,120,3.5,'F');
-        doc.setFillColor(...d.color); doc.rect(margin+56,y+1,120*d.score/100,3.5,'F'); y+=6;
-        if(i<8){doc.setFontSize(5.5);doc.setTextColor(130);doc.text((tips[i]||''),margin+56,y-3,{maxWidth:120});doc.setTextColor(0);}
+      // --- 渲染评估到PDF (Canvas中文支持) ---
+      doc.addPage();
+      var cW=190,cH=277; // mm
+      var lines=[];
+      function addP(txt,x,y,fs,bold,color){lines.push({t:txt,x:x||2,y:y||0,fs:fs||6,b:!!bold,c:color||'#000000'});}
+      // Title
+      addP('面签风险评估报告',95,8,12,true,'#1a56db');
+      addP('Visa Interview Risk Assessment',95,14,6.5,false,'#555');
+      // Score
+      var sc=overall,scC='#2ed573',scL='低风险',scD='材料整体扎实，面签通过率较高。';
+      if(sc<60){scC='#ff5367';scL='高风险';scD='多项指标偏低，建议先优化材料再预约面签。';}
+      else if(sc<80){scC='#ffae42';scL='中等风险';scD='存在薄弱环节，建议补充材料并加强应答准备。';}
+      addP(sc+'',10,22,16,true,scC);
+      addP('综合过签指数',10,28,6.5,false,'#333');
+      addP('评估结果：'+scL,10,34,8,true,scC);
+      addP(scD,2,40,6,false,'#555');
+      // 8 dims
+      var dy=49;
+      dims.forEach(function(d,i){
+        addP(d.name,2,dy,6.5,true,'#222');
+        addP(d.score+'',48,dy,7,true,'#'+d.color.map(function(v){return v.toString(16).padStart(2,'0');}).join(''));
+        addP(tips[i]||'',56,dy,5,false,'#777');
+        dy+=9;
       });
-      y+=2;
-
-      // 风险聚焦
+      dy+=3;
+      // Risks
       if(topRisks.length>0){
-        if(y>240){doc.addPage(); y=12;}
-        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(220,50,50);
-        doc.text('主要风险点',margin+2,y+2); doc.setTextColor(0); y+=6;
-        topRisks.forEach((r,i)=>{
-          if(y>265){doc.addPage(); y=12;}
-          doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
-          doc.text((i+1)+'. '+r.t,margin+4,y+2);
-          doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(100);
-          doc.text(r.a,margin+4,y+6,{maxWidth:pageW-8}); doc.setTextColor(0); y+=10;
+        addP('主要风险点',2,dy,7,true,'#ff5367');dy+=7;
+        topRisks.forEach(function(r,i){
+          addP((i+1)+'. '+r.t,4,dy,6,true,'#222');dy+=6;
+          addP(r.a,4,dy,5.5,false,'#555');dy+=7;
         });
-        y+=2;
+        dy+=2;
       }
+      // Checklist
+      addP('面签行动清单',2,dy,7,true,'#1a56db');dy+=7;
+      urgent.forEach(function(item){addP(item,4,dy,5.5,false,'#cc3333');dy+=4.5;});
+      important.forEach(function(item){addP(item,4,dy,5.5,false,'#b3821e');dy+=4.5;});
+      suggested.forEach(function(item){addP(item,4,dy,5.5,false,'#64a064');dy+=4.5;});
+      dy+=4;
+      addP('过签侠 · 面签风险评估引擎 v3.0 | 仅供参考',95,dy,5,false,'#aaa');
 
-      // 行动清单
-      if(y>240){doc.addPage(); y=12;}
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text('面签行动清单',margin+2,y); y+=5;
-      if(urgent.length>0){doc.setFontSize(5.5);doc.setTextColor(200,50,50);urgent.forEach(item=>{if(y>270){doc.addPage();y=12;}doc.text('🔴 '+item,margin+4,y+2);y+=4;});doc.setTextColor(0);y+=1;}
-      doc.setFontSize(5.5);doc.setTextColor(180,130,30);important.forEach(item=>{if(y>270){doc.addPage();y=12;}doc.text('🟡 '+item,margin+4,y+2);y+=4;});doc.setTextColor(0);y+=1;
-      doc.setFontSize(5.5);doc.setTextColor(100,160,100);suggested.forEach(item=>{if(y>270){doc.addPage();y=12;}doc.text('🟢 '+item,margin+4,y+2);y+=4;});doc.setTextColor(0);
+      // Render to canvas then embed as image
+      var scale=3;
+      var cWpx=Math.round(cW*scale*50/25.4), cHpx=Math.round(cH*scale*50/25.4);
+      var cv=document.createElement('canvas');
+      cv.width=cWpx; cv.height=cHpx;
+      var ctx=cv.getContext('2d');
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cWpx,cHpx);
+      var xToPx=function(mm){return mm*scale*50/25.4;};
+      var pgHpx=cHpx,curPg=0,totalPages=1;
+      // Calculate pages
+      var pageGap=dy+10;
+      totalPages=Math.ceil(pageGap/(cH-16));
+      // Draw
+      ctx.beginPath();ctx.arc(xToPx(12),xToPx(24),xToPx(10),0,Math.PI*2);ctx.fillStyle=scC;ctx.fill();
+      ctx.fillStyle='#ffffff';ctx.font='bold '+xToPx(12)+'px Arial';ctx.textAlign='center';ctx.fillText(sc+'',xToPx(12),xToPx(28));
+      ctx.textAlign='left';
+      var yOff=0;
+      lines.forEach(function(l){
+        var yy=xToPx(l.y)-yOff;
+        if(yy>xToPx(cH-12)){yOff+=xToPx(cH-16);yy=xToPx(l.y)-yOff;totalPages++;}
+        ctx.font=(l.b?'bold ':'')+xToPx(l.fs)+'px Arial';
+        ctx.fillStyle=l.c;
+        ctx.fillText(l.t,xToPx(l.x),yy);
+      });
 
-      y+=3; doc.setFontSize(5.5); doc.setTextColor(150);
-      doc.text('过签侠 · 面签风险评估引擎 v3.0 | 仅供参考，最终由签证官独立判断',105,y,{align:'center'});
-      doc.setTextColor(0);
+      // Embed each page
+      for(var pg=0;pg<totalPages;pg++){
+        if(pg>0)doc.addPage();
+        var srcY=pg*xToPx(cH-16);
+        var h=Math.min(xToPx(cH-16)+xToPx(10),cv.height-srcY);
+        var tmpCv=document.createElement('canvas');
+        tmpCv.width=cv.width;tmpCv.height=h;
+        var tctx=tmpCv.getContext('2d');
+        tctx.drawImage(cv,0,srcY,cv.width,h,0,0,cv.width,h);
+        doc.addImage(tmpCv.toDataURL('image/png'),'PNG',10,12,cW,h*cW/cWpx*50/25.4);
+        if(pg<totalPages-1)doc.addPage();
+      }
     })();
 
     // ═════════════ DS-160 确认页模拟 ═════════════
