@@ -694,38 +694,105 @@ function collectFormText(){var out='',ls='';document.querySelectorAll('[data-fie
 function getAssessmentData(){
   var d={
     occupation:getVal('occupation'),employer:getVal('employerName'),salary:getVal('monthlySalary'),
-    marital:getVal('maritalStatus'),sex:getVal('sex'),
+    marital:getVal('maritalStatus'),sex:getVal('sex'),addrCity:getVal('addrCity'),
     prevUS:getVal('prevUSTravel'),visaRefused:getVal('visaRefused'),immPetition:getVal('immPetition'),
     visaRevoked:getVal('visaRevoked'),hadVisa:getVal('hadUSVisa'),tripPayer:getVal('tripPayer'),
     hasPlans:getVal('hasTravelPlans'),military:getVal('military'),contactType:getVal('contactType'),
     passportExp:getVal('passportExpiry'),relativeUS:getVal('relativeInUS'),occupationOther:getVal('occupationOther')
   };
+  // ── 城市分级 ──
+  var tier1=['北京','上海','深圳','广州','杭州','南京','成都','武汉','重庆','天津','苏州','西安','长沙','郑州','青岛','合肥','宁波','东莞','佛山','无锡','厦门','沈阳','大连','济南','福州'];var tier2=['昆明','贵阳','南宁','南昌','太原','石家庄','哈尔滨','长春','兰州','乌鲁木齐','呼和浩特','海口','银川','三亚','珠海','惠州','中山','温州','常州','徐州','南通','嘉兴','绍兴','泉州','烟台','潍坊','淄博','洛阳','宜昌','襄阳','岳阳','株洲','柳州','桂林','海口','西宁','拉萨'];
+  function getCityTier(c){if(!c)return 3;c=c.trim().replace(/市$/,'');if(tier1.indexOf(c)>-1)return 1;if(tier2.indexOf(c)>-1)return 2;return 3;}
+  var cityTier=getCityTier(d.addrCity);
+  // ── 职业精细分析 ──
+  var occStability={GOVERNMENT:1,MILITARY:1,'LEGAL PROFESSION':2,EDUCATION:2,'MEDICAL/HEALTH':2,ENGINEERING:3,'COMPUTER SCIENCE':3,'NATURAL SCIENCE':3,'PHYSICAL SCIENCE':3,'SOCIAL SCIENCE':3,RESEARCH:3,BUSINESS:4,COMMUNICATIONS:4,'CULINARY/FOOD':5,'SELF-EMPLOYED':5,STUDENT:6,'RELIGIOUS VOCATION':6,HOMEMAKER:7,HOMEWORK:7,'NOT EMPLOYED':8,UNEMPLOYED:8,RETIRED:7,OTHER:5};
+  var occStabilityLvl=occStability[d.occupation]||5;
+  var occChinese={GOVERNMENT:'公务员/政府机构',MILITARY:'军人','LEGAL PROFESSION':'法律行业',EDUCATION:'教育行业','MEDICAL/HEALTH':'医疗健康',ENGINEERING:'工程领域','COMPUTER SCIENCE':'IT/计算机','NATURAL SCIENCE':'自然科学','PHYSICAL SCIENCE':'物理科学','SOCIAL SCIENCE':'社会科学',RESEARCH:'科研领域',BUSINESS:'商业/贸易',COMMUNICATIONS:'传媒/新闻','CULINARY/FOOD':'餐饮/食品','SELF-EMPLOYED':'个体经营',STUDENT:'学生','RELIGIOUS VOCATION':'宗教职业',HOMEMAKER:'家庭主理',HOMEWORK:'居家工作者','NOT EMPLOYED':'无业',UNEMPLOYED:'失业',RETIRED:'退休',OTHER:'其他'};
+
   var findings=[],questions=[],adviceItems=[],score=0,maxScore=100;
-  var cats={travel:{name:'出行记录',score:0,max:20,notes:[]},work:{name:'工作稳定性',score:0,max:25,notes:[]},family:{name:'家庭纽带',score:0,max:15,notes:[]},visa:{name:'签证历史',score:0,max:20,notes:[]},security:{name:'安全背景',score:0,max:10,notes:[]},plan:{name:'旅行计划',score:0,max:10,notes:[]}};
+  var cats={travel:{name:'出行记录',score:0,max:20,notes:[]},work:{name:'工作/经济稳定性',score:0,max:25,notes:[]},family:{name:'家庭纽带',score:0,max:15,notes:[]},visa:{name:'签证历史',score:0,max:20,notes:[]},security:{name:'安全背景',score:0,max:10,notes:[]},plan:{name:'旅行计划',score:0,max:10,notes:[]}};
   var extraScore=0;
+
+  // 1. 出行记录
   if(!d.prevUS||d.prevUS==='No'){cats.travel.score=15;cats.travel.notes.push('无美国旅行记录');findings.push({icon:'⚠️ ',level:'warn',text:'无美国及发达国家旅行记录，签证官可能对出行目的产生疑虑。'});questions.push('你之前去过哪些国家？为什么选择现在去美国？');}
   else{findings.push({icon:'✓ ',level:'good',text:'有美国旅行经历，具备合法出入境记录。'});questions.push('上次去美国做了什么？按计划返回了吗？');}
   if(d.hadVisa==='Yes')extraScore-=5;
-  var hr=['UNEMPLOYED','NOT EMPLOYED','HOMEMAKER','HOMEWORK','RETIRED'];
-  var lr=['GOVERNMENT','EDUCATION','MEDICAL/HEALTH','ENGINEERING','LEGAL PROFESSION'];
-  if(hr.indexOf(d.occupation)>-1){cats.work.score=22;cats.work.notes.push('无稳定职业');findings.push({icon:'● ',level:'danger',text:'当前无稳定职业（'+d.occupation+'），缺乏国内工作约束力。'});questions.push('你在国内的主要经济来源是什么？怎么支付旅行费用？');}
-  else if(d.occupation==='STUDENT'){cats.work.score=10;cats.work.notes.push('学生身份');findings.push({icon:'⚠ ',level:'warn',text:'学生身份，收入来源有限。需证明学业约束力及回国必要性。'});questions.push('你学什么专业？毕业后有什么打算？');}
-  else if(lr.indexOf(d.occupation)>-1){cats.work.score=3;findings.push({icon:'✓ ',level:'good',text:'稳定职业（'+d.occupation+'），是国内约束力的有力证明。'});}
-  else if(d.occupation){cats.work.score=8;cats.work.notes.push('一般职业');findings.push({icon:'· ',level:'neutral',text:'就职于'+d.occupation+'领域，建议准备在职证明。'});questions.push('你在这家公司工作多久了？什么职位？月薪多少？');}
-  if(d.salary&&parseInt(d.salary)>0){var s=parseInt(d.salary);if(s<5000){extraScore+=5;findings.push({icon:'⚠ ',level:'warn',text:'月收入偏低（￥'+d.salary+'），可能引发经济能力顾虑。'});}else if(s>=20000){extraScore-=3;findings.push({icon:'✓ ',level:'good',text:'月收入较高（￥'+d.salary+'），经济能力充足。'});}}
+
+  // 2. 工作/经济稳定性（增强：职业深度分析 + 收入城市阈值）
+  if(occStabilityLvl<=2){
+    cats.work.score=2;cats.work.notes.push('高稳定职业('+occChinese[d.occupation]+')');
+    findings.push({icon:'✓ ',level:'good',text:'高稳定性职业：'+occChinese[d.occupation]+'，是国内约束力的极强证明。'});extraScore-=6;
+    if(d.occupation==='GOVERNMENT'){questions.push('你是什么级别的公务员？工作多少年了？');}
+    else if(d.occupation==='MILITARY'){questions.push('你的军衔和服役年限？是否已获准出境？');}
+    else if(d.occupation==='LEGAL PROFESSION'){questions.push('你是律师还是法官？在哪个律所/法院？');}
+  }
+  else if(occStabilityLvl===3){
+    cats.work.score=5;cats.work.notes.push('专业技术职业('+occChinese[d.occupation]+')');
+    findings.push({icon:'✓ ',level:'good',text:'专业技术职业：'+occChinese[d.occupation]+'，技能壁垒高、回国发展前景好。'});extraScore-=2;
+    questions.push('你从事的具体技术方向是什么？证书有哪些？');
+    if(d.occupation==='ENGINEERING')adviceItems.push('携带工程师资格证或项目成果证明，展示专业深度。');
+    if(d.occupation==='MEDICAL/HEALTH')adviceItems.push('携带医师/护士执业证书，说明在职状态。');
+    if(d.occupation==='EDUCATION')adviceItems.push('携带教师资格证、在聘证明。');
+  }
+  else if(occStabilityLvl===4){
+    cats.work.score=8;cats.work.notes.push('商业/传媒职业');
+    findings.push({icon:'· ',level:'neutral',text:'商业/传媒类职业：'+occChinese[d.occupation]+'，建议准备在职证明及收入流水。'});extraScore+=2;
+    questions.push('你在这家公司工作多久了？什么职位？月薪多少？');adviceItems.push('准备中英文在职证明（含职位、薪资、准假日期），加盖公章。');
+  }
+  else if(occStabilityLvl===5){
+    cats.work.score=12;cats.work.notes.push('灵活就业/服务业');
+    findings.push({icon:'⚠ ',level:'warn',text:'灵活就业/服务业：'+occChinese[d.occupation]+'，缺乏传统雇佣约束力。需额外提供资产证明和稳定收入来源说明。'});extraScore+=6;
+    questions.push('你的收入稳定吗？有其他资产吗（房产/车/存款）？');adviceItems.push('提供营业执照（如有）、近6个月银行流水、房产/车辆证明。');
+  }
+  else if(occStabilityLvl===6){
+    cats.work.score=10;cats.work.notes.push('学生身份');
+    findings.push({icon:'⚠ ',level:'warn',text:'学生身份，收入来源有限。需证明学业约束力及回国必要性。'});extraScore+=3;
+    questions.push('你学什么专业？毕业后有什么打算？');adviceItems.push('准备在读证明、学籍材料，说明学业完成后将回国。');
+  }
+  else{
+    cats.work.score=22;cats.work.notes.push('无稳定职业('+occChinese[d.occupation]+')');
+    findings.push({icon:'● ',level:'danger',text:'当前处于'+occChinese[d.occupation]+'状态，缺乏国内工作约束力。需提供其他经济来源证明或家庭纽带。'});extraScore+=10;
+    questions.push('你在国内的主要经济来源是什么？怎么支付旅行费用？');adviceItems.push('准备银行存款证明、房产证、车辆登记证等资产材料。');
+  }
+  // 收入动态阈值
+  if(d.salary&&parseInt(d.salary)>0){
+    var s=parseInt(d.salary),cityIncome=['',8000,5000,3000][cityTier];
+    if(s<cityIncome*0.5){extraScore+=6;findings.push({icon:'⚠ ',level:'warn',text:'月收入远低于所在城市标准（￥'+s+' vs '+cityTier+'线城市基准￥'+cityIncome+'），经济能力存疑。'});questions.push('你的月收入怎么花的？有其他收入来源吗？');}
+    else if(s<cityIncome*0.8){extraScore+=3;findings.push({icon:'⚠ ',level:'warn',text:'月收入略低于所在城市标准（￥'+s+'），建议补充资产证明。'});}
+    else if(s>=cityIncome*1.5){extraScore-=3;findings.push({icon:'✓ ',level:'good',text:'月收入较高（￥'+s+'），符合'+cityTier+'线城市水平，经济能力充足。'});}
+    else{findings.push({icon:'· ',level:'neutral',text:'月收入￥'+s+'，处于'+cityTier+'线城市正常水平。'});}
+  }
   if(d.tripPayer&&d.tripPayer!=='SELF'&&d.tripPayer!==''){extraScore+=5;findings.push({icon:'⚠ ',level:'warn',text:'由第三方支付费用（'+d.tripPayer+'），签证官可能关注此关系。'});questions.push('谁给你支付旅行费用？你们什么关系？');}
+
+  // 3. 家庭纽带
   if(d.marital==='Single'||!d.marital){cats.family.score=10;cats.family.notes.push('未婚');findings.push({icon:'⚠ ',level:'warn',text:'未婚状态，国内家庭约束力较弱。'});questions.push('你有结婚计划吗？家人都在国内吗？');}
   else if(d.marital==='Married'){cats.family.score=3;findings.push({icon:'✓ ',level:'good',text:'已婚，家庭在国内构成一定约束力。'});}
   if(d.relativeUS==='Yes'){extraScore+=5;findings.push({icon:'⚠ ',level:'warn',text:'有直系亲属在美国，签证官可能关注移民倾向。'});questions.push('你在美国的亲属是什么身份？常联系吗？');}
+
+  // 4. 签证历史
   if(d.visaRefused==='Yes'){cats.visa.score=18;cats.visa.notes.push('有拒签记录');findings.push({icon:'● ',level:'danger',text:'有美国签证拒签记录！这是最重要的负面因素。'});questions.push('上次被拒签是什么原因？这次相比有什么变化？');}
   if(d.immPetition==='Yes'){cats.visa.score=15;cats.visa.notes.push('有移民申请');findings.push({icon:'● ',level:'danger',text:'曾有移民申请记录，签证官会高度怀疑移民倾向。'});questions.push('谁提交的移民申请？当前状态如何？');}
   if(d.visaRevoked==='Yes'){cats.visa.score=12;cats.visa.notes.push('签证被撤销');findings.push({icon:'● ',level:'danger',text:'签证曾被撤销，需准备好解释材料。'});questions.push('签证为什么被撤销？当时是什么情况？');}
+
+  // 5. 安全背景
   var sVals=[];document.querySelectorAll('.sec-q select').forEach(function(s){if(s.value==='Yes')sVals.push(s.closest('.sec-q').querySelector('label').textContent.trim());});
   if(sVals.length>0){cats.security.score=8;cats.security.notes.push(sVals.length+'项Yes');findings.push({icon:'● ',level:'danger',text:'安全背景有'+sVals.length+'项回答Yes，可能触发行政审查。'});questions.push('请准备好安全背景Yes项的解释材料。');}
+
+  // 6. 旅行计划
   if(!d.hasPlans||d.hasPlans==='No'){cats.plan.score=3;cats.plan.notes.push('无具体计划');findings.push({icon:'⚠ ',level:'warn',text:'无具体旅行计划，出行意图不明确。'});questions.push('打算什么时候去美国？去哪些地方？');}
   if(d.passportExp){var exp=new Date(d.passportExp),now=new Date();if((exp-now)/1000/60/60/24/30<6){extraScore+=4;findings.push({icon:'⚠ ',level:'warn',text:'护照有效期不足6个月，建议先更换护照再申请。'});}}
+
+  // ── 组合因素权重 ──
   score=Math.min(cats.travel.score+cats.work.score+cats.family.score+cats.visa.score+cats.security.score+cats.plan.score+extraScore,maxScore);
   var passRate=Math.max(5,100-score);
+  // 统计有多少维度属于低风险（相对自身max占比≤30%）
+  var lowRiskCount=0;Object.keys(cats).forEach(function(k){if(cats[k].max>0&&cats[k].score/cats[k].max<=0.3)lowRiskCount++;});
+  if(lowRiskCount>=4){passRate=Math.min(98,Math.round(passRate*1.15));findings.push({icon:'✓ ',level:'good',text:'组合优势：多个维度风险较低，整体通过率上调约15%。'});}
+  else if(lowRiskCount>=3){passRate=Math.min(95,Math.round(passRate*1.10));findings.push({icon:'✓ ',level:'good',text:'组合优势：三个以上维度稳定，整体通过率上调约10%。'});}
+  // 如果有任意维度满风险（≥80%），下调
+  var criticalCount=0;Object.keys(cats).forEach(function(k){if(cats[k].max>0&&cats[k].score/cats[k].max>=0.8)criticalCount++;});
+  if(criticalCount>=2){passRate=Math.max(3,Math.round(passRate*0.85));findings.push({icon:'⚠ ',level:'warn',text:'多重风险：2个以上维度处于极高风险，综合通过率下调。建议做好充分准备。'});}
+  if(cats.visa.score>=15){passRate=Math.max(3,Math.round(passRate*0.80));}
   if(adviceItems.length===0)adviceItems.push('携带完整旅行计划、在职证明、银行流水、房产证等约束力材料。');
   return{score:score,passRate:passRate,cats:cats,findings:findings,questions:questions,advice:adviceItems,sVals:sVals,maxScore:maxScore};
 }
