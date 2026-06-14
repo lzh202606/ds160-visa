@@ -827,73 +827,106 @@ function getAssessmentData(){
 
 function buildPdfReport(appId,ad){
   var ds=new Date().toISOString().slice(0,10),sc=ad.score,pr=ad.passRate;
-  var lvl,lBg,lBg2,lTxt;if(sc<=15){lvl='低风险';lBg='#0d6e3f';lBg2='#e6f4ea';lTxt='#1a5c2a';}else if(sc<=35){lvl='中等风险';lBg='#d85a30';lBg2='#fef7e0';lTxt='#7a5d00';}else if(sc<=60){lvl='高风险';lBg='#b50909';lBg2='#fce8e6';lTxt='#b50909';}else{lvl='极高风险';lBg='#880e4f';lBg2='#fce4ec';lTxt='#880e4f';}
-  // SVG gauge
-  var gaugeR=46,cir=2*Math.PI*gaugeR,dash=cir*sc/100,gc='#2b8c4d';if(sc>35)gc='#d85a30';if(sc>60)gc='#b50909';if(sc>80)gc='#880e4f';
-  var gaugeSVG='<svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+gaugeR+'" fill="none" stroke="#e8e8e8" stroke-width="10"/><circle cx="60" cy="60" r="'+gaugeR+'" fill="none" stroke="'+gc+'" stroke-width="10" stroke-dasharray="'+dash+' '+cir+'" stroke-linecap="round" transform="rotate(-90 60 60)"/><text x="60" y="58" text-anchor="middle" font-size="28" font-weight="800" fill="'+gc+'" font-family="sans-serif">'+sc+'</text><text x="60" y="78" text-anchor="middle" font-size="10" fill="#999" font-family="sans-serif">风险分</text></svg>';
+  var lvl,lBg,lBg2,lTxt,bgLight;
+  if(sc<=15){lvl='低风险';lBg='#0d6e3f';lBg2='#e6f4ea';lTxt='#1a5c2a';bgLight='#f2faf6';}
+  else if(sc<=35){lvl='中等风险';lBg='#d85a30';lBg2='#fef7e0';lTxt='#7a5d00';bgLight='#fffbf0';}
+  else if(sc<=60){lvl='高风险';lBg='#b50909';lBg2='#fce8e6';lTxt='#b50909';bgLight='#fff5f5';}
+  else{lvl='极高风险';lBg='#880e4f';lBg2='#fce4ec';lTxt='#880e4f';bgLight='#fff5f9';}
 
-  // Category cards (2-col grid)
-  var ck=['travel','work','family','visa','security','plan'];
-  var cg='';ck.forEach(function(k){var c=ad.cats[k],p=Math.round(c.sc/c.mx*100),fg='#2b8c4d',bd='🟢',lx='low';if(p>35){fg='#d85a30';bd='🟡';lx='medium';}if(p>65){fg='#b50909';bd='🔴';lx='high';}if(p>85){fg='#880e4f';bd='⛔';lx='critical';}
-  var bg='#e6f4ea';if(lx==='medium')bg='#fef7e0';if(lx==='high')bg='#fce8e6';if(lx==='critical')bg='#fce4ec';
-  cg+='<div style="background:'+bg+';border-radius:8px;padding:10px 12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;font-weight:700;color:#333;">'+bd+' '+c.name+'</span><span style="font-size:10px;font-weight:600;color:'+fg+';">'+c.sc+'/'+c.mx+'</span></div><div style="height:6px;background:rgba(255,255,255,.6);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+p+'%;background:'+fg+';border-radius:3px;transition:width .4s;"></div></div>'+(c.nt.length>0?'<div style="font-size:9px;color:'+fg+';margin-top:4px;">'+c.nt.join(' · ')+'</div>':'')+'</div>';});
+  var gc='#2b8c4d';if(sc>35)gc='#d85a30';if(sc>60)gc='#b50909';if(sc>80)gc='#880e4f';
+  var gaugeR=44,cir=2*Math.PI*gaugeR,dash=cir*sc/100;
+  var gaugeSVG='<svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="'+gaugeR+'" fill="none" stroke="#e8e8e8" stroke-width="9"/><circle cx="55" cy="55" r="'+gaugeR+'" fill="none" stroke="'+gc+'" stroke-width="9" stroke-dasharray="'+dash+' '+cir+'" stroke-linecap="round" transform="rotate(-90 55 55)"/><text x="55" y="54" text-anchor="middle" font-size="26" font-weight="800" fill="'+gc+'" font-family="sans-serif">'+sc+'</text><text x="55" y="70" text-anchor="middle" font-size="9" fill="#999" font-family="sans-serif">风险分</text></svg>';
+
+  // Category cards
+  var ck=['travel','work','family','visa','security','plan'],cg='';
+  ck.forEach(function(k){var c=ad.cats[k],p=Math.round(c.sc/c.mx*100),fg='#2b8c4d',st='低',sg='■';
+    if(p>35){fg='#d85a30';st='中';sg='■';}if(p>65){fg='#b50909';st='高';sg='■';}if(p>85){fg='#880e4f';st='极高';sg='■';}
+    var cardBg='#f2faf6';if(st==='中')cardBg='#fffbf0';if(st==='高')cardBg='#fff5f5';if(st==='极高')cardBg='#fff5f9';
+    cg+='<div style="padding:8px 10px;border-radius:6px;border:1px solid #eee;background:'+cardBg+';">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:10px;font-weight:700;color:#333;">'+c.name+'</span>'+
+      '<span style="font-size:9px;font-weight:600;padding:1px 8px;border-radius:10px;color:#fff;background:'+fg+';">'+st+'</span></div>'+
+      '<div style="height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden;margin-bottom:3px;"><div style="height:100%;width:'+p+'%;background:'+fg+';border-radius:3px;"></div></div>'+
+      '<div style="font-size:8px;color:'+fg+';">'+c.sc+' / '+c.mx+(c.nt.length?'  '+c.nt.join(' · '):'')+'</div></div>';
+  });
 
   // Findings
-  var fh='';ad.findings.forEach(function(f){var bg='#f0f4f8',bd='#456',lb='#789';if(f.lv==='danger'){bg='#fff0f0';bd='#b50909';lb='#b50909';}else if(f.lv==='warn'){bg='#fff8e8';bd='#d85a30';lb='#d85a30';}else if(f.lv==='good'){bg='#f0faf4';bd='#2b8c4d';lb='#2b8c4d';}
-  fh+='<div style="background:'+bg+';border-left:4px solid '+lb+';padding:8px 12px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:11px;color:'+bd+';display:flex;align-items:flex-start;gap:6px;"><span style="font-size:14px;flex-shrink:0;">'+f.i+'</span><span>'+f.t+'</span></div>';});
+  var fh='';ad.findings.forEach(function(f){var bg='#f4f7fa',bd='#456',lb='#789';
+    if(f.lv==='danger'){bg='#fff0f0';bd='#b50909';lb='#b50909';}
+    else if(f.lv==='warn'){bg='#fff8e8';bd='#d85a30';lb='#d85a30';}
+    else if(f.lv==='good'){bg='#f0faf4';bd='#2b8c4d';lb='#2b8c4d';}
+    fh+='<tr><td style="padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:10px;color:'+bd+';"><span style="margin-right:4px;">'+f.i+'</span>'+f.t+'</td></tr>';
+  });
 
   // Questions
-  var qh='';ad.questions.forEach(function(q,i){qh+='<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;"><span style="background:#003867;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">'+(i+1)+'</span><span style="padding-top:1px;">'+q+'</span></div>';});
+  var qh='';ad.questions.forEach(function(q,i){qh+='<tr><td style="padding:4px 0;font-size:10px;color:#333;border-bottom:1px solid #f5f5f5;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#003867;color:#fff;text-align:center;line-height:18px;font-size:9px;font-weight:700;margin-right:6px;vertical-align:middle;">'+(i+1)+'</span>'+q+'</td></tr>';});
 
   // Advice
-  var ah='';ad.advice.forEach(function(a){ah+='<div style="background:#faf5eb;border-left:3px solid #d85a30;padding:6px 12px;margin-bottom:5px;border-radius:0 6px 6px 0;font-size:11px;color:#5c3a00;display:flex;gap:6px;align-items:flex-start;"><span style="color:#d85a30;font-weight:700;flex-shrink:0;">◆</span><span>'+a+'</span></div>';});
+  var ah='';ad.advice.forEach(function(a,i){ah+='<tr><td style="padding:4px 0;font-size:10px;color:#5c3a00;"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#d85a30;color:#fff;text-align:center;line-height:18px;font-size:10px;font-weight:700;margin-right:6px;vertical-align:middle;">'+(i+1)+'</span>'+a+'</td></tr>';});
 
-  return '<div style="font-family:PingFang SC,Microsoft YaHei,sans-serif;color:#222;line-height:1.7;max-width:700px;background:#fff;">'+
+  return '<div style="font-family:PingFang SC,Microsoft YaHei,sans-serif;color:#2a2a2a;line-height:1.6;width:680px;background:#fff;margin:0 auto;">'+
 
-    // --- HEADER ---
-    '<div style="background:linear-gradient(135deg,#002244,#003867,#004d8a);padding:24px 28px 20px 28px;color:#fff;text-align:center;position:relative;overflow:hidden;">'+
-    '<div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%;"></div>'+
-    '<div style="position:absolute;bottom:-20px;left:40px;width:60px;height:60px;background:rgba(255,255,255,.03);border-radius:50%;"></div>'+
-    '<div style="font-size:10px;letter-spacing:4px;opacity:.7;margin-bottom:4px;">U.S. DEPARTMENT OF STATE</div>'+
-    '<h1 style="font-size:20px;font-weight:800;margin:0;letter-spacing:1px;">面签风险评估报告</h1>'+
-    '<div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.15);padding:4px 20px;border-radius:20px;font-size:10px;letter-spacing:2px;">VISA INTERVIEW RISK ASSESSMENT</div>'+
+    // ── HEADER ──────────────────────
+    '<div style="background:linear-gradient(135deg,#001d3d,#003867,#004e96);padding:26px 32px 22px 32px;color:#fff;text-align:center;position:relative;overflow:hidden;">'+
+    '<div style="position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:rgba(255,255,255,.03);border-radius:50%;"></div>'+
+    '<div style="position:absolute;bottom:-25px;left:60px;width:80px;height:80px;background:rgba(255,255,255,.025);border-radius:50%;"></div>'+
+    '<div style="font-size:9px;letter-spacing:5px;opacity:.65;margin-bottom:6px;">U.S. DEPARTMENT OF STATE · BUREAU OF CONSULAR AFFAIRS</div>'+
+    '<h1 style="font-size:22px;font-weight:800;margin:0 0 8px 0;letter-spacing:2px;">面签风险评估报告</h1>'+
+    '<div style="display:inline-block;border:1px solid rgba(255,255,255,.3);padding:3px 24px;border-radius:20px;font-size:9px;letter-spacing:3px;">VISA INTERVIEW RISK ASSESSMENT REPORT</div>'+
     '</div>'+
 
-    // --- META ---
-    '<div style="background:#f8fafc;padding:10px 28px;border-bottom:1px solid #e8ecf0;display:flex;justify-content:space-between;font-size:9px;color:#777;">'+
-    '<span>Application ID: <b style="color:#003867;">'+appId+'</b></span><span>生成日期: '+ds+'</span>'+
+    // ── META BAR ────────────────────
+    '<div style="background:#f8fafc;padding:8px 32px;border-bottom:1px solid #e4e8ec;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#777;">'+
+    '<span>Application ID <b style="color:#003867;font-size:11px;">'+appId+'</b></span>'+
+    '<span style="color:#aaa;">|</span>'+
+    '<span>生成日期 <b style="color:#444;">'+ds+'</b></span>'+
+    '<span style="color:#aaa;">|</span>'+
+    '<span>报告类型 <b style="color:#444;">DS-160 面签评估</b></span>'+
     '</div>'+
 
-    // --- SCORE HERO ---
-    '<div style="padding:20px 28px;background:'+lBg2+';">'+
-    '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">'+
+    // ── SCORE CARD ──────────────────
+    '<div style="padding:22px 32px;background:'+bgLight+';display:flex;align-items:center;gap:24px;">'+
     '<div style="flex-shrink:0;">'+gaugeSVG+'</div>'+
-    '<div style="flex:1;min-width:160px;">'+
-    '<div style="display:inline-block;background:'+lBg+';color:#fff;padding:3px 16px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:6px;">'+lvl+'</div>'+
-    '<div style="font-size:13px;color:#444;line-height:1.6;">预估通过率 <b style="font-size:22px;color:'+lBg+';">'+pr+'%</b></div>'+
-    '<div style="font-size:11px;color:'+lTxt+';margin-top:4px;">'+(sc<=15?'各维度表现良好，面签准备充分。':sc<=35?'部分维度需要关注，建议针对性准备。':sc<=60?'多个维度存在风险，强烈建议完善材料后预约面签。':'高风险因素较多，建议咨询签证专家后再提交申请。')+'</div>'+
-    '</div></div></div>'+
+    '<div style="flex:1;">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'+
+    '<span style="background:'+lBg+';color:#fff;padding:4px 18px;border-radius:20px;font-size:12px;font-weight:700;">'+lvl+'</span>'+
+    '<span style="font-size:11px;color:#666;">综合风险评分</span></div>'+
+    '<div style="font-size:11px;color:#444;margin-bottom:6px;">预估面签通过率 <b style="font-size:28px;color:'+lBg+';line-height:1;">'+pr+'%</b></div>'+
+    '<div style="font-size:10px;color:'+lTxt+';line-height:1.5;">'+(sc<=15?'✓ 各维度表现良好，面签准备充分，保持自信如实回答即可。':sc<=35?'⚠ 部分维度需要关注，建议针对风险项做定向准备后再预约面签。':sc<=60?'▲ 多个维度存在明显风险，强烈建议完善相关材料、提升约束力证明后再申请。':'✕ 高风险因素较多且严重，建议暂缓申请，咨询专业签证顾问调整策略后再提交。')+'</div>'+
+    '</div></div>'+
 
-    // --- DIMENSIONS ---
-    '<div style="padding:20px 28px;">'+
-    '<h2 style="font-size:13px;color:#003867;margin:0 0 12px 0;padding-left:10px;border-left:3px solid #003867;">风险维度分析</h2>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+cg+'</div></div>'+
+    // ── DIMENSIONS ──────────────────
+    '<div style="padding:20px 32px 12px 32px;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">'+
+    '<div style="width:4px;height:16px;background:#003867;border-radius:2px;"></div>'+
+    '<h2 style="font-size:13px;color:#003867;margin:0;font-weight:700;">风险维度分析</h2>'+
+    '<div style="flex:1;height:1px;background:#e8e8e8;margin-left:8px;"></div></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'+cg+'</div></div>'+
 
-    // --- FINDINGS ---
-    '<div style="padding:0 28px 20px 28px;">'+
-    '<h2 style="font-size:13px;color:#003867;margin:0 0 12px 0;padding-left:10px;border-left:3px solid #003867;">关键发现</h2>'+fh+'</div>'+
+    // ── FINDINGS ────────────────────
+    '<div style="padding:4px 32px 12px 32px;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+
+    '<div style="width:4px;height:16px;background:'+lBg+';border-radius:2px;"></div>'+
+    '<h2 style="font-size:13px;color:#003867;margin:0;font-weight:700;">关键发现</h2></div>'+
+    '<table style="width:100%;border-collapse:collapse;">'+fh+'</table></div>'+
 
-    // --- QUESTIONS ---
-    '<div style="padding:0 28px 20px 28px;">'+
-    '<h2 style="font-size:13px;color:#003867;margin:0 0 12px 0;padding-left:10px;border-left:3px solid #003867;">预测面签问题</h2>'+qh+'</div>'+
+    // ── QUESTIONS ──────────────────
+    '<div style="padding:4px 32px 12px 32px;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+
+    '<div style="width:4px;height:16px;background:#003867;border-radius:2px;"></div>'+
+    '<h2 style="font-size:13px;color:#003867;margin:0;font-weight:700;">预测面签问题</h2></div>'+
+    '<table style="width:100%;border-collapse:collapse;">'+qh+'</table></div>'+
 
-    // --- ADVICE ---
-    '<div style="padding:0 28px 20px 28px;">'+
-    '<h2 style="font-size:13px;color:#003867;margin:0 0 12px 0;padding-left:10px;border-left:3px solid #003867;">面签准备建议</h2>'+ah+'</div>'+
+    // ── ADVICE ────────────────────
+    '<div style="padding:4px 32px 16px 32px;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+
+    '<div style="width:4px;height:16px;background:#d85a30;border-radius:2px;"></div>'+
+    '<h2 style="font-size:13px;color:#003867;margin:0;font-weight:700;">面签准备建议</h2></div>'+
+    '<table style="width:100%;border-collapse:collapse;">'+ah+'</table></div>'+
 
-    // --- FOOTER ---
-    '<div style="text-align:center;padding:16px 28px;border-top:1px solid #eee;font-size:9px;color:#aaa;">'+
-    'AI-Assisted Tool · 本报告为辅助参考，最终签证结果由美国领事官员决定<br>Application ID: '+appId+'</div>'+
+    // ── FOOTER ────────────────────
+    '<div style="margin:4px 32px 20px 32px;border-top:2px solid #003867;padding-top:12px;text-align:center;font-size:8px;color:#aaa;line-height:1.6;">'+
+    '<b style="color:#003867;">AI-Assisted Assessment Tool</b> &nbsp;·&nbsp; 本报告基于 DS-160 表单数据自动生成，为辅助参考<br>'+
+    '最终签证审批结果由美国领事官员独立决定 &nbsp;·&nbsp; Application ID: '+appId+'</div>'+
     '</div>';
 }
 
@@ -929,7 +962,7 @@ async function printPDF(){
     var ad=getAssessmentData();var rp=buildPdfReport(appId,ad);
     var d=document.createElement('div');d.id='__pdfR_';d.innerHTML='<div style="background:#fff;">'+rp+'</div>';
     document.body.appendChild(d);await new Promise(function(r){setTimeout(r,400);});
-    var cv2=await html2canvas(d,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true,width:740});
+    var cv2=await html2canvas(d,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true,width:680});
     document.body.removeChild(d);
     var ih2=cv2.height*190/cv2.width;pdf.addImage(cv2.toDataURL('image/png'),'PNG',10,15,190,ih2);
     var r2=ih2-267;
