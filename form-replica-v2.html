@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS-160 Nonimmigrant Visa Application | CEAC Official Replica</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --primary: #003867; --primary-light: #e3edf4; --danger: #b50909; --success: #2b8c4d;
+  --warning: #946a00; --bg: #f5f6f8; --card-bg: #fff; --text: #1b1b1b;
+  --text2: #565c65; --border: #c9c9c9; --radius: 4px; --shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:"Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:80px;
+}
+.gov-banner{background:#f0f0f0;padding:6px 16px;font-size:11px;color:#565c65;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.gov-banner .flag{background:#b50909;color:#fff;padding:1px 6px;border-radius:2px;font-weight:700;font-size:10px;}
+.header{background:#fff;border-bottom:3px solid #003867;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+.header h1{font-size:17px;font-weight:600;color:#003867;line-height:1.2;}
+.header p{font-size:12px;color:#565c65;margin:0;}
+.progress-bar{background:#fff;border-bottom:1px solid var(--border);padding:8px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;}
+.progress-track{flex:1;height:5px;background:#e8e8e8;border-radius:3px;}
+.progress-fill{height:100%;background:#2b8c4d;border-radius:3px;transition:width .4s;}
+.progress-text{font-size:12px;color:var(--text2);white-space:nowrap;}
+.container{max-width:780px;margin:0 auto;padding:20px 16px;}
+
+.section{background:#fff;border:1px solid var(--border);border-radius:4px;margin-bottom:12px;overflow:hidden;}
+.section-header{background:#f8fafc;padding:11px 16px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background .15s;}
+.section-header:hover{background:#eef3f7;}
+.section-num{background:var(--primary);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.section-title{font-weight:600;font-size:13px;flex:1;}
+.section-arrow{font-size:10px;transition:transform .3s;color:#757575;}
+.section.open .section-arrow{transform:rotate(90deg);}
+.section-body{padding:0;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;}
+.section.open .section-body{max-height:8000px;padding:16px;}
+.section-body h3{font-size:13px;color:var(--primary);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #dce8f0;font-weight:600;}
+.section-body h4{font-size:12px;color:var(--text);margin-bottom:6px;font-weight:600;}
+
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:10px;}
+.form-row.col2{grid-template-columns:1fr 1fr;}
+.form-row.col1{grid-template-columns:1fr;}
+.form-row.col3{grid-template-columns:1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;}
+.form-group label{font-size:11px;font-weight:500;margin-bottom:2px;color:var(--text);}
+.form-group label .req{color:var(--danger);}
+.form-group label .hint{font-weight:400;color:var(--text2);font-size:10px;}
+.form-group input,.form-group select,.form-group textarea{padding:6px 9px;border:1px solid var(--border);border-radius:3px;font-size:12px;font-family:inherit;background:#fff;transition:border-color .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#005ea2;box-shadow:0 0 0 2px rgba(0,94,162,.1);}
+.form-group textarea{resize:vertical;min-height:50px;}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0;justify-content:center;}
+.btn{padding:9px 20px;border:none;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:#002d50;}
+.btn-outline{background:#fff;color:var(--primary);border:2px solid var(--primary);}
+.btn-outline:hover{background:var(--primary-light);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-success:hover{background:#216d3a;}
+.btn-danger{background:#fff;color:var(--danger);border:2px solid var(--danger);}
+.btn-danger:hover{background:#fef0f0;}
+
+.alert{padding:9px 12px;border-radius:3px;margin-bottom:12px;font-size:11px;line-height:1.5;}
+.alert-info{background:#e7f2fa;color:#003867;border-left:4px solid #005ea2;}
+.alert-warning{background:#faf3d1;color:#5c4000;border-left:4px solid #ffbe2e;}
+
+.sec-q{display:flex;align-items:center;gap:.8rem;padding:5px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;}
+.sec-q label{flex:1;font-size:11px;min-width:200px;}
+.sec-q select{width:100px;flex-shrink:0;padding:4px 8px;border:1px solid var(--border);border-radius:3px;font-size:11px;}
+.sec-q input{flex:1;display:none;min-width:200px;}
+
+.preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;overflow-y:auto;padding:20px;}
+.preview-overlay.show{display:block;}
+.preview-paper{background:#fff;max-width:800px;margin:20px auto;padding:40px;border-radius:3px;font-family:"Courier New",monospace;font-size:12px;line-height:1.5;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+.close-btn{position:fixed;top:20px;right:20px;z-index:1001;background:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;}
+
+/* Photo upload zone (unused, removed from UI) */
+
+@media(max-width:768px){.form-row,.form-row.col2,.form-row.col3{grid-template-columns:1fr;}.container{padding:12px;}}
+@media print{.gov-banner,.header,.progress-bar,.btn-row,.alert,.close-btn{display:none!important;}
+  .section-body{max-height:none!important;padding:16px!important;}
+  .section{border:1px solid #000;margin-bottom:0;box-shadow:none;page-break-inside:avoid;}
+  body{padding-left:0;background:#fff;}
+}
+</style>
+</head>
+<body>
+<div class="gov-banner"><span class="flag">U.S. FLAG</span> An official website of the United States Government</div>
+
+<!-- Token Gate -->
+<div id="tokenGate" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:480px;width:90%;text-align:center;color:#fff;">
+    <div style="font-size:48px;margin-bottom:16px;" id="gateIcon">⏱️</div>
+    <h2 style="margin-bottom:8px;" id="gateTitle">链接已失效</h2>
+    <p style="color:#94a3b8;font-size:14px;line-height:1.8;" id="gateMsg">此链接已被使用或无效。</p>
+  </div>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-text">Progress: <span id="progressPercent">0%</span></div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-text"><span id="filledCount">0</span> fields</div>
+</div>
+
+<div class="header">
+  <div><h1>DS-160: Nonimmigrant Visa Application</h1><p>U.S. Department of State · Bureau of Consular Affairs</p></div>
+  <div style="text-align:right;font-size:12px;">Application ID<br><strong style="color:#003867;font-size:16px;" id="appIdDisplay">AA00000000</strong></div>
+</div>
+
+<div class="container">
+<div class="alert alert-info">Fields marked <span style="color:var(--danger)">*</span> are required. Complete all sections in order.</div>
+
+<form id="ds160Form" novalidate>
+<!-- ═══ 1. Personal Information 1 ═══ -->
+<div class="section open" id="section-1">
+  <div class="section-header" onclick="toggleSection(1)"><span class="section-num">1</span><span class="section-title">Personal Information 1 个人信息（一）</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col2">
+      <div class="form-group"><label>Surnames 姓氏 <span class="req">*</span></label><input name="surname" data-field="Surnames" placeholder="e.g. CHEN" required></div>
+      <div class="form-group"><label>Given Names 名字 <span class="req">*</span></label><input name="givenName" data-field="Given Names" placeholder="e.g. XIAOMING" required></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>Full Name in Native Alphabet 中文姓名 <span class="req">*</span></label><input name="nativeName" data-field="Name in Native" placeholder="e.g. 陈小明" required></div></div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Surname Telecode 姓氏电码 <span class="hint">4 digits</span></label><input name="surTelecode" placeholder="e.g. 7115"></div>
+      <div class="form-group"><label>Given Name Telecode 名字电码 <span class="hint">4 digits</span></label><input name="givTelecode" placeholder="e.g. 1129 2494"></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>Other Surnames Used 曾用姓氏 <span class="hint">Maiden name, professional name, etc. / 如无则填 N/A</span></label><input name="otherSurnames" data-field="Other Surnames" placeholder="N/A"></div></div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Sex 性别 <span class="req">*</span></label><select name="sex" data-field="Sex" required><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+      <div class="form-group"><label>Marital Status 婚姻状态 <span class="req">*</span></label>
+        <select name="maritalStatus" data-field="Marital Status" required>
+          <option value="">Select</option><option value="Single">Single 未婚</option><option value="Married">Married 已婚</option>
+          <option value="Common Law">Common Law 事实婚姻</option><option value="Widowed">Widowed 丧偶</option>
+          <option value="Divorced">Divorced 离异</option><option value="Separated">Separated 分居</option><option value="Other">Other 其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Date of Birth 出生日期 <span class="req">*</span></label><input type="date" name="dob" data-field="DOB" required></div>
+      <div class="form-group"><label>City of Birth 出生城市 <span class="req">*</span></label><input name="birthCity" data-field="Birth City" placeholder="e.g. Fuzhou" required></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>State/Province of Birth 出生省/州 <span class="req">*</span></label><input name="birthState" data-field="Birth State" placeholder="e.g. Fujian" required></div>
+      <div class="form-group"><label>Country of Birth 出生国家 <span class="req">*</span></label>
+        <select name="birthCountry" data-field="Birth Country" required id="birthCountry"><option value="">Select</option><option value="CHINA">CHINA</option><option value="TAIWAN">TAIWAN</option><option value="HK">HONG KONG SAR</option><option value="MACAU">MACAU SAR</option><option value="OTHER">OTHER</option></select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 2. Personal Information 2 ═══ -->
+<div class="section" id="section-2">
+  <div class="section-header" onclick="toggleSection(2)"><span class="section-num">2</span><span class="section-title">Personal Information 2 个人信息（二）</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col2">
+      <div class="form-group"><label>Nationality 国籍 <span class="req">*</span></label><select name="nationality" data-field="Nationality" required><option value="">Select</option><option value="CHINA">CHINA</option><option value="TAIWAN">TAIWAN</option><option value="HK">HONG KONG SAR</option><option value="MACAU">MACAU SAR</option><option value="OTHER">OTHER</option></select></div>
+      <div class="form-group"><label>Other Nationality? 其他国籍/永居</label><select name="otherNationality" data-field="Other Nationality"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+    </div>
+    <div id="otherNationalityBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain</label><input name="otherNationalityList" placeholder="List countries"></div></div>
+    <div class="form-row col2">
+      <div class="form-group"><label>National Identification Number 身份证号</label><input name="nationalId" data-field="National ID" placeholder="N/A if not applicable"></div>
+      <div class="form-group"><label>U.S. Social Security Number</label><input name="ssn" data-field="SSN" placeholder="Does Not Apply"></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>U.S. Taxpayer ID Number</label><input name="taxpayerId" data-field="Taxpayer ID" placeholder="Does Not Apply"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 3. Address and Phone (including Social Media) ═══ -->
+<div class="section" id="section-3">
+  <div class="section-header" onclick="toggleSection(3)"><span class="section-num">3</span><span class="section-title">Address and Phone Information 地址和联系方式</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <h3>Home Address 家庭地址</h3>
+    <div class="form-row col1"><div class="form-group"><label>Street Address 1 详细地址 <span class="req">*</span></label><input name="addrLine1" data-field="Address 1" placeholder="e.g. Room 301, No.88 Wusi Rd" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Street Address 2 <span class="hint">Optional</span></label><input name="addrLine2" data-field="Address 2"></div></div>
+    <div class="form-row col2">
+      <div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="addrCity" data-field="City" placeholder="e.g. Fuzhou" required></div>
+      <div class="form-group"><label>State/Province 省/州 <span class="req">*</span></label><input name="addrState" data-field="State" placeholder="e.g. Fujian" required></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Postal Code 邮编</label><input name="addrZip" data-field="ZIP"></div>
+      <div class="form-group"><label>Country 国家 <span class="req">*</span></label><select name="addrCountry" data-field="Country" required><option value="CHINA">CHINA</option></select></div>
+    </div>
+    <h3 style="margin-top:14px;">Mailing Address 邮寄地址</h3>
+    <div class="form-row col1"><div class="form-group"><label>Is your mailing address the same as home? 邮寄地址与家庭地址相同？ <span class="req">*</span></label><select name="mailingSame" data-field="Mail Same" required><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div></div>
+    <div id="mailingBlock" style="display:none;">
+      <div class="form-row col1"><div class="form-group"><label>Mailing Address</label><input name="mailingAddr"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>City</label><input name="mailingCity"><label>State/Province</label><input name="mailingState"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Postal Code</label><input name="mailingZip"><label>Country</label><input name="mailingCountry"></div></div>
+    </div>
+    <h3 style="margin-top:14px;">Phone & Email 电话和邮箱</h3>
+    <div class="form-row col2">
+      <div class="form-group"><label>Primary Phone 主要电话 <span class="req">*</span></label><input name="phone" data-field="Phone" placeholder="e.g. 13800138000" required></div>
+      <div class="form-group"><label>Secondary Phone 备用电话</label><input name="phone2" data-field="Phone2"></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>Email Address 电子邮箱 <span class="req">*</span></label><input name="email" data-field="Email" type="email" placeholder="you@email.com" required></div></div>
+
+    <h3 style="margin-top:14px;">Email Addresses (Last 5 Years) 近5年其他邮箱</h3>
+    <div class="form-row col1"><div class="form-group"><label>Have you used other email addresses in the last 5 years?</label><select name="hasOtherEmails"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="otherEmailsBlock" style="display:none;">
+      <div class="form-row col2"><div class="form-group"><label>Email 1</label><input name="email2" type="email"><label>Email 2</label><input name="email3" type="email"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Email 3</label><input name="email4" type="email"></div></div>
+    </div>
+
+    <h3 style="margin-top:14px;">Social Media Identifiers 社交媒体信息 (过去5年)</h3>
+    <div class="alert alert-info" style="font-size:10px;">Provide identifiers used in the last 5 years. Leave blank if not applicable.</div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Facebook</label><input name="sm_facebook" placeholder="@username"></div>
+      <div class="form-group"><label>Twitter / X</label><input name="sm_twitter" placeholder="@username"></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Instagram</label><input name="sm_instagram" placeholder="@username"></div>
+      <div class="form-group"><label>YouTube</label><input name="sm_youtube" placeholder="Channel"></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>LinkedIn</label><input name="sm_linkedin" placeholder="Profile URL"></div>
+      <div class="form-group"><label>WeChat 微信</label><input name="sm_wechat" placeholder="WeChat ID"></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Weibo 微博</label><input name="sm_weibo" placeholder="Username"></div>
+      <div class="form-group"><label>QQ</label><input name="sm_qq" placeholder="QQ number"></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Douyin / TikTok 抖音</label><input name="sm_douyin" placeholder="Username"></div>
+      <div class="form-group"><label>Telegram</label><input name="sm_telegram" placeholder="@username"></div>
+    </div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Reddit</label><input name="sm_reddit" placeholder="u/username"></div>
+      <div class="form-group"><label>Other 其他平台</label><input name="sm_other" placeholder="Platform + ID"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 4. Passport ═══ -->
+<div class="section" id="section-4">
+  <div class="section-header" onclick="toggleSection(4)"><span class="section-num">4</span><span class="section-title">Passport/Travel Document Information 护照信息</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col2">
+      <div class="form-group"><label>Passport Type 护照类型 <span class="req">*</span></label><select name="passportType" data-field="Passport Type" required><option value="">Select</option><option value="Regular">Regular</option><option value="Official">Official</option><option value="Diplomatic">Diplomatic</option><option value="Service">Service</option><option value="Other">Other Travel Document</option></select></div>
+      <div class="form-group"><label>Passport Number 护照号码 <span class="req">*</span></label><input name="passportNo" data-field="Passport #" placeholder="e.g. E12345678" required></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>Passport Book Number 护照本编号 <span class="hint">May not apply to all countries</span></label><input name="passportBookNo" data-field="Book #" placeholder=""></div></div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Country of Issuance 签发国家 <span class="req">*</span></label><select name="passportCty" data-field="Iss Country" required><option value="CHINA">CHINA</option></select></div>
+      <div class="form-group"><label>City of Issuance 签发城市</label><input name="passportCity" data-field="Iss City" placeholder="e.g. Fuzhou"></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>State/Province of Issuance</label><input name="passportState" placeholder="e.g. Fujian"></div></div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Issuance Date 签发日期 <span class="req">*</span></label><input type="date" name="passportIssue" data-field="Iss Date" required></div>
+      <div class="form-group"><label>Expiration Date 有效期至 <span class="req">*</span></label><input type="date" name="passportExpiry" data-field="Exp Date" required></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>Lost/Stolen Passport? 护照遗失/被盗? <span class="req">*</span></label><select name="passportLost" data-field="Passport Lost" required><option value="">Select</option><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="passportLostBlock" style="display:none;">
+      <div class="form-row col2"><div class="form-group"><label>Lost Passport #</label><input name="passportLostNo"><label>Country Where Lost</label><input name="passportLostCty"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Explanation</label><textarea name="passportLostEx" rows="2"></textarea></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 5. Travel ═══ -->
+<div class="section" id="section-5">
+  <div class="section-header" onclick="toggleSection(5)"><span class="section-num">5</span><span class="section-title">Travel Information 旅行信息</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col2">
+      <div class="form-group"><label>Purpose of Trip 赴美目的 <span class="req">*</span></label><select name="tripPurpose" data-field="Trip Purpose" required id="tripPurpose"><option value="">Select</option><option value="B1">BUSINESS / CONFERENCE (B1)</option><option value="B2">TOURISM / PLEASURE (B2)</option><option value="B1/B2">BUSINESS & TOURISM (B1/B2)</option><option value="F1">STUDENT (F1)</option><option value="F2">STUDENT DEPENDENT (F2)</option><option value="J1">EXCHANGE VISITOR (J1)</option><option value="J2">EXCHANGE DEPENDENT (J2)</option><option value="H1B">TEMPORARY WORKER (H1B)</option><option value="L1">INTRA-COMPANY TRANSFER (L1)</option><option value="M1">VOCATIONAL TRAINING (M1)</option><option value="O1">EXTRAORDINARY ABILITY (O1)</option></select></div>
+      <div class="form-group"><label>Intended Visa Type 签证类型 <span class="req">*</span></label><select name="visaType" data-field="Visa Type" required><option value="">Select</option><option value="B1">B1</option><option value="B2">B2</option><option value="B1/B2">B1/B2</option><option value="F1">F1</option><option value="F2">F2</option><option value="J1">J1</option><option value="J2">J2</option><option value="H1B">H1B</option><option value="L1">L1</option><option value="M1">M1</option><option value="O1">O1</option></select></div>
+    </div>
+    <h3>Travel Plans 旅行计划</h3>
+    <div class="form-row col1"><div class="form-group"><label>Have you made specific travel plans? 是否已制定具体旅行计划? <span class="req">*</span></label><select name="hasTravelPlans" data-field="Travel Plans" required id="hasTravelPlans"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div></div>
+    <div id="travelPlansBlock" style="display:none;">
+      <div class="form-row col2"><div class="form-group"><label>Intended Date of Arrival</label><input type="date" name="arrivalDate" data-field="Arrival"><label>Intended Date of Departure</label><input type="date" name="departureDate" data-field="Departure"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Intended Length of Stay</label><input name="stayLength" data-field="Stay Length" placeholder="e.g. 2 weeks / 4 years"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Flight to U.S. <span class="hint">If known</span></label><input name="arrivalFlight" placeholder="e.g. CA981"><label>Flight from U.S. <span class="hint">If known</span></label><input name="departureFlight" placeholder="e.g. DL124"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Places to Visit 计划旅游地点</label><input name="travelPlaces" data-field="Places" placeholder="e.g. NYC, Washington DC"></div></div>
+    </div>
+    <h3 style="margin-top:14px;">U.S. Address 在美地址</h3>
+    <div class="form-row col1"><div class="form-group"><label>Street Address <span class="req">*</span></label><input name="usAddrLine1" data-field="US Address" placeholder="School/hotel address" required></div></div>
+    <div class="form-row col3"><div class="form-group"><label>City <span class="req">*</span></label><input name="usAddrCity" data-field="US City" placeholder="e.g. New York" required><label>State <span class="req">*</span></label><select name="usAddrState" data-field="US State" required><option value="">Select</option><option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option><option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option><option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option><option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option><option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option><option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option><option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option><option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option><option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option><option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option><option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option><option value="WI">WI</option><option value="WY">WY</option><option value="DC">DC</option></select><label>ZIP <span class="req">*</span></label><input name="usAddrZip" data-field="US ZIP" placeholder="e.g. 10001" required></div></div>
+    <h3 style="margin-top:14px;">Trip Payment 旅行费用</h3>
+    <div class="form-row col1"><div class="form-group"><label>Person/Entity Paying <span class="req">*</span></label><select name="tripPayer" data-field="Trip Payer" required id="tripPayer"><option value="">Select</option><option value="SELF">SELF</option><option value="OTHER PERSON">OTHER PERSON</option><option value="COMPANY/ORG">COMPANY / ORGANIZATION</option><option value="OTHER">OTHER</option></select></div></div>
+    <div id="payerBlock" style="display:none;">
+      <div class="form-row col2"><div class="form-group"><label>Name of Payer</label><input name="payerName"><label>Relationship</label><input name="payerRelation"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Address</label><input name="payerAddr"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Phone</label><input name="payerPhone"><label>Email</label><input name="payerEmail" type="email"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 6. Travel Companions ═══ -->
+<div class="section" id="section-6">
+  <div class="section-header" onclick="toggleSection(6)"><span class="section-num">6</span><span class="section-title">Travel Companions Information 旅伴信息</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col1"><div class="form-group"><label>Traveling with others? 是否与其他人同行? <span class="req">*</span></label><select name="hasCompanion" data-field="Companions" required id="hasCompanion"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="companionBlock" style="display:none;">
+      <div class="form-row col1"><div class="form-group"><label>Names & Relationships</label><textarea name="companionList" rows="2" placeholder="LI SI (Spouse)&#10;WANG WU (Colleague)"></textarea></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Traveling as part of a group/organization?</label><select name="travelGroup" data-field="Group Travel"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+      <div id="groupNameBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Group/Organization Name</label><input name="groupName"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 7. Previous U.S. Travel ═══ -->
+<div class="section" id="section-7">
+  <div class="section-header" onclick="toggleSection(7)"><span class="section-num">7</span><span class="section-title">Previous U.S. Travel Information 赴美旅行历史</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col1"><div class="form-group"><label>Ever been to the U.S.? 是否去过美国? <span class="req">*</span></label><select name="prevUSTravel" data-field="Prev US Travel" required id="prevUSTravel"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="prevTravelBlock" style="display:none;"><div class="form-row col1"><div class="form-group"><label>Last 5 visits (date, length)</label><textarea name="prevTravelRec" rows="3" placeholder="2023-06-01 to 2023-06-20 (20 days) Tourism&#10;2019-01-10 to 2019-01-25 (15 days) Business"></textarea></div></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Ever issued a U.S. visa? 曾获美国签证? <span class="req">*</span></label><select name="hadUSVisa" data-field="US Visa Issued" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Visa ever cancelled/revoked? 签证曾被取消/撤销? <span class="req">*</span></label><select name="visaRevoked" data-field="Visa Revoked" required id="visaRevoked"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="visaRevokedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain</label><textarea name="visaRevokedEx" rows="2"></textarea></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Immigrant petition filed for you? 曾有人为您提交移民申请? <span class="req">*</span></label><select name="immPetition" data-field="Imm Petition" required id="immPetition"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="immPetitionBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain</label><textarea name="immPetitionEx" rows="2" placeholder="Who filed, when"></textarea></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Ever refused a U.S. visa or denied entry? 曾被拒签/拒绝入境? <span class="req">*</span></label><select name="visaRefused" data-field="Visa Refused" required id="visaRefused"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="visaRefusedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain</label><textarea name="visaRefusedEx" rows="3" placeholder="When, where, what visa type, reason"></textarea></div></div>
+  </div>
+</div>
+
+<!-- ═══ 8. U.S. Point of Contact ═══ -->
+<div class="section" id="section-8">
+  <div class="section-header" onclick="toggleSection(8)"><span class="section-num">8</span><span class="section-title">U.S. Point of Contact Information 在美联系人</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="alert alert-info" style="font-size:10px;">Provide contact information of a person or organization in the U.S. (school official, friend, relative, hotel, etc.)</div>
+    <div class="form-row col2">
+      <div class="form-group"><label>Contact Type 联系人类型 <span class="req">*</span></label><select name="contactType" data-field="Contact Type" required><option value="">Select</option><option value="SCHOOL OFFICIAL">School Official</option><option value="FRIEND">Friend</option><option value="RELATIVE">Relative</option><option value="SPOUSE">Spouse</option><option value="BUSINESS CONTACT">Business Contact</option><option value="HOTEL">Hotel</option><option value="OTHER">Other</option></select></div>
+      <div class="form-group"><label>Contact Name 联系人姓名 <span class="req">*</span></label><input name="contactName" data-field="Contact Name" placeholder="Individual or organization" required></div>
+    </div>
+    <div class="form-row col1"><div class="form-group"><label>Organization Name</label><input name="contactOrg" data-field="Contact Org" placeholder="School / company name"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Relationship to You</label><select name="contactRelation" data-field="Contact Rel"><option value="">Select</option><option value="SCHOOL OFFICIAL">School Official</option><option value="FRIEND">Friend</option><option value="RELATIVE">Relative</option><option value="SPOUSE">Spouse</option><option value="EMPLOYER">Employer</option><option value="BUSINESS ASSOCIATE">Business Associate</option><option value="HOTEL">Hotel</option><option value="OTHER">Other</option></select></div></div>
+    <h4 style="margin-top:10px;">Contact Address</h4>
+    <div class="form-row col1"><div class="form-group"><label>Street</label><input name="contactAddr" data-field="Contact Addr"></div></div>
+    <div class="form-row col3"><div class="form-group"><label>City</label><input name="contactCity"><label>State</label><input name="contactState"><label>ZIP</label><input name="contactZip"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Phone</label><input name="contactPhone"><label>Email</label><input name="contactEmail" type="email"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 9. Family: Relatives ═══ -->
+<div class="section" id="section-9">
+  <div class="section-header" onclick="toggleSection(9)"><span class="section-num">9</span><span class="section-title">Family Information: Relatives 家庭信息：父母</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <h3>Father 父亲</h3>
+    <div class="form-row col2"><div class="form-group"><label>Surname <span class="req">*</span></label><input name="fatherSurname" data-field="Father Sur" placeholder="e.g. CHEN" required><label>Given Name <span class="req">*</span></label><input name="fatherGiven" data-field="Father Giv" placeholder="e.g. DAWEI" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Date of Birth</label><input type="date" name="fatherDob" data-field="Father DOB"><label>In the U.S.? <span class="req">*</span></label><select name="fatherInUS" data-field="Father US" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <h3 style="margin-top:14px;">Mother 母亲</h3>
+    <div class="form-row col2"><div class="form-group"><label>Surname <span class="req">*</span></label><input name="motherSurname" data-field="Mother Sur" placeholder="e.g. LIN" required><label>Given Name <span class="req">*</span></label><input name="motherGiven" data-field="Mother Giv" placeholder="e.g. MEILING" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Date of Birth</label><input type="date" name="motherDob" data-field="Mother DOB"><label>In the U.S.? <span class="req">*</span></label><select name="motherInUS" data-field="Mother US" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <h3 style="margin-top:14px;">Immediate Relatives in U.S.</h3>
+    <div class="form-row col1"><div class="form-group"><label>Any immediate relatives in the U.S.? <span class="req">*</span></label><select name="relativeInUS" data-field="Relatives US" required id="relativeInUS"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="relativeBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List</label><textarea name="relativeList" rows="2" placeholder="CHEN LI, Brother, Green Card&#10;WANG HUA, Father, Citizen"></textarea></div></div>
+  </div>
+</div>
+
+<!-- ═══ 10. Family: Spouse ═══ -->
+<div class="section" id="section-10">
+  <div class="section-header" onclick="toggleSection(10)"><span class="section-num">10</span><span class="section-title">Family Information: Spouse 配偶信息 (如适用)</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="alert alert-info" style="font-size:10px;">Complete if married / common law. Otherwise skip.</div>
+    <div class="form-row col2"><div class="form-group"><label>Spouse's Surname</label><input name="spouseSur"><label>Spouse's Given Name</label><input name="spouseGiv"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Date of Birth</label><input type="date" name="spouseDob"><label>Nationality</label><input name="spouseNat" placeholder="China"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>City of Birth</label><input name="spouseBirthCity"><label>Country of Birth</label><select name="spouseBirthCty"><option value="">Select</option><option value="CHINA">CHINA</option><option value="OTHER">OTHER</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address (if different from yours)</label><input name="spouseAddr"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 11. Work/Education: Present ═══ -->
+<div class="section" id="section-11">
+  <div class="section-header" onclick="toggleSection(11)"><span class="section-num">11</span><span class="section-title">Work/Education/Training: Present 当前工作/教育信息</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="form-row col1"><div class="form-group"><label>Primary Occupation 主要职业 <span class="req">*</span></label>
+      <select name="occupation" data-field="Occupation" required id="occupation">
+        <option value="">— Select —</option>
+        <option value="BUSINESS">BUSINESS</option><option value="COMMUNICATIONS">COMMUNICATIONS</option>
+        <option value="COMPUTER SCIENCE">COMPUTER SCIENCE</option><option value="CULINARY/FOOD">CULINARY/FOOD SERVICES</option>
+        <option value="EDUCATION">EDUCATION</option><option value="ENGINEERING">ENGINEERING</option>
+        <option value="GOVERNMENT">GOVERNMENT</option><option value="MILITARY">MILITARY</option>
+        <option value="MEDICAL/HEALTH">MEDICAL/HEALTH</option><option value="HOMEMAKER">HOMEMAKER</option>
+        <option value="HOMEWORK">HOME-BASED WORKER</option><option value="LEGAL PROFESSION">LEGAL PROFESSION</option>
+        <option value="NATURAL SCIENCE">NATURAL SCIENCE</option><option value="PHYSICAL SCIENCE">PHYSICAL SCIENCE</option>
+        <option value="SOCIAL SCIENCE">SOCIAL SCIENCE</option><option value="RESEARCH">RESEARCH</option>
+        <option value="RELIGIOUS VOCATION">RELIGIOUS VOCATION</option><option value="NOT EMPLOYED">NOT EMPLOYED</option>
+        <option value="STUDENT">STUDENT</option><option value="RETIRED">RETIRED</option>
+        <option value="UNEMPLOYED">UNEMPLOYED</option><option value="SELF-EMPLOYED">SELF-EMPLOYED</option>
+        <option value="OTHER">OTHER</option>
+      </select>
+    </div></div>
+    <div id="occExplain" class="alert alert-info" style="display:none;font-size:10px;"><span id="occExplainText"></span><div id="occOtherInput" hidden style="margin-top:4px;"><label>Specify occupation:</label><input name="occupationOther" style="width:100%;"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Employer / School Name <span class="req">*</span></label><input name="employerName" data-field="Employer" placeholder="e.g. X Company / Fuzhou University" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="employerAddr" data-field="Employer Addr"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>City</label><input name="employerCity"><label>State/Province</label><input name="employerState"></div></div>
+    <div class="form-row col3"><div class="form-group"><label>Postal Code</label><input name="employerZip"><label>Country</label><input name="employerCountry" placeholder="China"><label>Work Phone</label><input name="workPhone"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Monthly Salary (local currency) <span class="req">*</span></label><input name="monthlySalary" type="number" data-field="Salary" placeholder="e.g. 8000" required><label>Briefly Describe Duties <span class="req">*</span></label><input name="jobDuties" data-field="Duties" placeholder="e.g. Software Engineer" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Were you previously employed? <span class="req">*</span></label><select name="prevEmployed" data-field="Prev Employed" required id="prevEmployed"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="alert alert-warning" style="font-size:10px;">If Yes, complete Section 12 (Previous Work).</div>
+  </div>
+</div>
+
+<!-- ═══ 12. Work/Education: Previous ═══ -->
+<div class="section" id="section-12">
+  <div class="section-header" onclick="toggleSection(12)"><span class="section-num">12</span><span class="section-title">Work/Education/Training: Previous 过往工作 (过去5年)</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="alert alert-info" style="font-size:10px;">List all previous employment/school in the last 5 years. Leave blank if none.</div>
+    <h4>Previous Employer 1</h4>
+    <div class="form-row col2"><div class="form-group"><label>Employer Name</label><input name="prevEmp1"><label>Job Title</label><input name="prevJob1"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="prevAddr1"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>City</label><input name="prevCity1"><label>State</label><input name="prevState1"></div></div>
+    <div class="form-row col3"><div class="form-group"><label>ZIP</label><input name="prevZip1"><label>Phone</label><input name="prevPhone1"><label>Country</label><input name="prevCty1"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Salary</label><input name="prevSal1" type="number"><label>Dates (From-To)</label><input name="prevDates1" placeholder="e.g. 2021-2023"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Duties</label><input name="prevDuties1"></div></div>
+    <hr style="border-color:#e0e0e0;margin:12px 0;">
+    <h4>Previous Employer 2</h4>
+    <div class="form-row col2"><div class="form-group"><label>Employer Name</label><input name="prevEmp2"><label>Job Title</label><input name="prevJob2"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="prevAddr2"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>City</label><input name="prevCity2"><label>State</label><input name="prevState2"></div></div>
+    <div class="form-row col3"><div class="form-group"><label>ZIP</label><input name="prevZip2"><label>Phone</label><input name="prevPhone2"><label>Country</label><input name="prevCty2"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Salary</label><input name="prevSal2" type="number"><label>Dates</label><input name="prevDates2" placeholder="e.g. 2019-2021"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Duties</label><input name="prevDuties2"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 13. Work/Education: Additional ═══ -->
+<div class="section" id="section-13">
+  <div class="section-header" onclick="toggleSection(13)"><span class="section-num">13</span><span class="section-title">Work/Education/Training: Additional 补充信息</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <h3>Languages Spoken 语言能力</h3>
+    <div class="form-row col2"><div class="form-group"><label>Primary Language</label><select name="lang1"><option value="">Select</option><option>Chinese (Mandarin)</option><option>Chinese (Cantonese)</option><option>English</option><option>Spanish</option><option>Other</option></select><label>English Proficiency</label><select name="englishLvl"><option value="">Select</option><option>Native/Fluent</option><option>Good</option><option>Basic</option><option>None</option></select></div></div>
+
+    <h3 style="margin-top:14px;">Education History 教育背景</h3>
+    <div class="form-row col2"><div class="form-group"><label>Highest Education Level</label><select name="eduLvl"><option value="">Select</option><option>High School</option><option>Associate</option><option>Bachelor's</option><option>Master's</option><option>Doctorate</option><option>Professional (MD/JD)</option><option>Other</option></select><label>Institution Name</label><input name="eduSchool" data-field="School"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="eduAddr"></div></div>
+    <div class="form-row col3"><div class="form-group"><label>City</label><input name="eduCity"><label>State/Province</label><input name="eduState"><label>ZIP</label><input name="eduZip"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Country</label><input name="eduCty" placeholder="China"><label>Major / Course of Study</label><input name="eduMajor" placeholder="e.g. Computer Science"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Dates Attended</label><input name="eduYears" placeholder="e.g. 2018-2022"></div></div>
+
+    <h3 style="margin-top:14px;">Countries Visited (Last 5 Years) 过去5年访问国家</h3>
+    <div class="form-row col1"><div class="form-group"><label>List countries visited</label><textarea name="countriesVisited" rows="3" placeholder="Japan, 2024&#10;Thailand, 2023&#10;South Korea, 2022"></textarea></div></div>
+
+    <h3 style="margin-top:14px;">Organizational Memberships 组织隶属</h3>
+    <div class="form-row col1"><div class="form-group"><label>Have you belonged to or contributed to any professional, social, or charitable organization?</label><select name="orgMember" data-field="Orgs"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="orgMemberBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List organizations</label><textarea name="orgList" rows="2" placeholder="Name, purpose, dates"></textarea></div></div>
+
+    <h3 style="margin-top:14px;">Military Service 军事服役</h3>
+    <div class="form-row col1"><div class="form-group"><label>Have you ever served in the military? <span class="req">*</span></label><select name="military" data-field="Military" required id="military"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div id="militaryBlock" style="display:none;">
+      <div class="form-row col2"><div class="form-group"><label>Country</label><input name="milCty"><label>Branch</label><input name="milBranch" placeholder="e.g. Army, Navy"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Rank</label><input name="milRank"><label>Dates</label><input name="milDates" placeholder="e.g. 2010-2012"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Specialty</label><input name="milSpecialty"></div></div>
+    </div>
+
+    <h3 style="margin-top:14px;">Specialized Skills/Training 特殊技能</h3>
+    <div class="alert alert-warning" style="font-size:10px;">Most applicants answer No. Answer truthfully.</div>
+    <div class="sec-q"><label>Firearms, explosives, WMD training? 枪支/爆炸物/大规模杀伤性武器?</label><select name="skill_weapons" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="skill_weapons_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Nuclear, biological, chemical training? 核/生物/化学培训?</label><select name="skill_nbc" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="skill_nbc_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Child soldier training/use? 儿童兵相关?</label><select name="skill_child" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="skill_child_ex" placeholder="Explain" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ═══ 14-18. Security & Background (5 parts) ═══ -->
+<div class="section" id="section-14">
+  <div class="section-header" onclick="toggleSection(14)"><span class="section-num">14-18</span><span class="section-title">Security and Background 安全与背景</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="alert alert-warning" style="font-size:10px;">Answer ALL questions honestly. Most applicants answer "No" to all.</div>
+    <h4>Part 1 — Medical & Health</h4>
+    <div class="sec-q"><label>Communicable disease of public health significance?</label><select name="s1_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s1_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Physical or mental disorder posing threat?</label><select name="s1_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s1_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Drug abuser or addict?</label><select name="s1_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s1_3_ex" placeholder="Explain" style="display:none;"></div>
+    <h4>Part 2 — Criminal</h4>
+    <div class="sec-q"><label>Arrested or convicted?</label><select name="s2_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Drug law violations?</label><select name="s2_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Money laundering?</label><select name="s2_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Prostitution or procuring?</label><select name="s2_4" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_4_ex" placeholder="Explain" style="display:none;"></div>
+    <h4>Part 3 — National Security</h4>
+    <div class="sec-q"><label>Espionage, sabotage, terrorism?</label><select name="s3_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s3_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Member of terrorist organization?</label><select name="s3_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s3_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Genocide / extrajudicial killings / persecution?</label><select name="s3_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s3_3_ex" placeholder="Explain" style="display:none;"></div>
+    <h4>Part 4 — Immigration</h4>
+    <div class="sec-q"><label>Overstayed U.S. visa?</label><select name="s4_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s4_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Deported or removed from U.S.?</label><select name="s4_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s4_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Alien smuggling?</label><select name="s4_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s4_3_ex" placeholder="Explain" style="display:none;"></div>
+    <h4>Part 5 — Miscellaneous</h4>
+    <div class="sec-q"><label>Withheld custody of U.S. citizen child?</label><select name="s5_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s5_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Human trafficking?</label><select name="s5_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s5_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>War crimes / crimes against humanity?</label><select name="s5_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s5_3_ex" placeholder="Explain" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ═══ 19. Additional Point of Contact (F/M/J only) ═══ -->
+<div class="section" id="section-19" style="opacity:0.6;">
+  <div class="section-header" onclick="toggleSection(19)"><span class="section-num">19</span><span class="section-title">Additional Point of Contact 额外联系人 (F/M/J 签证填写)</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="alert alert-info" style="font-size:10px;">Provide 2 contacts who do NOT live with you. Not necessarily U.S. citizens.</div>
+    <h4>Contact 1</h4>
+    <div class="form-row col2"><div class="form-group"><label>Full Name</label><input name="ref1Name"><label>Phone</label><input name="ref1Phone"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Email</label><input name="ref1Email" type="email"><label>Address</label><input name="ref1Addr"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Relationship</label><input name="ref1Rel" placeholder="e.g. Friend, Colleague"></div></div>
+    <hr style="border-color:#e0e0e0;margin:12px 0;">
+    <h4>Contact 2</h4>
+    <div class="form-row col2"><div class="form-group"><label>Full Name</label><input name="ref2Name"><label>Phone</label><input name="ref2Phone"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Email</label><input name="ref2Email" type="email"><label>Address</label><input name="ref2Addr"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Relationship</label><input name="ref2Rel" placeholder="e.g. Uncle, Neighbor"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 20. SEVIS (F/M/J only) ═══ -->
+<div class="section" id="section-20" style="opacity:0.6;">
+  <div class="section-header" onclick="toggleSection(20)"><span class="section-num">20</span><span class="section-title">SEVIS Information (F/M/J only) SEVIS信息</span><span class="section-arrow">▶</span></div>
+  <div class="section-body">
+    <div class="alert alert-info" style="font-size:10px;">Required ONLY for F, M, or J visa applicants. Others skip.</div>
+    <div class="form-row col2"><div class="form-group"><label>SEVIS ID</label><input name="sevisId" placeholder="N00XXXXXXXXX"><label>Program/School Name</label><input name="sevisSchool"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>School Address</label><input name="sevisAddr"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Course of Study / Major</label><input name="sevisMajor"></div></div>
+  </div>
+</div>
+
+<!-- ═══ Buttons ═══ -->
+<div class="btn-row">
+  <button type="button" class="btn btn-outline" onclick="expandAll()">Expand All</button>
+  <button type="button" class="btn btn-outline" onclick="collapseAll()">Collapse All</button>
+  <button type="button" class="btn btn-primary" onclick="validateForm()">Validate</button>
+  <button type="button" class="btn btn-primary" onclick="showPreview()">Preview DS-160</button>
+  <button type="button" class="btn btn-success" onclick="printPDF()">Download PDF</button>
+  <button type="button" class="btn btn-danger" onclick="resetForm()">Reset All</button>
+</div>
+</form></div>
+
+<!-- Preview -->
+<div class="preview-overlay" id="previewOverlay"><button class="close-btn" onclick="closePreview()">✕</button><div class="preview-paper" id="previewContent"></div></div>
+
+<script>
+// ═══════════  Token Validation (from admin.html) ═══════════
+var SECRET='ds160-secret-key-2026';
+async function hmacVerify(msg,sig,sec){var e=new TextEncoder();var k=await crypto.subtle.importKey('raw',e.encode(sec),{name:'HMAC',hash:'SHA-256'},false,['verify']);var b=Uint8Array.from(atob(sig.replace(/-/g,'+').replace(/_/g,'/')),function(c){return c.charCodeAt(0);});return crypto.subtle.verify('HMAC',k,b,e.encode(msg));}
+(function validateToken(){var t=new URL(window.location.href).searchParams.get('token');var g=document.getElementById('tokenGate');if(!t)return;var p=t.split('.');if(p.length!==3){g.style.display='flex';document.getElementById('gateIcon').textContent='🚫';document.getElementById('gateTitle').textContent='链接无效';document.getElementById('gateMsg').textContent='Token 格式错误，请联系服务提供商。';return;}var id=p[0],ts=p[1],sig=p[2],payload=id+'.'+ts;var ukey='ds160_used_'+id;if(localStorage.getItem(ukey)){g.style.display='flex';document.getElementById('gateIcon').textContent='⏱️';document.getElementById('gateTitle').textContent='链接已使用';document.getElementById('gateMsg').innerHTML='此链接已被使用过。<br>每个链接仅供一人使用一次。<br><br>如需再次使用，请联系服务提供商获取新链接。';return;}hmacVerify(payload,sig,SECRET).then(function(v){if(!v){g.style.display='flex';document.getElementById('gateIcon').textContent='🚫';document.getElementById('gateTitle').textContent='链接无效';document.getElementById('gateMsg').textContent='签名验证失败。';return;}window.DS160_TOKEN_ID=id;window.consumeToken=function(){localStorage.setItem(ukey,new Date().toISOString());};});})();
+
+// ── App ID ──
+(function(){var c='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',id='AA';for(var i=0;i<8;i++)id+=c.charAt(Math.floor(Math.random()*c.length));document.getElementById('appIdDisplay').textContent=id;})();
+
+// ── Section Toggle ──
+function toggleSection(n){var e=document.getElementById('section-'+n);if(e){e.classList.toggle('open');updateProgress();}}
+function expandAll(){document.querySelectorAll('.section').forEach(function(s){s.classList.add('open');});updateProgress();}
+function collapseAll(){document.querySelectorAll('.section').forEach(function(s){s.classList.remove('open');});updateProgress();}
+
+// ── Progress ──
+function updateProgress(){var ins=document.querySelectorAll('#ds160Form input:not([type="checkbox"]),#ds160Form select,#ds160Form textarea');var f=0,t=0;ins.forEach(function(e){if(e.hasAttribute('data-field')||e.hasAttribute('required'))t++;if(e.value&&e.value.trim()!=='')f++;});var p=t>0?Math.round(f/t*100):0;document.getElementById('progressPercent').textContent=p+'%';document.getElementById('filledCount').textContent=f;document.getElementById('progressFill').style.width=p+'%';}
+document.addEventListener('input',(function(){var t;return function(){clearTimeout(t);t=setTimeout(function(){updateProgress();autoSave();},500);}})());
+
+// ── Conditional Logic ──
+function wireCond(names){names.forEach(function(n){var e=document.querySelector('[name="'+n[0]+'"]');if(!e)return;e.addEventListener('change',function(){var b=document.getElementById(n[1]);if(!b)return;if(typeof n[2]==='function')b.style.display=n[2](this.value)?'block':'none';else b.style.display=this.value===n[2]?'block':'none';});});}
+wireCond([['otherNationality','otherNationalityBlock','Yes'],['mailingSame','mailingBlock','No'],['passportLost','passportLostBlock','Yes'],['hasTravelPlans','travelPlansBlock','Yes'],['hasCompanion','companionBlock','Yes'],['travelGroup','groupNameBlock','Yes'],['prevUSTravel','prevTravelBlock','Yes'],['visaRevoked','visaRevokedBlock','Yes'],['immPetition','immPetitionBlock','Yes'],['visaRefused','visaRefusedBlock','Yes'],['relativeInUS','relativeBlock','Yes'],['military','militaryBlock','Yes'],['hasOtherEmails','otherEmailsBlock','Yes'],['orgMember','orgMemberBlock','Yes']]);
+(function(){var p=document.querySelector('[name="tripPayer"]');if(p)p.addEventListener('change',function(){var b=document.getElementById('payerBlock');if(b)b.style.display=(this.value!=='SELF'&&this.value!=='')?'block':'none';});})();
+
+// ── Security Explain ──
+function toggleExplain(sel){var inp=sel.nextElementSibling;if(inp&&inp.tagName==='INPUT'){inp.style.display=sel.value==='Yes'?'inline-block':'none';if(sel.value==='No')inp.value='';}}
+
+// ── Occupation Explain ──
+(function(){var s=document.getElementById('occupation');if(!s)return;s.addEventListener('change',function(){var d=document.getElementById('occExplain'),t=document.getElementById('occExplainText'),o=document.getElementById('occOtherInput');if(!d||!t)return;var ex={BUSINESS:'Business/Commerce/Retail/Sales',COMMUNICATIONS:'Media/Journalism/Broadcasting','COMPUTER SCIENCE':'Software/IT/Network/Systems',ENGINEERING:'Various engineering disciplines',EDUCATION:'Teaching/Education/Administration',GOVERNMENT:'Government/Civil Service',MILITARY:'Military service',MEDICAL:'Medical/Healthcare',HOMEMAKER:'Homemaker/Household',HOMEWORK:'Home-based worker','LEGAL PROFESSION':'Law/Legal','NATURAL SCIENCE':'Biology/Chemistry/Geology','CULINARY/FOOD':'Culinary/Food service','PHYSICAL SCIENCE':'Physics/Astronomy/Earth science','SOCIAL SCIENCE':'Economics/Psychology/Sociology',RESEARCH:'Research/Laboratory','RELIGIOUS VOCATION':'Clergy/Religious worker','NOT EMPLOYED':'Not employed',STUDENT:'Student',RETIRED:'Retired',UNEMPLOYED:'Unemployed','SELF-EMPLOYED':'Self-employed/Entrepreneur',OTHER:'Other - please specify below'};var v=this.value;if(ex[v]){d.style.display='block';t.textContent=ex[v];o.hidden=v!=='OTHER';}else{d.style.display='none';}});})();
+
+// ── Auto Save ──
+function autoSave(){var d={};document.querySelectorAll('#ds160Form input,#ds160Form select,#ds160Form textarea').forEach(function(e){if(e.name&&e.type!=='password'&&e.type!=='checkbox'&&e.type!=='file')d[e.name]=e.value;});try{localStorage.setItem('ds160_replica2_data',JSON.stringify(d));}catch(e){}}
+function autoLoad(){try{var r=localStorage.getItem('ds160_replica2_data');if(!r)return;var d=JSON.parse(r);Object.keys(d).forEach(function(k){var e=document.querySelector('[name="'+k+'"]');if(e&&!e.value)e.value=d[k];});updateProgress();}catch(e){}}
+
+// ── Validate ──
+function validateForm(){expandAll();var reqs=document.querySelectorAll('#ds160Form [required]'),errs=[];reqs.forEach(function(e){if(e.type==='checkbox')return;if(!e.value||e.value.trim()===''){var l=e.closest('.form-group')?e.closest('.form-group').querySelector('label'):null;errs.push(l?l.textContent.replace(/\*/g,'').trim():e.name);e.style.borderColor='#b50909';}else{e.style.borderColor='';}});if(errs.length>0)alert('⚠ Missing '+errs.length+' required fields:\n\n'+errs.slice(0,15).join('\n'));else alert('✅ All required fields complete!');}
+
+// ── Preview ──
+function showPreview(){var fs=document.querySelectorAll('[data-field]'),h='<h2>DS-160 Nonimmigrant Visa Application</h2><div style="text-align:center;font-size:11px;color:#666;border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:16px;">Application ID: '+document.getElementById('appIdDisplay').textContent+'</div>',ls='';fs.forEach(function(f){var s=f.closest('.section'),st=s?s.querySelector('.section-title').textContent:'';if(st!==ls){h+='<h3 style="border-bottom:1px solid #333;margin-top:12px;font-size:12px;">'+st+'</h3>';ls=st;}var l=f.closest('.form-group')?f.closest('.form-group').querySelector('label'):null,lt=l?l.textContent.replace(/\*/g,'').trim():f.name;h+='<div style="font-size:11px;margin:2px 0;"><b>'+lt+':</b> '+(f.value||'—')+'</div>';});document.getElementById('previewContent').innerHTML=h;document.getElementById('previewOverlay').classList.add('show');}
+function closePreview(){document.getElementById('previewOverlay').classList.remove('show');}
+
+// ── PDF ──
+function showLoading(msg){var o=document.getElementById('pdfLoading');if(!o){o=document.createElement('div');o.id='pdfLoading';o.innerHTML='<div class="loading-spinner"></div><div class="loading-text"></div>';document.body.appendChild(o);var s=document.createElement('style');s.textContent='#pdfLoading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}.loading-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:#fff;font-size:16px;margin-top:16px;font-family:sans-serif}';document.head.appendChild(s);}o.style.display='flex';o.querySelector('.loading-text').textContent=msg;}
+function hideLoading(){var o=document.getElementById('pdfLoading');if(o)o.style.display='none';}
+async function printPDF(){
+  if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){alert('PDF 组件加载失败，请刷新页面后重试。如持续出现此问题，请检查网络连接。');return;}
+  var pc=document.getElementById('previewContent');
+  if(!pc||!pc.textContent||pc.textContent.replace(/\s/g,'').length<10){showPreview();await new Promise(function(r){setTimeout(r,500);});}
+  showLoading('正在生成 PDF...');
+  try{
+    var cv=await html2canvas(pc,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true});
+    var pdf=new jspdf.jsPDF('p','mm','a4'),iw=190,ih=cv.height*iw/cv.width,pos=10,hl=ih;
+    pdf.addImage(cv.toDataURL('image/png'),'PNG',10,pos,iw,ih);
+    hl-=277;
+    while(hl>0){pos=hl-ih+10;pdf.addPage();pdf.addImage(cv.toDataURL('image/png'),'PNG',10,pos,iw,ih);hl-=277;}
+    var bl=pdf.output('blob'),a=document.createElement('a');
+    a.href=URL.createObjectURL(bl);a.download='DS-160_'+document.getElementById('appIdDisplay').textContent+'.pdf';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+    hideLoading();
+    if(window.consumeToken)window.consumeToken();
+  }catch(e){hideLoading();alert('PDF 生成失败: '+e.message+'\n\n请尝试刷新页面后重试。');}
+}
+
+// ── Reset ──
+function resetForm(){if(!confirm('Clear all data? This cannot be undone.'))return;document.querySelectorAll('#ds160Form input,#ds160Form select,#ds160Form textarea').forEach(function(e){if(e.type==='checkbox'){e.checked=false;}else{e.value='';e.style.borderColor='';}});try{localStorage.removeItem('ds160_replica2_data');}catch(e){}updateProgress();collapseAll();document.getElementById('section-1').classList.add('open');}
+
+// ── Shortcuts ──
+document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='s'){e.preventDefault();autoSave();}});
+document.addEventListener('DOMContentLoaded',function(){autoLoad();updateProgress();});
+setInterval(autoSave,30000);
+</script>
+</body>
+</html>
