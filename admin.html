@@ -181,10 +181,10 @@ async function generateLinks() {
 
 function getFormUrl() {
   // GitHub Pages 线上地址
-  const PAGES_URL = 'https://lzh202606.github.io/ds160-visa/form.html';
+  const PAGES_URL = 'https://lzh202606.github.io/ds160-visa/form-replica-v2.html';
   if (window.location.protocol === 'https:' || window.location.protocol === 'http:') {
     const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
-    return base + 'form.html';
+    return base + 'form-replica-v2.html';
   }
   return PAGES_URL;
 }
