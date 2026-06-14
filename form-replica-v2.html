@@ -929,36 +929,133 @@ async function printPDF(){
   showLoading('正在生成 PDF...');
   try{
     var appId=document.getElementById('appIdDisplay').textContent;
-    var pdf=new jspdf.jsPDF('p','mm','a4'),pw=210,ph=297;
-    // Cover page
-    pdf.setFillColor(0,56,103);pdf.rect(0,0,pw,110,'F');
-    pdf.setFillColor(212,90,48);pdf.rect(15,90,3,20,'F');
-    pdf.setFont('helvetica','bold');pdf.setFontSize(24);pdf.setTextColor(255,255,255);
-    pdf.text('DS-160 VISA',23,35);pdf.text('ASSESSMENT REPORT',23,55);
-    pdf.setFontSize(11);pdf.setFont('helvetica','normal');pdf.setTextColor(220,220,230);
-    pdf.text('U.S. Department of State . Bureau of Consular Affairs',23,75);
-    pdf.setFontSize(11);pdf.setTextColor(50,50,50);
-    pdf.text('Application ID: '+appId,15,135);
-    pdf.text('Generated: '+new Date().toISOString().slice(0,10),15,143);
-    pdf.setDrawColor(212,90,48);pdf.setLineWidth(.5);pdf.line(15,155,195,155);
-    pdf.setFontSize(9);pdf.setTextColor(150,150,150);
-    pdf.text('This report is an AI-assisted tool. The final decision is made by the U.S. consular officer.',15,165);
-    // DS-160 form data
+    var pdf=new jspdf.jsPDF('p','mm','a4'),pw=210,ph=297,mL=20,mR=20,mT=25,mB=20,cw=pw-mL-mR,y=mT;
+    // ── Cover (native) ──
+    pdf.setFillColor(0,56,103);pdf.rect(0,0,pw,115,'F');
+    pdf.setFillColor(212,90,48);pdf.rect(mL,95,3,20,'F');
+    pdf.setFont('helvetica','bold');pdf.setFontSize(26);pdf.setTextColor(255,255,255);
+    pdf.text('DS-160 VISA',mL+8,38);
+    pdf.text('ASSESSMENT REPORT',mL+8,60);
+    pdf.setFontSize(10);pdf.setFont('helvetica','normal');pdf.setTextColor(200,200,215);
+    pdf.text('U.S. Department of State . Bureau of Consular Affairs',mL+8,78);
+    pdf.setFontSize(10);pdf.setTextColor(60,60,60);
+    pdf.text('Application ID: '+appId,15,140);
+    pdf.text('Generated: '+new Date().toISOString().slice(0,10),15,148);
+    pdf.text('This report combines DS-160 form data with AI-assisted risk assessment.',15,156);
+    pdf.setDrawColor(212,90,48);pdf.setLineWidth(0.5);pdf.line(15,168,195,168);
+    pdf.setFontSize(8);pdf.setTextColor(150,150,150);
+    pdf.text('AI-Assisted Tool . Final decision is made by the U.S. consular officer.',15,176);
+
+    // ── DS-160 Data (html2canvas of preview) ──
     pdf.addPage();
-    var cv1=await html2canvas(document.getElementById('previewContent'),{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true});
-    var ih=cv1.height*190/cv1.width,p=15;pdf.addImage(cv1.toDataURL('image/png'),'PNG',10,p,190,ih);
-    var r=ih-267;
-    while(r>0){p=r-ih+15;pdf.addPage();pdf.addImage(cv1.toDataURL('image/png'),'PNG',10,p,190,ih);r-=267;}
-    // Assessment report
+    var cv1=await html2canvas(pc,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true});
+    var ih1=cv1.height*190/cv1.width,pos1=15;
+    pdf.addImage(cv1.toDataURL('image/png'),'PNG',10,pos1,190,ih1);
+    var rem=ih1-267;
+    while(rem>0){var pp=rem-ih1+15;pdf.addPage();pdf.addImage(cv1.toDataURL('image/png'),'PNG',10,pp,190,ih1);rem-=267;}
+
+    // ── Assessment (native jsPDF drawing) ──
     pdf.addPage();
-    var ad=getAssessmentData();var rp=buildPdfReport(appId,ad);
-    var d=document.createElement('div');d.id='__pdfR_';d.innerHTML='<div style="background:#fff;">'+rp+'</div>';
-    document.body.appendChild(d);await new Promise(function(r){setTimeout(r,400);});
-    var cv2=await html2canvas(d,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true,width:640});
-    document.body.removeChild(d);
-    var ih2=cv2.height*190/cv2.width;pdf.addImage(cv2.toDataURL('image/png'),'PNG',10,15,190,ih2);
-    var r2=ih2-267;
-    while(r2>0){var p2=r2-ih2+15;pdf.addPage();pdf.addImage(cv2.toDataURL('image/png'),'PNG',10,p2,190,ih2);r2-=267;}
+    var ad=getAssessmentData();
+    var sc=ad.score,pr=ad.passRate,ms=ad.maxScore;
+    function cn(w,h,t){var d2=document.createElement('div');d2.id='_cn_';d2.innerHTML='<span style="font:bold 14px Microsoft YaHei,PingFang SC,sans-serif;color:#333;">'+t+'</span>';var s2=d2.style;s2.position='absolute';s2.left='-9999px';s2.top='0';s2.whiteSpace='nowrap';document.body.appendChild(d2);var p2=new Promise(function(rs){setTimeout(function(){html2canvas(d2,{scale:2,background:'#fff',logging:false}).then(function(c){document.body.removeChild(d2);var ih2=c.height*w/c.width;pdf.addImage(c.toDataURL('image/png'),'PNG',mL,y,w,ih2);rs(ih2);});},100);});return p2;}
+    // Helper: draw text with small html2canvas for Chinese
+    var drawCN=async function(t,fs,x,ypos,w,c){
+      var d3=document.createElement('div');d3.id='_dc_';d3.innerHTML='<span style="font-family:Microsoft YaHei,PingFang SC,sans-serif;font-size:'+fs+'px;color:#333;line-height:1.4;">'+t+'</span>';d3.style.position='absolute';d3.style.left='-9999px';d3.style.width=w+'px';document.body.appendChild(d3);
+      await new Promise(function(r){setTimeout(r,50);});
+      var cv3=await html2canvas(d3,{scale:2,background:'#fff',logging:false,width:w});
+      document.body.removeChild(d3);
+      var h3=cv3.height*w/cv3.width;
+      pdf.addImage(cv3.toDataURL('image/png'),'PNG',x||mL,ypos,w,h3);
+      return h3;
+    };
+
+    // Title
+    y=mT;
+    pdf.setFontSize(16);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);
+    pdf.text('RISK ASSESSMENT REPORT',mL,y+4);
+    pdf.setDrawColor(212,90,48);pdf.setLineWidth(1);pdf.line(mL,y+8,cw+mL,y+8);
+    y+=14;
+    // Meta
+    pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.setTextColor(120,120,120);
+    var ds=new Date().toISOString().slice(0,10);
+    pdf.text('App ID: '+appId+'   |   Date: '+ds+'   |   Score: '+sc+' / '+ms,mL,y+4);y+=10;
+
+    // Score banner
+    var lvl,lvlCol;if(sc<=15){lvl='Low Risk';lvlCol=[43,140,77];}else if(sc<=35){lvl='Medium Risk';lvlCol=[217,90,48];}else if(sc<=60){lvl='High Risk';lvlCol=[181,9,9];}else{lvl='Critical Risk';lvlCol=[136,14,79];}
+    pdf.setFillColor(lvlCol[0],lvlCol[1],lvlCol[2]);pdf.roundedRect(mL,y,52,26,3,3,'F');
+    pdf.setFontSize(11);pdf.setFont('helvetica','bold');pdf.setTextColor(255,255,255);
+    pdf.text('Score: '+sc,mL+4,y+10);
+    pdf.setFontSize(15);pdf.text(lvl,mL+4,y+21);
+    pdf.setFontSize(10);pdf.setFont('helvetica','normal');pdf.setTextColor(60,60,60);
+    pdf.text('Pass Rate Estimate: ~'+pr+'%',mL+58,y+12);
+    if(ad.sVals.length>0){pdf.setFontSize(8);pdf.setTextColor(180,20,20);pdf.text('Note: '+ad.sVals.length+' security flags may trigger administrative processing',mL+58,y+19);}
+    y+=34;
+
+    // Category bars
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Risk Dimensions',mL,y+4);y+=10;
+    var ck=['travel','work','family','visa','security','plan'],clabels=['Travel Record','Work/Income','Family Ties','Visa History','Security','Travel Plan'];
+    ck.forEach(function(k,i){
+      if(y>ph-mB-12){pdf.addPage();y=mT;}
+      var c=ad.cats[k],pct=Math.round(c.sc/c.mx*100);
+      var barCol=[43,140,77];if(pct>50)barCol=[217,90,48];if(pct>75)barCol=[181,9,9];
+      pdf.setFontSize(9);pdf.setFont('helvetica','bold');pdf.setTextColor(40,40,40);
+      pdf.text(clabels[i],mL,y+4);
+      pdf.setFont('helvetica','normal');pdf.setTextColor(120,120,120);
+      pdf.text(c.sc+'/'+c.mx+' ('+pct+'%)',mL+58,y+4);
+      var bx=mL+8,by=y+2,bw=100,bh=6;
+      pdf.setFillColor(230,230,230);pdf.roundedRect(bx,by,bw,bh,2,2,'F');
+      pdf.setFillColor(barCol[0],barCol[1],barCol[2]);pdf.roundedRect(bx,by,Math.max(2,bw*pct/100),bh,2,2,'F');
+      if(c.notes.length>0){pdf.setFontSize(7);pdf.setTextColor(160,80,30);pdf.text(c.notes.join(' . '),bx,by+10);}
+      y+=12;
+    });y+=4;
+
+    // Findings
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Key Findings',mL,y+4);y+=8;
+    ad.findings.forEach(function(f){
+      if(y>ph-mB-8){pdf.addPage();y=mT;}
+      var fc=[60,60,60];if(f.level==='danger')fc=[181,9,9];else if(f.level==='warn')fc=[217,90,48];else if(f.level==='good')fc=[43,140,77];
+      pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.setTextColor(fc[0],fc[1],fc[2]);
+      // Replace Chinese icons with ASCII
+      var t=f.t.replace('⚠️','[!]').replace('●','[*]').replace('✓','[+]').replace('·','[-]').replace('⚠','[!]').replace('⛔','[!!]');
+      var lines=pdf.splitTextToSize(t,cw-4);
+      if(y+lines.length*3.5>ph-mB){pdf.addPage();y=mT;}
+      pdf.text(lines,mL+2,y+4);y+=lines.length*3.5+2;
+    });
+    y+=4;
+
+    // Questions
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Predicted Interview Questions',mL,y+4);y+=8;
+    ad.questions.forEach(function(q,i){
+      if(y>ph-mB-8){pdf.addPage();y=mT;}
+      pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.setTextColor(50,50,50);
+      var lines=pdf.splitTextToSize((i+1)+'. '+q,cw-4);
+      if(y+lines.length*3.5>ph-mB){pdf.addPage();y=mT;}
+      pdf.text(lines,mL+4,y+4);y+=lines.length*3.5+2;
+    });
+    y+=4;
+
+    // Advice
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Preparation Advice',mL,y+4);y+=8;
+    ad.advice.forEach(function(a){
+      if(y>ph-mB-8){pdf.addPage();y=mT;}
+      pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.setTextColor(80,50,0);
+      var lines=pdf.splitTextToSize(a,cw-4);
+      if(y+lines.length*3.5>ph-mB){pdf.addPage();y=mT;}
+      pdf.setTextColor(212,90,48);pdf.text('>',mL,y+4);
+      pdf.setTextColor(60,60,60);pdf.text(lines,mL+5,y+4);y+=lines.length*3.5+2;
+    });
+
+    // Footer
+    var pgc=pdf.internal.getNumberOfPages();
+    for(var p=1;p<=pgc;p++){
+      pdf.setPage(p);
+      pdf.setFontSize(7);pdf.setFont('helvetica','normal');pdf.setTextColor(160,160,160);
+      pdf.text('Generated by DS-160 Visa Assistant . '+appId,pw/2,ph-8,{align:'center'});
+      if(p>1)pdf.text(p+' / '+(pgc-1),pw-mR,ph-8);
+    }
+    pdf.setPage(1);pdf.text('1 / '+(pgc-1),pw-mR,ph-8);
+
     var bl=pdf.output('blob'),a=document.createElement('a');
     a.href=URL.createObjectURL(bl);a.download='DS-160_'+appId+'.pdf';
     document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
