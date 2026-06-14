@@ -782,8 +782,11 @@ function showLoading(msg){var o=document.getElementById('pdfLoading');if(!o){o=d
 function hideLoading(){var o=document.getElementById('pdfLoading');if(o)o.style.display='none';}
 async function printPDF(){
   if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){alert('PDF 组件加载失败，请刷新页面后重试。如持续出现此问题，请检查网络连接。');return;}
+  // Always refresh assessment & preview
+  generateAssessment();
+  showPreview();
+  await new Promise(function(r){setTimeout(r,600);});
   var pc=document.getElementById('previewContent');
-  if(!pc||!pc.textContent||pc.textContent.replace(/\s/g,'').length<10){showPreview();await new Promise(function(r){setTimeout(r,500);});}
   showLoading('正在生成 PDF...');
   try{
     var appId=document.getElementById('appIdDisplay').textContent;
@@ -802,7 +805,7 @@ async function printPDF(){
     pdf.setDrawColor(212,90,48);pdf.setLineWidth(0.5);pdf.line(15,155,195,155);
     pdf.setFontSize(8);pdf.setTextColor(150,150,150);
     pdf.text('DS-160 form data with AI-assisted risk assessment.',15,163);
-    // DS-160 data + assessment
+    // DS-160 data + assessment (html2canvas capture)
     pdf.addPage();
     var cv=await html2canvas(pc,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true});
     var iw=190,ih=cv.height*iw/cv.width,pos=10,hl=ih;
