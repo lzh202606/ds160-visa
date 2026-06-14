@@ -780,157 +780,44 @@ function closePreview(){document.getElementById('previewOverlay').classList.remo
 // ── PDF ──
 function showLoading(msg){var o=document.getElementById('pdfLoading');if(!o){o=document.createElement('div');o.id='pdfLoading';o.innerHTML='<div class="loading-spinner"></div><div class="loading-text"></div>';document.body.appendChild(o);var s=document.createElement('style');s.textContent='#pdfLoading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}.loading-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:#fff;font-size:16px;margin-top:16px;font-family:sans-serif}';document.head.appendChild(s);}o.style.display='flex';o.querySelector('.loading-text').textContent=msg;}
 function hideLoading(){var o=document.getElementById('pdfLoading');if(o)o.style.display='none';}
-
-function getAssessmentData(){
-  var d={occupation:getVal('occupation'),salary:getVal('monthlySalary'),addrCity:getVal('addrCity'),marital:getVal('maritalStatus'),prevUS:getVal('prevUSTravel'),visaRefused:getVal('visaRefused'),immPetition:getVal('immPetition'),visaRevoked:getVal('visaRevoked'),hadVisa:getVal('hadUSVisa'),tripPayer:getVal('tripPayer'),hasPlans:getVal('hasTravelPlans'),passportExp:getVal('passportExpiry'),relativeUS:getVal('relativeInUS')};
-  var tier1='北京上海深圳广州杭州南京成都武汉重庆天津苏州西安长沙郑州青岛合肥宁波东莞佛山无锡厦门沈阳大连济南福州'.replace(/(..)/g,'$1 ').trim().split(' '),tier2='昆明贵阳南宁南昌太原石家庄哈尔滨长春兰州乌鲁木齐呼和浩特海口银川三亚珠海惠州中山温州常州徐州南通嘉兴绍兴泉州烟台潍坊淄博洛阳宜昌襄阳岳阳株洲柳州桂林海口西宁拉萨'.replace(/(..)/g,'$1 ').trim().split(' ');
-  function cityTier(c){if(!c)return 3;c=c.replace(/市$/,'');if(tier1.indexOf(c)>-1)return 1;if(tier2.indexOf(c)>-1)return 2;return 3;}
-  var ct=cityTier(d.addrCity);
-  var occMap={GOVERNMENT:1,MILITARY:1,'LEGAL PROFESSION':2,EDUCATION:2,'MEDICAL/HEALTH':2,ENGINEERING:3,'COMPUTER SCIENCE':3,'NATURAL SCIENCE':3,'PHYSICAL SCIENCE':3,'SOCIAL SCIENCE':3,RESEARCH:3,BUSINESS:4,COMMUNICATIONS:4,'CULINARY/FOOD':5,'SELF-EMPLOYED':5,STUDENT:6,'RELIGIOUS VOCATION':6,HOMEMAKER:7,HOMEWORK:7,'NOT EMPLOYED':8,UNEMPLOYED:8,RETIRED:7,OTHER:5};
-  var ol=occMap[d.occupation]||5;
-  var f=[],q=[],a=[],s=0,ms=100;
-  var c={travel:{name:'Travel Record',sc:0,mx:20,nt:[]},work:{name:'Work/Income',sc:0,mx:25,nt:[]},family:{name:'Family Ties',sc:0,mx:15,nt:[]},visa:{name:'Visa History',sc:0,mx:20,nt:[]},security:{name:'Security',sc:0,mx:10,nt:[]},plan:{name:'Travel Plan',sc:0,mx:10,nt:[]}};
-  var es=0;
-  if(!d.prevUS||d.prevUS==='No'){c.travel.sc=15;c.travel.nt.push('No US travel');f.push({i:'X',lv:'danger',t:'No prior US travel. Purpose may be questioned.'});q.push('Countries visited before? Why US now?');}
-  else{f.push({i:'OK',lv:'good',t:'Prior US travel with compliant record.'});q.push('Purpose of last US visit? Returned on time?');}
-  if(d.hadVisa==='Yes')es-=5;
-  if(ol<=2){c.work.sc=2;c.work.nt.push('Very stable');f.push({i:'OK',lv:'good',t:'Very stable occupation - strong domestic ties.'});es-=6;}
-  else if(ol===3){c.work.sc=5;c.work.nt.push('Professional');f.push({i:'OK',lv:'good',t:'Professional role with good home-country prospects.'});es-=2;}
-  else if(ol===4){c.work.sc=8;c.work.nt.push('Business/Media');f.push({i:'--',lv:'neutral',t:'Business/media sector. Employment letter recommended.'});q.push('How long employed? Position? Salary?');}
-  else if(ol===5){c.work.sc=12;c.work.nt.push('Flexible');f.push({i:'!',lv:'warn',t:'Flexible work. Asset proof strongly recommended.'});es+=6;a.push('Provide business license, bank statements, property deeds.');}
-  else if(ol===6){c.work.sc=10;c.work.nt.push('Student');f.push({i:'!',lv:'warn',t:'Student - demonstrate academic commitment.'});es+=3;q.push('Major? Post-graduation plans?');}
-  else{c.work.sc=22;c.work.nt.push('Unstable');f.push({i:'X',lv:'danger',t:'No stable employment. Domestic ties documentation needed.'});es+=10;}
-  if(d.salary&&parseInt(d.salary)>0){var sl=parseInt(d.salary),cs=[0,8000,5000,3000][ct];if(sl<cs*.5){es+=6;f.push({i:'!',lv:'warn',t:'Income far below Tier-'+ct+' standard (CNY '+sl+' vs '+cs+'). Financial concern.'});}else if(sl<cs*.8){es+=3;f.push({i:'!',lv:'warn',t:'Income slightly below Tier-'+ct+' city. Supplement with asset proof.'});}else if(sl>=cs*1.5){es-=3;f.push({i:'OK',lv:'good',t:'Income CNY '+sl+', meets Tier-'+ct+' city standard.'});}}
-  if(d.tripPayer&&d.tripPayer!=='SELF'&&d.tripPayer!==''){es+=5;f.push({i:'!',lv:'warn',t:'Trip funded by third party ('+d.tripPayer+'). May question relationship.'});q.push('Who pays? Relationship?');}
-  if(d.marital==='Single'||!d.marital){c.family.sc=10;c.family.nt.push('Single');f.push({i:'!',lv:'warn',t:'Unmarried. Weaker family ties.'});q.push('Marriage plans? Family in home country?');}
-  else{c.family.sc=3;f.push({i:'OK',lv:'good',t:'Married. Stronger family ties.'});}
-  if(d.relativeUS==='Yes'){es+=5;f.push({i:'!',lv:'warn',t:'Immediate relatives in US. Immigration intent concern.'});q.push('Status of US relatives?');}
-  if(d.visaRefused==='Yes'){c.visa.sc=18;c.visa.nt.push('Prior refusal');f.push({i:'X',lv:'danger',t:'Previous US visa refusal - most critical negative factor.'});q.push('Prior refusal reason? What has changed?');}
-  if(d.immPetition==='Yes'){c.visa.sc=15;c.visa.nt.push('Immigration petition');f.push({i:'X',lv:'danger',t:'Immigration petition filed. High immigrant intent suspicion.'});}
-  if(d.visaRevoked==='Yes'){c.visa.sc=12;c.visa.nt.push('Visa revoked');f.push({i:'X',lv:'danger',t:'Visa previously revoked. Be prepared to explain.'});}
-  var sv=[];document.querySelectorAll('.sec-q select').forEach(function(e){if(e.value==='Yes')sv.push(e.closest('.sec-q').querySelector('label').textContent.trim());});
-  if(sv.length>0){c.security.sc=8;c.security.nt.push(sv.length+' Yes');f.push({i:'X',lv:'danger',t:'Security section: '+sv.length+' Yes answers. Administrative processing likely.'});}
-  if(!d.hasPlans||d.hasPlans==='No'){c.plan.sc=3;c.plan.nt.push('No plans');f.push({i:'!',lv:'warn',t:'No specific travel plans. Purpose unclear.'});q.push('When will you travel? Where?');}
-  if(d.passportExp){var ex=new Date(d.passportExp),no=new Date();if((ex-no)/1000/60/60/24/30<6){es+=4;f.push({i:'!',lv:'warn',t:'Passport expires <6 months. Renew before applying.'});}}
-  s=Math.min(c.travel.sc+c.work.sc+c.family.sc+c.visa.sc+c.security.sc+c.plan.sc+es,ms);
-  var pr=Math.max(5,100-s);
-  var lc=0;Object.keys(c).forEach(function(k){if(c[k].mx>0&&c[k].sc/c[k].mx<=.3)lc++;});
-  if(lc>=4){pr=Math.min(98,Math.round(pr*1.15));f.push({i:'OK',lv:'good',t:'Composite: 4+ low-risk dimensions. Pass rate +15%.'});}
-  else if(lc>=3){pr=Math.min(95,Math.round(pr*1.10));f.push({i:'OK',lv:'good',t:'Composite: 3 stable dimensions. Pass rate +10%.'});}
-  var cc=0;Object.keys(c).forEach(function(k){if(c[k].mx>0&&c[k].sc/c[k].mx>=.8)cc++;});
-  if(cc>=2){pr=Math.max(3,Math.round(pr*.85));f.push({i:'!',lv:'warn',t:'Multiple critical risks: 2+ dimensions extreme. Pass rate -15%.'});}
-  if(c.visa.sc>=15)pr=Math.max(3,Math.round(pr*.80));
-  if(a.length===0)a.push('Bring travel itinerary, employment letter, bank statements, and property proof.');
-  return{score:s,passRate:pr,cats:c,findings:f,questions:q,advice:a,sVals:sv,maxScore:ms};
-}
-
 async function printPDF(){
-  if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){alert('PDF 组件加载失败,请刷新后重试。');return;}
+  if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){alert('PDF 组件加载失败，请刷新页面后重试。如持续出现此问题，请检查网络连接。');return;}
   var pc=document.getElementById('previewContent');
   if(!pc||!pc.textContent||pc.textContent.replace(/\s/g,'').length<10){showPreview();await new Promise(function(r){setTimeout(r,500);});}
   showLoading('正在生成 PDF...');
   try{
     var appId=document.getElementById('appIdDisplay').textContent;
-    var pdf=new jspdf.jsPDF('p','mm','a4'),pw=210,ph=297,mL=18,mR=18,mT=22,mB=18,cw=pw-mL-mR,y=mT;
-    // ── Cover ──
-    pdf.setFillColor(0,56,103);pdf.rect(0,0,pw,115,'F');
-    pdf.setFillColor(212,90,48);pdf.rect(mL,95,3,20,'F');
+    var pdf=new jspdf.jsPDF('p','mm','a4'),pw=210;
+    // Cover page
+    pdf.setFillColor(0,56,103);pdf.rect(0,0,pw,110,'F');
+    pdf.setFillColor(212,90,48);pdf.rect(15,90,3,20,'F');
     pdf.setFont('helvetica','bold');pdf.setFontSize(26);pdf.setTextColor(255,255,255);
-    pdf.text('DS-160 VISA',mL+8,38);
-    pdf.text('ASSESSMENT REPORT',mL+8,60);
+    pdf.text('DS-160 VISA',23,38);
+    pdf.text('ASSESSMENT REPORT',23,60);
     pdf.setFontSize(10);pdf.setFont('helvetica','normal');pdf.setTextColor(200,200,215);
-    pdf.text('U.S. Department of State . Bureau of Consular Affairs',mL+8,78);
+    pdf.text('U.S. Department of State . Bureau of Consular Affairs',23,78);
     pdf.setFontSize(10);pdf.setTextColor(60,60,60);
     pdf.text('Application ID: '+appId,15,140);
     pdf.text('Generated: '+new Date().toISOString().slice(0,10),15,148);
-    pdf.text('DS-160 form data with AI-assisted risk assessment.',15,156);
-    pdf.setDrawColor(212,90,48);pdf.setLineWidth(0.5);pdf.line(15,168,195,168);
+    pdf.setDrawColor(212,90,48);pdf.setLineWidth(0.5);pdf.line(15,155,195,155);
     pdf.setFontSize(8);pdf.setTextColor(150,150,150);
-    pdf.text('AI-Assisted Tool. Final decision is made by the U.S. consular officer.',15,176);
-    // ── DS-160 Data ──
+    pdf.text('DS-160 form data with AI-assisted risk assessment.',15,163);
+    // DS-160 data + assessment
     pdf.addPage();
-    var cv1=await html2canvas(pc,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true});
-    var ih1=cv1.height*190/cv1.width;
-    pdf.addImage(cv1.toDataURL('image/png'),'PNG',10,15,190,ih1);
-    var rem=ih1-267;
-    while(rem>0){var pp=rem-ih1+15;pdf.addPage();pdf.addImage(cv1.toDataURL('image/png'),'PNG',10,pp,190,ih1);rem-=267;}
-    // ── Assessment ──
-    pdf.addPage();y=mT;
-    var ad=getAssessmentData();
-    var sc=ad.score,pr=ad.passRate,ms=ad.maxScore;
-    // Title
-    pdf.setFontSize(16);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);
-    pdf.text('RISK ASSESSMENT REPORT',mL,y+4);y+=10;
-    pdf.setDrawColor(212,90,48);pdf.setLineWidth(0.8);pdf.line(mL,y,pw-mR,y);y+=8;
-    // Score band
-    var lvlCol;if(sc<=15)lvlCol=[43,140,77];else if(sc<=35)lvlCol=[217,90,48];else if(sc<=60)lvlCol=[181,9,9];else lvlCol=[136,14,79];
-    pdf.setFillColor(lvlCol[0],lvlCol[1],lvlCol[2]);pdf.roundedRect(mL,y,54,20,3,3,'F');
-    pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(255,255,255);
-    pdf.text('Score: '+sc+'/'+ms,mL+3,y+8);
-    pdf.setFontSize(14);pdf.text(sc<=15?'Low Risk':sc<=35?'Medium Risk':sc<=60?'High Risk':'Critical',mL+3,y+17);
-    pdf.setFontSize(10);pdf.setFont('helvetica','normal');pdf.setTextColor(60,60,60);
-    pdf.text('Pass Rate Estimate: ~'+pr+'%',mL+58,y+10);
-    pdf.setFontSize(8);if(ad.sVals.length>0){pdf.setTextColor(180,20,20);pdf.text(ad.sVals.length+' security flag(s) - admin processing possible',mL+58,y+18);}
-    y+=26;
-    // Dimensions
-    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Risk Dimensions',mL,y+4);y+=10;
-    var ck=['travel','work','family','visa','security','plan'];
-    var cl=['Travel Record','Work/Income','Family Ties','Visa History','Security','Travel Plan'];
-    ck.forEach(function(k,i){
-      if(y>ph-mB-10){pdf.addPage();y=mT;}
-      var c=ad.cats[k],pct=Math.round(c.sc/c.mx*100);
-      var fg=[43,140,77];if(pct>50)fg=[217,90,48];if(pct>75)fg=[181,9,9];
-      pdf.setFontSize(9);pdf.setFont('helvetica','bold');pdf.setTextColor(40,40,40);pdf.text(cl[i],mL,y+4);
-      pdf.setFont('helvetica','normal');pdf.setTextColor(120,120,120);pdf.text(c.sc+'/'+c.mx+' ('+pct+'%)',mL+55,y+4);
-      pdf.setFillColor(230,230,230);pdf.rect(mL+90,y+2,60,5,'F');
-      var bw2=Math.max(1,60*pct/100);
-      pdf.setFillColor(fg[0],fg[1],fg[2]);pdf.rect(mL+90,y+2,bw2,5,'F');
-      if(c.notes.length>0){pdf.setFontSize(7);pdf.setTextColor(160,80,30);pdf.text(c.notes.join(' | '),mL+90,y+11);}
-      y+=12;
-    });y+=6;
-    // Findings
-    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Key Findings',mL,y+4);y+=8;
-    ad.findings.forEach(function(f){
-      if(y>ph-mB-6){pdf.addPage();y=mT;}
-      var fc=[60,60,60];if(f.lv==='danger')fc=[181,9,9];else if(f.lv==='warn')fc=[217,90,48];else if(f.lv==='good')fc=[43,140,77];
-      pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.setTextColor(fc[0],fc[1],fc[2]);
-      var lines=pdf.splitTextToSize(f.t,cw-4);
-      if(y+lines.length*3.2>ph-mB){pdf.addPage();y=mT;}
-      pdf.text(lines,mL+2,y+4);y+=lines.length*3.2+1.5;
-    });y+=4;
-    // Questions
-    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Interview Questions',mL,y+4);y+=8;
-    ad.questions.forEach(function(q,i){
-      if(y>ph-mB-6){pdf.addPage();y=mT;}
-      pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.setTextColor(50,50,50);
-      var lines=pdf.splitTextToSize((i+1)+'. '+q,cw-4);
-      if(y+lines.length*3.2>ph-mB){pdf.addPage();y=mT;}
-      pdf.text(lines,mL+4,y+4);y+=lines.length*3.2+1.5;
-    });y+=6;
-    // Advice
-    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(0,56,103);pdf.text('Preparation Advice',mL,y+4);y+=8;
-    ad.advice.forEach(function(a){
-      if(y>ph-mB-6){pdf.addPage();y=mT;}
-      pdf.setFontSize(8);pdf.setFont('helvetica','normal');
-      var lines=pdf.splitTextToSize(a,cw-4);
-      if(y+lines.length*3.2>ph-mB){pdf.addPage();y=mT;}
-      pdf.setTextColor(212,90,48);pdf.text('>',mL,y+4);
-      pdf.setTextColor(50,50,50);pdf.text(lines,mL+5,y+4);y+=lines.length*3.2+1.5;
-    });
+    var cv=await html2canvas(pc,{scale:2,background:'#fff',logging:false,allowTaint:true,useCORS:true});
+    var iw=190,ih=cv.height*iw/cv.width,pos=10,hl=ih;
+    pdf.addImage(cv.toDataURL('image/png'),'PNG',10,pos,iw,ih);
+    hl-=277;
+    while(hl>0){pos=hl-ih+10;pdf.addPage();pdf.addImage(cv.toDataURL('image/png'),'PNG',10,pos,iw,ih);hl-=277;}
     // Footer
     var pgc=pdf.internal.getNumberOfPages();
-    for(var p=1;p<=pgc;p++){
-      pdf.setPage(p);
-      pdf.setFontSize(7);pdf.setFont('helvetica','normal');pdf.setTextColor(160,160,160);
-      var ft='DS-160 Visa Assistant . '+appId+' . Page '+(p-1)+'/'+(pgc-1);
-      pdf.text(ft,pw/2,ph-8,null,null,'center');
-      if(p===1)pdf.text('Cover',pw/2,ph-8,null,null,'center');
-    }
+    for(var p=2;p<=pgc;p++){pdf.setPage(p);pdf.setFontSize(7);pdf.setFont('helvetica','normal');pdf.setTextColor(160,160,160);pdf.text(p+'/'+pgc,pw-15,290);}
     var bl=pdf.output('blob'),a=document.createElement('a');
     a.href=URL.createObjectURL(bl);a.download='DS-160_'+appId+'.pdf';
     document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
-    hideLoading();if(window.consumeToken)window.consumeToken();
-  }catch(e){hideLoading();alert('PDF 生成失败: '+e.message);}
+    hideLoading();
+    if(window.consumeToken)window.consumeToken();
+  }catch(e){hideLoading();alert('PDF 生成失败: '+e.message+'\n\n请尝试刷新页面后重试。');}
 }
 
 // ── Reset ──
