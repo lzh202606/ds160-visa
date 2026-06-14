@@ -80,6 +80,19 @@ body{
 /* Photo upload zone (unused, removed from UI) */
 
 @media(max-width:768px){.form-row,.form-row.col2,.form-row.col3{grid-template-columns:1fr;}.container{padding:12px;}}
+/* Assessment */
+.risk-low{background:#e6f4ea;color:#1a5c2a;border:1px solid #a8dab5;}
+.risk-medium{background:#fef7e0;color:#7a5d00;border:1px solid #f9d849;}
+.risk-high{background:#fce8e6;color:#b50909;border:1px solid #f4a09a;}
+.risk-critical{background:#fce4ec;color:#880e4f;border:1px solid #f48fb1;}
+.risk-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:11px;}
+.risk-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.risk-dot.high{background:#b50909;}.risk-dot.medium{background:#d85a30;}.risk-dot.low{background:#2b8c4d;}
+.risk-item-text{flex:1;}
+.risk-item-tag{padding:1px 8px;border-radius:3px;font-size:10px;font-weight:600;white-space:nowrap;}
+.tag-red{background:#fce8e6;color:#b50909;}.tag-yellow{background:#fef7e0;color:#7a5d00;}.tag-green{background:#e6f4ea;color:#1a5c2a;}
+#assessmentResult h4{color:var(--primary);border-bottom:1px solid #dce8f0;padding-bottom:4px;}
+
 @media print{.gov-banner,.header,.progress-bar,.btn-row,.alert,.close-btn{display:none!important;}
   .section-body{max-height:none!important;padding:16px!important;}
   .section{border:1px solid #000;margin-bottom:0;box-shadow:none;page-break-inside:avoid;}
@@ -512,6 +525,34 @@ body{
   </div>
 </div>
 
+<!-- ═══ 21. Visa Interview Risk Assessment 面签风险评估 ═══ -->
+<div class="section" id="section-21">
+  <div class="section-header" onclick="toggleSection(21)">
+    <span class="section-num" style="background:#d85a30;">21</span>
+    <span class="section-title">Visa Interview Risk Assessment 面签风险评估（自动生成）</span>
+    <span class="section-arrow">▶</span>
+  </div>
+  <div class="section-body" id="assessmentBody">
+    <div id="assessmentLoading" style="text-align:center;padding:20px;color:#888;">请先填写 DS-160 表单，评估将自动生成…</div>
+    <div id="assessmentResult" style="display:none;">
+      <!-- 综合风险 -->
+      <div id="riskBanner" style="padding:16px;border-radius:8px;margin-bottom:16px;text-align:center;">
+        <div style="font-size:14px;font-weight:700;" id="riskLevel">风险评估中…</div>
+        <div style="font-size:11px;opacity:.8;margin-top:4px;" id="riskScore">—</div>
+      </div>
+      <!-- 逐项分析 -->
+      <h4 style="margin-bottom:8px;">📋 逐项分析</h4>
+      <div id="riskItems"></div>
+      <!-- 预测面签问题 -->
+      <h4 style="margin-top:16px;margin-bottom:8px;">🎯 预测面签问题</h4>
+      <div id="predictedQuestions" style="font-size:11px;line-height:1.8;"></div>
+      <!-- 准备建议 -->
+      <h4 style="margin-top:16px;margin-bottom:8px;">💡 面签准备建议</h4>
+      <div id="prepAdvice" style="font-size:11px;line-height:1.8;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ Buttons ═══ -->
 <div class="btn-row">
   <button type="button" class="btn btn-outline" onclick="expandAll()">Expand All</button>
@@ -542,7 +583,6 @@ function collapseAll(){document.querySelectorAll('.section').forEach(function(s)
 
 // ── Progress ──
 function updateProgress(){var ins=document.querySelectorAll('#ds160Form input:not([type="checkbox"]),#ds160Form select,#ds160Form textarea');var f=0,t=0;ins.forEach(function(e){if(e.hasAttribute('data-field')||e.hasAttribute('required'))t++;if(e.value&&e.value.trim()!=='')f++;});var p=t>0?Math.round(f/t*100):0;document.getElementById('progressPercent').textContent=p+'%';document.getElementById('filledCount').textContent=f;document.getElementById('progressFill').style.width=p+'%';}
-document.addEventListener('input',(function(){var t;return function(){clearTimeout(t);t=setTimeout(function(){updateProgress();autoSave();},500);}})());
 
 // ── Conditional Logic ──
 function wireCond(names){names.forEach(function(n){var e=document.querySelector('[name="'+n[0]+'"]');if(!e)return;e.addEventListener('change',function(){var b=document.getElementById(n[1]);if(!b)return;if(typeof n[2]==='function')b.style.display=n[2](this.value)?'block':'none';else b.style.display=this.value===n[2]?'block':'none';});});}
@@ -562,8 +602,115 @@ function autoLoad(){try{var r=localStorage.getItem('ds160_replica2_data');if(!r)
 // ── Validate ──
 function validateForm(){expandAll();var reqs=document.querySelectorAll('#ds160Form [required]'),errs=[];reqs.forEach(function(e){if(e.type==='checkbox')return;if(!e.value||e.value.trim()===''){var l=e.closest('.form-group')?e.closest('.form-group').querySelector('label'):null;errs.push(l?l.textContent.replace(/\*/g,'').trim():e.name);e.style.borderColor='#b50909';}else{e.style.borderColor='';}});if(errs.length>0)alert('⚠ Missing '+errs.length+' required fields:\n\n'+errs.slice(0,15).join('\n'));else alert('✅ All required fields complete!');}
 
+// ── Face-to-Face Assessment Engine 面签风险评估引擎 ──
+function getVal(n){var e=document.querySelector('[name="'+n+'"]');return e?e.value:'';}
+function generateAssessment(){
+  var d={
+    occupation:getVal('occupation'),employer:getVal('employerName'),salary:getVal('monthlySalary'),
+    marital:getVal('maritalStatus'),sex:getVal('sex'),
+    prevUS:getVal('prevUSTravel'),visaRefused:getVal('visaRefused'),immPetition:getVal('immPetition'),
+    visaRevoked:getVal('visaRevoked'),hadVisa:getVal('hadUSVisa'),
+    tripPayer:getVal('tripPayer'),hasPlans:getVal('hasTravelPlans'),
+    military:getVal('military'),contactType:getVal('contactType'),
+    passportExp:getVal('passportExpiry'),relativeUS:getVal('relativeInUS'),
+    occupationOther:getVal('occupationOther')
+  };
+  var items=[],predQ=[],advice=[];
+  var score=0,maxScore=100;
+
+  // 1. 出行记录 (0-20)
+  if(!d.prevUS||d.prevUS==='No'){score+=15;items.push({tag:'高风险',tagCls:'tag-red',dot:'high',text:'无美国及发达国家旅行记录。签证官可能对出行目的产生疑虑，需准备充分的旅行计划说明。'});predQ.push('你之前去过哪些国家？为什么选择现在去美国？');}
+  else{items.push({tag:'正常',tagCls:'tag-green',dot:'low',text:'有美国旅行经历，具备合法出入境记录，是积极因素。'});predQ.push('上次去美国做了什么？按计划返回了吗？');}
+  if(d.hadVisa==='Yes'){score-=5;advice.push('携带旧护照及签证复印件，证明良好出入境记录。');}
+
+  // 2. 工作/经济稳定性 (0-25)
+  var highRiskJobs=['UNEMPLOYED','NOT EMPLOYED','HOMEMAKER','HOMEWORK','RETIRED'];
+  var lowRiskJobs=['GOVERNMENT','EDUCATION','MEDICAL/HEALTH','ENGINEERING','LEGAL PROFESSION'];
+  if(highRiskJobs.indexOf(d.occupation)>-1){score+=22;items.push({tag:'高风险',tagCls:'tag-red',dot:'high',text:'当前处于'+d.occupation+'状态，缺乏国内工作约束力。需提供其他经济来源证明或家庭纽带。'});predQ.push('你在国内的主要经济来源是什么？打算怎么支付这次旅行费用？');advice.push('准备银行存款证明、房产证、车辆登记证等资产材料。');}
+  else if(d.occupation==='STUDENT'){score+=10;items.push({tag:'中等',tagCls:'tag-yellow',dot:'medium',text:'学生身份，收入来源有限。需证明学业约束力及回国必要性。'});predQ.push('你学什么专业？毕业后有什么打算？');advice.push('准备在读证明、学籍材料，说明学业完成后将回国。');}
+  else if(lowRiskJobs.indexOf(d.occupation)>-1){score+=3;items.push({tag:'低风险',tagCls:'tag-green',dot:'low',text:'稳定职业（'+d.occupation+'），是国内约束力的有力证明。'});}
+  else if(d.occupation){score+=8;items.push({tag:'中等',tagCls:'tag-yellow',dot:'medium',text:'就职于'+d.occupation+'领域，建议准备在职证明和收入材料。'});predQ.push('你在这家公司工作多久了？什么职位？月薪多少？');advice.push('准备中英文在职证明（含职位、薪资、准假日期），加盖公章。');}
+  if(d.salary&&parseInt(d.salary)>0){
+    var s=parseInt(d.salary);
+    if(s<5000){score+=5;items.push({tag:'注意',tagCls:'tag-yellow',dot:'medium',text:'月收入偏低（'+d.salary+'），可能引发经济能力顾虑。'});predQ.push('你的月收入是怎么花的？有其他收入来源吗？');}
+    else if(s>=20000){score-=3;items.push({tag:'正面',tagCls:'tag-green',dot:'low',text:'月收入水平较高，经济能力充足。'});}
+  }
+  if(d.tripPayer==='SELF'){items.push({tag:'正常',tagCls:'tag-green',dot:'low',text:'自费旅行，经济来源清晰。'});}
+  else if(d.tripPayer&&d.tripPayer!==''){score+=5;items.push({tag:'注意',tagCls:'tag-yellow',dot:'medium',text:'由第三方支付费用（'+d.tripPayer+'），签证官可能关注此关系。'});predQ.push('谁给你支付旅行费用？你们什么关系？');}
+
+  // 3. 家庭约束力 (0-15)
+  if(d.marital==='Single'||!d.marital){score+=10;items.push({tag:'中等',tagCls:'tag-yellow',dot:'medium',text:'未婚状态，国内家庭约束力较弱。'});predQ.push('你有结婚计划吗？家人都在国内吗？');}
+  else if(d.marital==='Married'){score+=3;items.push({tag:'正面',tagCls:'tag-green',dot:'low',text:'已婚，家庭在国内构成一定约束力。如有子女更佳。'});}
+  if(d.relativeUS==='Yes'){score+=5;items.push({tag:'注意',tagCls:'tag-yellow',dot:'medium',text:'有直系亲属在美国，签证官可能关注意图移民倾向。'});predQ.push('你在美国的亲属是什么身份？你们保持联系吗？');advice.push('明确说明此行仅为短期访问，不会滞留。准备好国内工作/家庭的约束力材料。');}
+
+  // 4. 签证历史 (0-20)
+  if(d.visaRefused==='Yes'){score+=18;items.push({tag:'极高风险',tagCls:'tag-red',dot:'high',text:'有美国签证拒签记录，这是最重要的负面因素。必须准备好详细解释上次拒签原因及本次情况变化。'});predQ.push('上次被拒签是什么原因？这次和上次相比有什么变化？');advice.push('务必整理好上次拒签后的情况变化：新工作、婚姻、资产等任何能证明约束力提升的材料。');}
+  if(d.immPetition==='Yes'){score+=15;items.push({tag:'极高风险',tagCls:'tag-red',dot:'high',text:'曾有移民申请记录，签证官会高度怀疑有移民倾向。'});predQ.push('谁给你提交的移民申请？你了解目前的申请状态吗？');}
+  if(d.visaRevoked==='Yes'){score+=12;items.push({tag:'高风险',tagCls:'tag-red',dot:'high',text:'签证曾被撤销，需准备好解释材料。'});predQ.push('你的签证为什么被撤销？当时是什么情况？');}
+
+  // 5. 安全背景 (0-10)
+  var sVals=[];
+  document.querySelectorAll('.sec-q select').forEach(function(s){if(s.value==='Yes')sVals.push(s.closest('.sec-q').querySelector('label').textContent.trim());});
+  if(sVals.length>0){score+=8;items.push({tag:'高风险',tagCls:'tag-red',dot:'high',text:'安全背景问题中有'+sVals.length+'项回答Yes，可能触发行政审查。'});predQ.push('请解释你安全背景中的Yes回答。');advice.push('准备好相关解释文件和证明材料。');}
+
+  // 6. 旅行计划 (0-5)
+  if(!d.hasPlans||d.hasPlans==='No'){score+=3;items.push({tag:'注意',tagCls:'tag-yellow',dot:'medium',text:'无具体旅行计划，签证官可能认为出行意图不明确。'});predQ.push('你打算什么时候去美国？去哪些地方？');}
+  else{items.push({tag:'正常',tagCls:'tag-green',dot:'low',text:'有具体旅行计划，目的明确。建议携带行程单。'});}
+  
+  // 7. 护照 (0-5)
+  if(d.passportExp){
+    var exp=new Date(d.passportExp),now=new Date();
+    var months=(exp-now)/1000/60/60/24/30;
+    if(months<6){score+=4;items.push({tag:'注意',tagCls:'tag-yellow',dot:'medium',text:'护照有效期不足6个月，建议先更换护照再申请签证。'});}
+  }
+
+  // 综合评定
+  score=Math.min(score,maxScore);
+  var lvl,lvlText,lvlCls,lvlDesc;
+  if(score<=15){lvl='低风险';lvlText='🟢 低风险';lvlCls='risk-low';lvlDesc='您的面签通过概率较高。保持自信、如实回答即可。';}
+  else if(score<=35){lvl='中等风险';lvlText='🟡 中等风险';lvlCls='risk-medium';lvlDesc='存在一些关注点，建议针对上述分析做好充分准备。';}
+  else if(score<=60){lvl='高风险';lvlText='🔴 高风险';lvlCls='risk-high';lvlDesc='面签被拒风险较高。强烈建议逐项准备以上提到的材料和回答，可延缓面签时间以完善材料。';}
+  else{lvl='极高风险';lvlText='⛔ 极高风险';lvlCls='risk-critical';lvlDesc='存在重大拒签风险因素。建议咨询专业签证顾问后调整申请策略。';}
+  if(sVals.length>0){lvlDesc+=' 注意：安全背景Yes项将触发行政审查，签证处理时间将延长。';}
+
+  // Render
+  document.getElementById('riskLevel').textContent=lvlText;
+  document.getElementById('riskScore').textContent='综合评分: '+score+' / '+maxScore;
+  var banner=document.getElementById('riskBanner');banner.className=lvlCls;banner.style.borderRadius='8px';
+  var hi='';
+  items.forEach(function(it){hi+='<div class="risk-item"><span class="risk-dot '+it.dot+'"></span><span class="risk-item-text">'+it.text+'</span><span class="risk-item-tag '+it.tagCls+'">'+it.tag+'</span></div>';});
+  document.getElementById('riskItems').innerHTML=hi;
+  var pq='<ol style="padding-left:16px;margin:0;">';
+  predQ.forEach(function(q){pq+='<li>'+q+'</li>';});pq+='</ol>';
+  document.getElementById('predictedQuestions').innerHTML=pq;
+  var pa='<ul style="padding-left:16px;margin:0;">';
+  if(advice.length===0)advice.push('携带完整的旅行计划、在职证明、银行流水、房产证等约束力材料。');
+  if(advice.length===0)advice.push('面签时保持自然、自信、诚实。回答简洁明了，不要过度解释。');
+  advice.forEach(function(a){pa+='<li>'+a+'</li>';});pa+='</ul>';
+  document.getElementById('prepAdvice').innerHTML=pa;
+
+  document.getElementById('assessmentLoading').style.display='none';
+  document.getElementById('assessmentResult').style.display='block';
+  toggleSection(21);
+  document.getElementById('section-21').classList.add('open');
+}
+document.addEventListener('input',(function(){var t;return function(){clearTimeout(t);t=setTimeout(function(){updateProgress();autoSave();generateAssessment();},800);}})());
+
 // ── Preview ──
-function showPreview(){var fs=document.querySelectorAll('[data-field]'),h='<h2>DS-160 Nonimmigrant Visa Application</h2><div style="text-align:center;font-size:11px;color:#666;border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:16px;">Application ID: '+document.getElementById('appIdDisplay').textContent+'</div>',ls='';fs.forEach(function(f){var s=f.closest('.section'),st=s?s.querySelector('.section-title').textContent:'';if(st!==ls){h+='<h3 style="border-bottom:1px solid #333;margin-top:12px;font-size:12px;">'+st+'</h3>';ls=st;}var l=f.closest('.form-group')?f.closest('.form-group').querySelector('label'):null,lt=l?l.textContent.replace(/\*/g,'').trim():f.name;h+='<div style="font-size:11px;margin:2px 0;"><b>'+lt+':</b> '+(f.value||'—')+'</div>';});document.getElementById('previewContent').innerHTML=h;document.getElementById('previewOverlay').classList.add('show');}
+function showPreview(){var fs=document.querySelectorAll('[data-field]'),h='<h2>DS-160 Nonimmigrant Visa Application</h2><div style="text-align:center;font-size:11px;color:#666;border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:16px;">Application ID: '+document.getElementById('appIdDisplay').textContent+'</div>',ls='';fs.forEach(function(f){var s=f.closest('.section'),st=s?s.querySelector('.section-title').textContent:'';if(st!==ls){h+='<h3 style="border-bottom:1px solid #333;margin-top:12px;font-size:12px;">'+st+'</h3>';ls=st;}var l=f.closest('.form-group')?f.closest('.form-group').querySelector('label'):null,lt=l?l.textContent.replace(/\*/g,'').trim():f.name;h+='<div style="font-size:11px;margin:2px 0;"><b>'+lt+':</b> '+(f.value||'—')+'</div>';});
+  // Append assessment to preview
+  if(document.getElementById('assessmentResult').style.display!=='none'){
+    generateAssessment();
+    h+='<div style="page-break-before:always;"></div>';
+    h+='<h2 style="color:#d85a30;margin-top:24px;">面签风险评估报告</h2>';
+    h+='<div style="font-size:11px;">'+document.getElementById('riskItems').innerHTML+'</div>';
+    h+='<h3 style="margin-top:14px;">预测面签问题</h3>';
+    h+=document.getElementById('predictedQuestions').innerHTML;
+    h+='<h3 style="margin-top:14px;">面签准备建议</h3>';
+    h+=document.getElementById('prepAdvice').innerHTML;
+  }
+  document.getElementById('previewContent').innerHTML=h;document.getElementById('previewOverlay').classList.add('show');
+}
 function closePreview(){document.getElementById('previewOverlay').classList.remove('show');}
 
 // ── PDF ──
