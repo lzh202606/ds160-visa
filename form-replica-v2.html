@@ -815,9 +815,19 @@ async function printPDF(){
     // Footer
     var pgc=pdf.internal.getNumberOfPages();
     for(var p=2;p<=pgc;p++){pdf.setPage(p);pdf.setFontSize(7);pdf.setFont('helvetica','normal');pdf.setTextColor(160,160,160);pdf.text(p+'/'+pgc,pw-15,290);}
-    var bl=pdf.output('blob'),a=document.createElement('a');
-    a.href=URL.createObjectURL(bl);a.download='DS-160_'+appId+'.pdf';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+    // Android compatible download
+    var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      // Use data URI for mobile — most reliable across Android browsers
+      var dataUri=pdf.output('datauristring');
+      var w=window.open('');if(w){w.document.write('<iframe src="'+dataUri+'" width="100%" height="100%" style="border:none;"></iframe>');w.document.title='DS-160_'+appId;}
+      else{pdf.save('DS-160_'+appId+'.pdf');}
+    }else{
+      var bl=pdf.output('blob'),a=document.createElement('a');
+      a.href=URL.createObjectURL(bl);a.download='DS-160_'+appId+'.pdf';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(a.href);},3000);
+    }
     hideLoading();
     if(window.consumeToken)window.consumeToken();
   }catch(e){hideLoading();alert('PDF 生成失败: '+e.message+'\n\n请尝试刷新页面后重试。');}
