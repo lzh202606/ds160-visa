@@ -646,67 +646,68 @@ function generateAssessment(){
   };
   var findings=[],questions=[],adviceItems=[];
   var score=0,maxScore=100;
-  var cats={travel:{name:'出行记录',score:0,max:20,notes:[]},
-            work:{name:'工作稳定性',score:0,max:25,notes:[]},
-            family:{name:'家庭纽带',score:0,max:15,notes:[]},
-            visa:{name:'签证历史',score:0,max:20,notes:[]},
-            security:{name:'安全背景',score:0,max:10,notes:[]},
-            plan:{name:'旅行计划',score:0,max:10,notes:[]}};
+  var cats={travel:{name:'出行记录',score:0,max:15,notes:[]},
+            work:{name:'工作稳定性',score:0,max:20,notes:[]},
+            family:{name:'家庭纽带',score:0,max:10,notes:[]},
+            visa:{name:'签证历史',score:0,max:15,notes:[]},
+            security:{name:'安全背景',score:0,max:8,notes:[]},
+            plan:{name:'旅行计划',score:0,max:7,notes:[]}};
 
   // 1. 出行记录
-  if(!d.prevUS||d.prevUS==='No'){cats.travel.score=15;cats.travel.notes.push('无美国旅行记录');findings.push({icon:'⚠️',cls:'fd-warning',text:'无美国及发达国家旅行记录，签证官可能对出行目的产生疑虑。'});questions.push('你之前去过哪些国家？为什么选择现在去美国？');}
+  if(!d.prevUS||d.prevUS==='No'){cats.travel.score=8;cats.travel.notes.push('无美国旅行记录');findings.push({icon:'⚠️',cls:'fd-warning',text:'无美国旅行记录，建议准备好旅行计划说明。'});questions.push('你之前去过哪些国家？为什么选择现在去美国？');}
   else{findings.push({icon:'✅',cls:'fd-positive',text:'有美国旅行经历，具备合法出入境记录。'});questions.push('上次去美国做了什么？按计划返回了吗？');}
-  if(d.hadVisa==='Yes'){score-=5;adviceItems.push('携带旧护照及签证复印件，证明良好出入境记录。');}
+  if(d.hadVisa==='Yes'){score-=3;adviceItems.push('携带旧护照及签证复印件，证明良好出入境记录。');}
 
   // 2. 工作稳定性
   var highRiskJobs=['UNEMPLOYED','NOT EMPLOYED','HOMEMAKER','HOMEWORK','RETIRED'];
   var lowRiskJobs=['GOVERNMENT','EDUCATION','MEDICAL/HEALTH','ENGINEERING','LEGAL PROFESSION'];
-  if(highRiskJobs.indexOf(d.occupation)>-1){cats.work.score=22;cats.work.notes.push('无稳定职业');findings.push({icon:'🔴',cls:'fd-danger',text:'当前无稳定职业（'+d.occupation+'），缺乏国内工作约束力。'});questions.push('你在国内的主要经济来源是什么？打算怎么支付旅行费用？');adviceItems.push('准备银行存款证明、房产证、车辆登记证等资产材料。');}
-  else if(d.occupation==='STUDENT'){cats.work.score=10;cats.work.notes.push('学生身份');findings.push({icon:'⚠️',cls:'fd-warning',text:'学生身份，收入来源有限。需证明学业约束力及回国必要性。'});questions.push('你学什么专业？毕业后有什么打算？');adviceItems.push('准备在读证明、学籍材料。');}
-  else if(lowRiskJobs.indexOf(d.occupation)>-1){cats.work.score=3;findings.push({icon:'✅',cls:'fd-positive',text:'稳定职业（'+d.occupation+'），是国内约束力的有力证明。'});}
-  else if(d.occupation){cats.work.score=8;cats.work.notes.push('一般职业');findings.push({icon:'ℹ️',cls:'fd-neutral',text:'就职于'+d.occupation+'领域，建议准备在职证明。'});questions.push('你在这家公司工作多久了？什么职位？月薪多少？');adviceItems.push('准备中英文在职证明（含职位、薪资、准假日期），加盖公章。');}
+  if(highRiskJobs.indexOf(d.occupation)>-1){cats.work.score=15;cats.work.notes.push('无稳定职业');findings.push({icon:'🔴',cls:'fd-danger',text:'当前无稳定职业（'+d.occupation+'），需提供其他经济来源证明。'});questions.push('你在国内的主要经济来源是什么？');adviceItems.push('准备银行存款证明、房产证等资产材料。');}
+  else if(d.occupation==='STUDENT'){cats.work.score=6;cats.work.notes.push('学生身份');findings.push({icon:'⚠️',cls:'fd-warning',text:'学生身份，需证明学业约束力及回国必要性。'});questions.push('你学什么专业？毕业后有什么打算？');}
+  else if(lowRiskJobs.indexOf(d.occupation)>-1){cats.work.score=2;findings.push({icon:'✅',cls:'fd-positive',text:'稳定职业（'+d.occupation+'），是国内约束力的有力证明。'});}
+  else if(d.occupation){cats.work.score=5;cats.work.notes.push('一般职业');findings.push({icon:'ℹ️',cls:'fd-neutral',text:'就职于'+d.occupation+'领域，建议准备在职证明。'});questions.push('你在这家公司工作多久了？什么职位？');}
   if(d.salary&&parseInt(d.salary)>0){
     var s=parseInt(d.salary);
-    if(s<5000){score+=5;findings.push({icon:'⚠️',cls:'fd-warning',text:'月收入偏低（￥'+d.salary+'），可能引发经济能力顾虑。'});questions.push('你的月收入怎么花的？有其他收入吗？');}
-    else if(s>=20000){score-=3;findings.push({icon:'✅',cls:'fd-positive',text:'月收入较高（￥'+d.salary+'），经济能力充足。'});}
+    if(s<4000){score+=3;findings.push({icon:'⚠️',cls:'fd-warning',text:'月收入偏低（￥'+d.salary+'），建议补充资产证明。'});}
+    else if(s>=15000){score-=2;findings.push({icon:'✅',cls:'fd-positive',text:'月收入￥'+d.salary+'，经济能力良好。'});}
   }
   if(d.tripPayer==='SELF'){findings.push({icon:'✅',cls:'fd-positive',text:'自费旅行，经济来源清晰。'});}
-  else if(d.tripPayer&&d.tripPayer!==''){score+=5;findings.push({icon:'⚠️',cls:'fd-warning',text:'由第三方支付费用（'+d.tripPayer+'），签证官可能关注此关系。'});questions.push('谁给你支付旅行费用？你们什么关系？');}
+  else if(d.tripPayer&&d.tripPayer!==''){score+=3;findings.push({icon:'⚠️',cls:'fd-warning',text:'由第三方支付费用（'+d.tripPayer+'），建议准备好关系说明。'});questions.push('谁给你支付旅行费用？你们什么关系？');}
 
   // 3. 家庭纽带
-  if(d.marital==='Single'||!d.marital){cats.family.score=10;cats.family.notes.push('未婚');findings.push({icon:'⚠️',cls:'fd-warning',text:'未婚状态，国内家庭约束力较弱。'});questions.push('你有结婚计划吗？家人都在国内吗？');}
-  else if(d.marital==='Married'){cats.family.score=3;findings.push({icon:'✅',cls:'fd-positive',text:'已婚，家庭在国内构成一定约束力。'});}
-  if(d.relativeUS==='Yes'){score+=5;findings.push({icon:'⚠️',cls:'fd-warning',text:'有直系亲属在美国，签证官可能关注移民倾向。'});questions.push('你在美国的亲属是什么身份？常联系吗？');adviceItems.push('明确说明此行仅为短期访问，不会滞留。');}
+  if(d.marital==='Single'||!d.marital){cats.family.score=6;cats.family.notes.push('未婚');findings.push({icon:'⚠️',cls:'fd-warning',text:'未婚状态，建议准备其他国内约束力材料。'});questions.push('你有结婚计划吗？家人都在国内吗？');}
+  else if(d.marital==='Married'){cats.family.score=2;findings.push({icon:'✅',cls:'fd-positive',text:'已婚，家庭在国内构成约束力。'});}
+  if(d.relativeUS==='Yes'){score+=3;findings.push({icon:'⚠️',cls:'fd-warning',text:'有直系亲属在美，建议说明此行仅为短期访问。'});questions.push('你在美国的亲属是什么身份？');}
 
   // 4. 签证历史
-  if(d.visaRefused==='Yes'){cats.visa.score=18;cats.visa.notes.push('有拒签记录');findings.push({icon:'🔴',cls:'fd-danger',text:'有美国签证拒签记录！这是最重要的负面因素。'});questions.push('上次被拒签是什么原因？这次相比有什么变化？');adviceItems.push('整理上次拒签后的情况变化：新工作、婚姻、资产等约束力提升材料。');}
-  if(d.immPetition==='Yes'){cats.visa.score=15;cats.visa.notes.push('有移民申请');findings.push({icon:'🔴',cls:'fd-danger',text:'曾有移民申请记录，签证官会高度怀疑移民倾向。'});questions.push('谁提交的移民申请？当前申请状态如何？');}
-  if(d.visaRevoked==='Yes'){cats.visa.score=12;cats.visa.notes.push('签证被撤销');findings.push({icon:'🔴',cls:'fd-danger',text:'签证曾被撤销，需准备好解释材料。'});questions.push('签证为什么被撤销？当时是什么情况？');}
+  if(d.visaRefused==='Yes'){cats.visa.score=12;cats.visa.notes.push('有拒签记录');findings.push({icon:'🔴',cls:'fd-danger',text:'有美国签证拒签记录，需准备好情况变化说明。'});questions.push('上次被拒签是什么原因？这次相比有什么变化？');adviceItems.push('整理上次拒签后的情况变化：新工作、婚姻、资产等。');}
+  if(d.immPetition==='Yes'){cats.visa.score=10;cats.visa.notes.push('有移民申请');findings.push({icon:'🔴',cls:'fd-danger',text:'曾有移民申请记录，签证官会关注移民倾向。'});questions.push('谁提交的移民申请？当前状态如何？');}
+  if(d.visaRevoked==='Yes'){cats.visa.score=8;cats.visa.notes.push('签证被撤销');findings.push({icon:'🔴',cls:'fd-danger',text:'签证曾被撤销，需准备好解释材料。'});questions.push('签证为什么被撤销？');}
 
   // 5. 安全背景
   var sVals=[];
   document.querySelectorAll('.sec-q select').forEach(function(s){if(s.value==='Yes')sVals.push(s.closest('.sec-q').querySelector('label').textContent.trim());});
-  if(sVals.length>0){cats.security.score=8;cats.security.notes.push(sVals.length+'项Yes');findings.push({icon:'🔴',cls:'fd-danger',text:'安全背景有'+sVals.length+'项回答Yes，可能触发行政审查。'});questions.push('请准备好安全背景Yes项的解释材料。');adviceItems.push('准备好相关解释文件和证明材料，行政审查可能延长处理时间。');}
+  if(sVals.length>0){cats.security.score=5;cats.security.notes.push(sVals.length+'项Yes');findings.push({icon:'🔴',cls:'fd-danger',text:'安全背景有'+sVals.length+'项Yes，可能触发行政审查。'});}
 
   // 6. 旅行计划
-  if(!d.hasPlans||d.hasPlans==='No'){cats.plan.score=3;cats.plan.notes.push('无具体计划');findings.push({icon:'⚠️',cls:'fd-warning',text:'无具体旅行计划，出行意图不明确。'});questions.push('打算什么时候去美国？去哪些地方？');}
-  else{findings.push({icon:'✅',cls:'fd-positive',text:'有具体旅行计划，目的明确。建议携带行程单。'});}
+  if(!d.hasPlans||d.hasPlans==='No'){cats.plan.score=2;cats.plan.notes.push('无具体计划');findings.push({icon:'⚠️',cls:'fd-warning',text:'无具体旅行计划，建议提前规划行程。'});questions.push('打算什么时候去美国？去哪些地方？');}
+  else{findings.push({icon:'✅',cls:'fd-positive',text:'有具体旅行计划，目的明确。'});}
 
   // 护照
   if(d.passportExp){
     var exp=new Date(d.passportExp),now=new Date();
-    if((exp-now)/1000/60/60/24/30<6){score+=4;findings.push({icon:'⚠️',cls:'fd-warning',text:'护照有效期不足6个月，建议先更换护照再申请。'});}
+    if((exp-now)/1000/60/60/24/30<6){score+=2;findings.push({icon:'⚠️',cls:'fd-warning',text:'护照有效期不足6个月，建议先更换。'});}
   }
 
   // 计算总分
   score=cats.travel.score+cats.work.score+cats.family.score+cats.visa.score+cats.security.score+cats.plan.score+score;
   score=Math.min(score,maxScore);
-  var passRate=Math.max(5,100-score);
+  var passRate=100-score; // 直接映射：分数越低通过率越高
+  passRate=Math.max(25,Math.min(95,passRate)); // 限制在 25%-95%
 
   // 渲染 Gauge
   var cl=2*Math.PI*52, dash=cl*score/100;
   document.getElementById('asGaugeArc').setAttribute('stroke-dasharray',dash+' '+cl);
-  var gc='#2b8c4d';if(score>35)gc='#d85a30';if(score>60)gc='#b50909';if(score>80)gc='#880e4f';
+  var gc='#2b8c4d';if(score>25)gc='#d85a30';if(score>45)gc='#b50909';if(score>65)gc='#880e4f';
   document.getElementById('asGaugeArc').setAttribute('stroke',gc);
   document.getElementById('asScoreNum').textContent=score;
   document.getElementById('asScoreNum').style.color=gc;
@@ -714,12 +715,12 @@ function generateAssessment(){
   // Level badge
   var lb=document.getElementById('asLevelBadge');
   var ld=document.getElementById('asLevelDesc');
-  if(score<=15){lb.textContent='🟢 低风险 · 通过率 ~'+passRate+'%';lb.className='lvl-low';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='您的面签通过概率较高。保持自信、如实回答即可。';}
-  else if(score<=35){lb.textContent='🟡 中等风险 · 通过率 ~'+passRate+'%';lb.className='lvl-medium';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='存在一些关注点，建议针对分析做好充分准备。';}
-  else if(score<=60){lb.textContent='🔴 高风险 · 通过率 ~'+passRate+'%';lb.className='lvl-high';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='面签被拒风险较高。强烈建议逐项准备以上材料，可延缓面签以完善条件。';}
-  else{lb.textContent='⛔ 极高风险 · 通过率 ~'+passRate+'%';lb.className='lvl-critical';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='存在重大拒签风险因素。建议咨询专业签证顾问后调整申请策略。';}
+  if(score<=12){lb.textContent='🟢 通过率较高 · ~'+passRate+'%';lb.className='lvl-low';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='您的各方面条件较好，面签准备充分即可，保持自信。';}
+  else if(score<=25){lb.textContent='🟡 通过率良好 · ~'+passRate+'%';lb.className='lvl-medium';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='存在少量关注点，建议针对上述分析做好准备。';}
+  else if(score<=45){lb.textContent='🔴 需要重视 · ~'+passRate+'%';lb.className='lvl-high';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='存在一定风险因素，建议逐项完善材料后再预约面签。';}
+  else{lb.textContent='⛔ 风险较高 · ~'+passRate+'%';lb.className='lvl-critical';lb.style.cssText='display:inline-block;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:6px;';ld.textContent='风险因素较多，建议咨询专业顾问后调整申请策略。';}
   if(sVals.length>0)ld.textContent+=' | 安全背景Yes项将触发行政审查，处理时间将延长。';
-  var bg=gcl='';if(score<=15)bg='linear-gradient(135deg,#e6f4ea,#c8e6c9)';else if(score<=35)bg='linear-gradient(135deg,#fef7e0,#fff3c4)';else if(score<=60)bg='linear-gradient(135deg,#fce8e6,#ffcdd2)';else bg='linear-gradient(135deg,#fce4ec,#f8bbd0)';
+  var bg='';if(score<=12)bg='linear-gradient(135deg,#e6f4ea,#c8e6c9)';else if(score<=25)bg='linear-gradient(135deg,#fef7e0,#fff3c4)';else if(score<=45)bg='linear-gradient(135deg,#fce8e6,#ffcdd2)';else bg='linear-gradient(135deg,#fce4ec,#f8bbd0)';
   document.getElementById('asScoreCard').style.background=bg;
 
   // Category bars
