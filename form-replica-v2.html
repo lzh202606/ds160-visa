@@ -347,12 +347,9 @@ body{
   <div class="section-header" onclick="toggleSection(8)"><span class="section-num">8</span><span class="section-title">U.S. Point of Contact Information 在美联系人</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="alert alert-info" style="font-size:10px;">Provide contact information of a person or organization in the U.S. (school official, friend, relative, hotel, etc.)</div>
-    <div class="form-row col2">
-      <div class="form-group"><label>Contact Type 联系人类型 <span class="req">*</span></label><select name="contactType" data-field="Contact Type" required><option value="">Select</option><option value="SCHOOL OFFICIAL">School Official</option><option value="FRIEND">Friend</option><option value="RELATIVE">Relative</option><option value="SPOUSE">Spouse</option><option value="BUSINESS CONTACT">Business Contact</option><option value="HOTEL">Hotel</option><option value="OTHER">Other</option></select></div>
-      <div class="form-group"><label>Contact Name 联系人姓名 <span class="req">*</span></label><input name="contactName" data-field="Contact Name" placeholder="Individual or organization" required></div>
-    </div>
+    <div class="form-row col1"><div class="form-group"><label>Contact Name 联系人姓名 <span class="req">*</span></label><input name="contactName" data-field="Contact Name" placeholder="Individual or organization" required></div></div>
     <div class="form-row col1"><div class="form-group"><label>Organization Name 组织名称</label><input name="contactOrg" data-field="Contact Org" placeholder="School / company name"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Relationship to You 与您的关系</label><select name="contactRelation" data-field="Contact Rel"><option value="">Select 请选择</option><option value="SCHOOL OFFICIAL">School Official 学校官员</option><option value="FRIEND">Friend 朋友</option><option value="RELATIVE">Relative 亲属</option><option value="SPOUSE">Spouse 配偶</option><option value="EMPLOYER">Employer 雇主</option><option value="BUSINESS ASSOCIATE">Business Associate 商务伙伴</option><option value="HOTEL">Hotel 酒店</option><option value="OTHER">Other 其他</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Relationship to You 与您的关系</label><select name="contactRelation" data-field="Contact Rel"><option value="">Select 请选择</option><option value="SCHOOL OFFICIAL">School Official 学校</option><option value="FRIEND">Friend 朋友</option><option value="RELATIVE">Relative 亲属</option><option value="SPOUSE">Spouse 配偶</option><option value="EMPLOYER">Employer 雇主</option><option value="BUSINESS ASSOCIATE">Business Associate 商务</option><option value="OTHER">Other 其他</option></select></div></div>
     <h4 style="margin-top:10px;">Contact Address 联系人地址</h4>
     <div class="form-row col1"><div class="form-group"><label>Street 街道</label><input name="contactAddr" data-field="Contact Addr"></div></div>
     <div class="form-row col3"><div class="form-group"><label>City 城市</label><input name="contactCity"><label>State 州</label><input name="contactState"><label>ZIP 邮编</label><input name="contactZip"></div></div>
@@ -394,19 +391,19 @@ body{
   <div class="section-body">
     <div class="form-row col1"><div class="form-group"><label>Primary Occupation 主要职业 <span class="req">*</span></label>
       <select name="occupation" data-field="Occupation" required id="occupation">
-        <option value="">— Select —</option>
-        <option value="BUSINESS">BUSINESS</option><option value="COMMUNICATIONS">COMMUNICATIONS</option>
-        <option value="COMPUTER SCIENCE">COMPUTER SCIENCE</option><option value="CULINARY/FOOD">CULINARY/FOOD SERVICES</option>
-        <option value="EDUCATION">EDUCATION</option><option value="ENGINEERING">ENGINEERING</option>
-        <option value="GOVERNMENT">GOVERNMENT</option><option value="MILITARY">MILITARY</option>
-        <option value="MEDICAL/HEALTH">MEDICAL/HEALTH</option><option value="HOMEMAKER">HOMEMAKER</option>
-        <option value="HOMEWORK">HOME-BASED WORKER</option><option value="LEGAL PROFESSION">LEGAL PROFESSION</option>
-        <option value="NATURAL SCIENCE">NATURAL SCIENCE</option><option value="PHYSICAL SCIENCE">PHYSICAL SCIENCE</option>
-        <option value="SOCIAL SCIENCE">SOCIAL SCIENCE</option><option value="RESEARCH">RESEARCH</option>
-        <option value="RELIGIOUS VOCATION">RELIGIOUS VOCATION</option><option value="NOT EMPLOYED">NOT EMPLOYED</option>
-        <option value="STUDENT">STUDENT</option><option value="RETIRED">RETIRED</option>
-        <option value="UNEMPLOYED">UNEMPLOYED</option><option value="SELF-EMPLOYED">SELF-EMPLOYED</option>
-        <option value="OTHER">OTHER</option>
+        <option value="">— Select 请选择 —</option>
+        <option value="BUSINESS">BUSINESS 商务/贸易</option><option value="COMMUNICATIONS">COMMUNICATIONS 传媒/通讯</option>
+        <option value="COMPUTER SCIENCE">COMPUTER SCIENCE 计算机科学</option><option value="CULINARY/FOOD">CULINARY/FOOD 餐饮/食品</option>
+        <option value="EDUCATION">EDUCATION 教育</option><option value="ENGINEERING">ENGINEERING 工程</option>
+        <option value="GOVERNMENT">GOVERNMENT 政府/公职</option><option value="MILITARY">MILITARY 军事</option>
+        <option value="MEDICAL/HEALTH">MEDICAL/HEALTH 医疗/健康</option><option value="HOMEMAKER">HOMEMAKER 家庭主理</option>
+        <option value="HOMEWORK">HOME-BASED WORKER 居家工作者</option><option value="LEGAL PROFESSION">LEGAL PROFESSION 法律专业</option>
+        <option value="NATURAL SCIENCE">NATURAL SCIENCE 自然科学</option><option value="PHYSICAL SCIENCE">PHYSICAL SCIENCE 物理科学</option>
+        <option value="SOCIAL SCIENCE">SOCIAL SCIENCE 社会科学</option><option value="RESEARCH">RESEARCH 研究</option>
+        <option value="RELIGIOUS VOCATION">RELIGIOUS VOCATION 宗教职业</option><option value="NOT EMPLOYED">NOT EMPLOYED 无业</option>
+        <option value="STUDENT">STUDENT 学生</option><option value="RETIRED">RETIRED 退休</option>
+        <option value="UNEMPLOYED">UNEMPLOYED 失业</option><option value="SELF-EMPLOYED">SELF-EMPLOYED 个体经营</option>
+        <option value="OTHER">OTHER 其他</option>
       </select>
     </div></div>
     <div id="occExplain" class="alert alert-info" style="display:none;font-size:10px;"><span id="occExplainText"></span><div id="occOtherInput" hidden style="margin-top:4px;"><label>Specify occupation: 具体职业</label><input name="occupationOther" style="width:100%;"></div></div>
