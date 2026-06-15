@@ -689,14 +689,28 @@ var TR_DICT={
   '北京市':'Beijing','上海市':'Shanghai','天津市':'Tianjin','重庆市':'Chongqing'
 };
 function translateCN(text,type){
-  if(!text||!/[\u4e00-\u9fff]/.test(text))return text; // No Chinese chars, return as-is
-  if(type==='address')return translateAddress(text);
-  if(type==='name')return translateName(text);
-  return translateGeneral(text);
+  if(!text||!/[\u4e00-\u9fff]/.test(text))return text;
+  // Address always uses local parser (Google doesn't understand Chinese address format)
+  if(type==='address')return googleTranslate(text).then(function(en){return translateAddress(text,en);});
+  // Names: try Google, fall back to local
+  if(type==='name')return googleTranslate(text).catch(function(){return translateName(text);});
+  // General: Google first, fall back to local
+  return googleTranslate(text).catch(function(){return translateGeneral(text);});
+}
+// Google Translate (unofficial, free, no API key needed)
+var _gtCache={};
+function googleTranslate(text){
+  if(_gtCache[text])return Promise.resolve(_gtCache[text]);
+  return fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=en&dt=t&q='+encodeURIComponent(text))
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var out='';if(d&&d[0])d[0].forEach(function(s){if(s&&s[0])out+=s[0];});
+    out=out||text;_gtCache[text]=out;
+    return out;
+  });
 }
 function translateGeneral(text){
   var r=text;
-  // Replace known terms (longer matches first)
   var keys=Object.keys(TR_DICT).sort(function(a,b){return b.length-a.length;});
   keys.forEach(function(k){if(TR_DICT[k])r=r.split(k).join(' '+TR_DICT[k]+' ');});
   return r.replace(/\s+/g,' ').trim();
@@ -708,32 +722,26 @@ function translateName(text){
   commonSurnames.forEach(function(s){if(r.indexOf(s)===0)r=s+' '+r.slice(s.length);});
   return r;
 }
-function translateAddress(cn){
+function translateAddress(cn,googTrans){
   // Parse Chinese address → English format
+  // Use Google translation for word-level, local parser for structure
   var parts=[],remaining=cn.trim();
-  // Extract: Room
+  function tCN(s){if(googTrans&&googTrans!==cn){var w=googTrans.split(/[\s,]+/);for(var i=0;i<w.length;i++)if(w[i].toLowerCase().indexOf(s.toLowerCase())>-1||s.indexOf(w[i])>-1)return w[i];}return translateGeneral(s);}
   var rm=remaining.match(/(\d+)\s*[室号]/);if(rm){parts.push('Room '+rm[1]);remaining=remaining.replace(rm[0],'');}
-  // Extract: Building/Floor
   var bd=remaining.match(/(\d+)\s*(?:号楼|栋|幢)/);if(bd){parts.push('Building '+bd[1]);remaining=remaining.replace(bd[0],'');}
   var fl=remaining.match(/(\d+)\s*层/);if(fl){parts.push(fl[1]+'F');remaining=remaining.replace(fl[0],'');}
   var un=remaining.match(/(\d+)\s*单元/);if(un){parts.push('Unit '+un[1]);remaining=remaining.replace(un[0],'');}
-  // Extract: No. X Road/Street
   var ns=remaining.match(/([\u4e00-\u9fff]+?)(?:路|街|大道|巷|弄)(\d+)\s*号?/);
-  if(ns){var sn=translateGeneral(ns[1]+ns[0].slice(ns[1].length));parts.push('No.'+ns[2]+' '+sn);remaining=remaining.replace(ns[0],'');}
-  else{var nr=remaining.match(/(\d+)\s*号\s*([\u4e00-\u9fff]+(?:路|街|大道|巷|弄))/);if(nr){var sn2=translateGeneral(nr[2]);parts.push('No.'+nr[1]+' '+sn2);remaining=remaining.replace(nr[0],'');}}
-  // Extract: District/County
+  if(ns){var sn=tCN(ns[1]+ns[0].slice(ns[1].length));parts.push('No.'+ns[2]+' '+sn);remaining=remaining.replace(ns[0],'');}
+  else{var nr=remaining.match(/(\d+)\s*号\s*([\u4e00-\u9fff]+(?:路|街|大道|巷|弄))/);if(nr){var sn2=tCN(nr[2]);parts.push('No.'+nr[1]+' '+sn2);remaining=remaining.replace(nr[0],'');}}
   var dist=remaining.match(/([\u4e00-\u9fff]+)(?:区|县|镇|村)/);
-  if(dist){var dn=translateGeneral(dist[0]);if(dn)parts.push(dn);remaining=remaining.replace(dist[0],'');}
-  // Extract: City
+  if(dist){var dn=tCN(dist[0]);if(dn)parts.push(dn);remaining=remaining.replace(dist[0],'');}
   var city=remaining.match(/([\u4e00-\u9fff]+)市/);
-  if(city){var cn2=translateGeneral(city[1]);parts.push(cn2?(cn2+' City'):city[0]);remaining=remaining.replace(city[0],'');}
-  // Extract: Province
+  if(city){var cn2=tCN(city[1]);parts.push(cn2?(cn2+' City'):city[0]);remaining=remaining.replace(city[0],'');}
   var prov=remaining.match(/([\u4e00-\u9fff]+)(?:省|自治区|特别行政区)/);
-  if(prov){var pn=translateGeneral(prov[0]);if(pn)parts.push(pn);remaining=remaining.replace(prov[0],'');}
-  // Translate remaining segments
+  if(prov){var pn=tCN(prov[0]);if(pn)parts.push(pn);remaining=remaining.replace(prov[0],'');}
   var segs=remaining.split(/[,，\s]+/).filter(Boolean);
-  segs.forEach(function(s){var t=translateGeneral(s);if(t)parts.push(t);});
-  // Remove duplicates
+  segs.forEach(function(s){var t=tCN(s);if(t)parts.push(t);});
   var seen={};parts=parts.filter(function(p){if(seen[p])return false;seen[p]=true;return true;});
   return parts.join(', ');
 }
@@ -753,14 +761,15 @@ function wireTranslation(){
     btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();
       var v=el.value.trim();if(!v||!/[\u4e00-\u9fff]/.test(v))return;
       btn.innerHTML='<span class=\"tr-spinner\"></span>';btn.style.pointerEvents='none';
-      setTimeout(function(){try{
-        var type=el.dataset.tr||'general';
-        var en=translateCN(v,type);
+      var type=el.dataset.tr||'general';
+      translateCN(v,type).then(function(en){
         el.dataset.en=en;res.textContent='✓ '+en;res.style.display='block';
         btn.textContent='✓';btn.className='tr-btn tr-done';btn.style.cssText='display:inline-flex;cursor:default;margin-left:6px;vertical-align:middle;background:#2b8c4d;color:#fff;';
         updateProgress();
-      }catch(err){btn.textContent='⚡';btn.className='tr-btn';btn.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn.style.pointerEvents='auto';res.textContent='翻译失败';res.style.display='block';res.style.background='#fce8e6';res.style.color='#b50909';}
-      },100);
+      }).catch(function(err){
+        btn.textContent='⚡';btn.className='tr-btn';btn.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn.style.pointerEvents='auto';
+        res.textContent='翻译失败: '+(err.message||err);res.style.display='block';res.style.background='#fce8e6';res.style.color='#b50909';
+      });
     });
     showIfCN();
   });
@@ -774,7 +783,7 @@ function wireTranslation(){
     el.parentNode.insertBefore(res2,btn2.nextSibling);
     var sh=function(){var v=el.value;btn2.style.display=(/[\u4e00-\u9fff]/.test(v))?'inline-flex':'none';};
     el.addEventListener('input',function(){sh();btn2.textContent='⚡';btn2.className='tr-btn';btn2.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn2.style.pointerEvents='auto';res2.style.display='none';delete el.dataset.en;});
-    btn2.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var v=el.value.trim();if(!v||!/[\u4e00-\u9fff]/.test(v))return;btn2.innerHTML='<span class=\"tr-spinner\"></span>';btn2.style.pointerEvents='none';setTimeout(function(){try{var en=translateCN(v,el.dataset.tr||'general');el.dataset.en=en;res2.textContent='✓ '+en;res2.style.display='block';btn2.textContent='✓';btn2.className='tr-btn tr-done';btn2.style.cssText='display:inline-flex;cursor:default;margin-left:6px;vertical-align:middle;background:#2b8c4d;color:#fff;';updateProgress();}catch(err){btn2.textContent='⚡';btn2.className='tr-btn';btn2.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn2.style.pointerEvents='auto';res2.textContent='翻译失败';res2.style.display='block';res2.style.background='#fce8e6';res2.style.color='#b50909';}},100);});
+    btn2.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var v=el.value.trim();if(!v||!/[\u4e00-\u9fff]/.test(v))return;btn2.innerHTML='<span class=\"tr-spinner\"></span>';btn2.style.pointerEvents='none';translateCN(v,el.dataset.tr||'general').then(function(en){el.dataset.en=en;res2.textContent='✓ '+en;res2.style.display='block';btn2.textContent='✓';btn2.className='tr-btn tr-done';btn2.style.cssText='display:inline-flex;cursor:default;margin-left:6px;vertical-align:middle;background:#2b8c4d;color:#fff;';updateProgress();}).catch(function(err){btn2.textContent='⚡';btn2.className='tr-btn';btn2.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn2.style.pointerEvents='auto';res2.textContent='翻译失败';res2.style.display='block';res2.style.background='#fce8e6';res2.style.color='#b50909';});});
     sh();
   });
 }
