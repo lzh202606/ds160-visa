@@ -181,7 +181,7 @@ body{
   <div class="section-header" onclick="toggleSection(2)"><span class="section-num">2</span><span class="section-title">Personal Information 2 个人信息（二）</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col2">
-      <div class="form-group"><label>Nationality 国籍 <span class="req">*</span></label><select name="nationality" data-field="Nationality" required><option value="">Select</option><option value="CHINA">CHINA</option><option value="TAIWAN">TAIWAN</option><option value="HK">HONG KONG SAR</option><option value="MACAU">MACAU SAR</option><option value="OTHER">OTHER</option></select></div>
+      <div class="form-group"><label>Nationality 国籍 <span class="req">*</span></label><select name="nationality" data-field="Nationality" required><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="OTHER">OTHER 其他</option></select></div>
       <div class="form-group"><label>Other Nationality? 其他国籍/永居</label><select name="otherNationality" data-field="Other Nationality"><option value="No">No</option><option value="Yes">Yes</option></select></div>
     </div>
     <div id="otherNationalityBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><input name="otherNationalityList" placeholder="List countries"></div></div>
@@ -263,7 +263,7 @@ body{
   <div class="section-header" onclick="toggleSection(4)"><span class="section-num">4</span><span class="section-title">Passport/Travel Document Information 护照信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col2">
-      <div class="form-group"><label>Passport Type 护照类型 <span class="req">*</span></label><select name="passportType" data-field="Passport Type" required><option value="">Select</option><option value="Regular">Regular</option><option value="Official">Official</option><option value="Diplomatic">Diplomatic</option><option value="Service">Service</option><option value="Other">Other Travel Document</option></select></div>
+      <div class="form-group"><label>Passport Type 护照类型 <span class="req">*</span></label><select name="passportType" data-field="Passport Type" required><option value="">Select 请选择</option><option value="Regular">Regular 普通护照</option><option value="Official">Official 公务护照</option><option value="Diplomatic">Diplomatic 外交护照</option><option value="Service">Service 因公护照</option><option value="Other">Other Travel Document 其他旅行证件</option></select></div>
       <div class="form-group"><label>Passport Number 护照号码 <span class="req">*</span></label><input name="passportNo" data-field="Passport #" placeholder="e.g. E12345678" required></div>
     </div>
     <div class="form-row col1"><div class="form-group"><label>Passport Book Number 护照本编号 <span class="hint">May not apply to all countries</span></label><input name="passportBookNo" data-field="Book #" placeholder=""></div></div>
