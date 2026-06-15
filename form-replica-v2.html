@@ -105,7 +105,21 @@ body{
 .lvl-critical{background:linear-gradient(135deg,#fce4ec,#f8bbd0);color:#880e4f;}
 @media(max-width:768px){#asFindings{grid-template-columns:1fr!important;}}
 
-@media print{.gov-banner,.header,.progress-bar,.btn-row,.alert,.close-btn{display:none!important;}
+/* Translation UI */
+.tr-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid #d0d5dd;border-radius:4px;background:#fff;color:#666;cursor:pointer;font-size:10px;transition:all .15s;flex-shrink:0;margin-left:4px;}
+.tr-btn:hover{background:#003867;color:#fff;border-color:#003867;}
+.tr-btn.tr-done{background:#2b8c4d;color:#fff;border-color:#2b8c4d;}
+.tr-result{font-size:10px;color:#2b8c4d;margin-top:2px;padding:2px 6px;background:#e6f4ea;border-radius:3px;word-break:break-all;line-height:1.4;max-height:60px;overflow-y:auto;}
+.tr-input-wrap{display:flex;align-items:flex-start;gap:0;}
+.tr-input-wrap input{flex:1;}
+.tr-spinner{display:inline-block;width:12px;height:12px;border:2px solid #ccc;border-top-color:#003867;border-radius:50%;animation:spin .6s linear infinite;}
+.btn-translate{background:#fff;color:#2b8c4d;border:2px solid #2b8c4d;}
+.btn-translate:hover{background:#e6f4ea;}
+.bilingual-label{display:flex;flex-direction:column;}
+.bilingual-label .cn{font-size:12px;font-weight:600;color:var(--text);}
+.bilingual-label .en{font-size:10px;color:var(--text2);font-weight:400;}
+
+@media print{.gov-banner,.header,.progress-bar,.btn-row,.alert,.close-btn,.tr-btn,.tr-result{display:none!important;}
   .section-body{max-height:none!important;padding:16px!important;}
   .section{border:1px solid #000;margin-bottom:0;box-shadow:none;page-break-inside:avoid;}
   body{padding-left:0;background:#fff;}
@@ -144,15 +158,15 @@ body{
   <div class="section-header" onclick="toggleSection(1)"><span class="section-num">1</span><span class="section-title">Personal Information 1 个人信息（一）</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col2">
-      <div class="form-group"><label>Surnames 姓氏 <span class="req">*</span></label><input name="surname" data-field="Surnames" placeholder="e.g. CHEN" required></div>
-      <div class="form-group"><label>Given Names 名字 <span class="req">*</span></label><input name="givenName" data-field="Given Names" placeholder="e.g. XIAOMING" required></div>
+      <div class="form-group"><label>Surnames 姓氏 <span class="req">*</span></label><input name="surname" data-field="Surnames" data-tr="name" placeholder="e.g. 陈 / CHEN" required></div>
+      <div class="form-group"><label>Given Names 名字 <span class="req">*</span></label><input name="givenName" data-field="Given Names" data-tr="name" placeholder="e.g. 小明 / XIAOMING" required></div>
     </div>
     <div class="form-row col1"><div class="form-group"><label>Full Name in Native Alphabet 中文姓名 <span class="req">*</span></label><input name="nativeName" data-field="Name in Native" placeholder="e.g. 陈小明" required></div></div>
     <div class="form-row col2">
       <div class="form-group"><label>Surname Telecode 姓氏电码 <span class="hint">4 digits</span></label><input name="surTelecode" placeholder="e.g. 7115"></div>
       <div class="form-group"><label>Given Name Telecode 名字电码 <span class="hint">4 digits</span></label><input name="givTelecode" placeholder="e.g. 1129 2494"></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>Other Surnames Used 曾用姓氏 <span class="hint">Maiden name, professional name, etc. / 如无则填 N/A</span></label><input name="otherSurnames" data-field="Other Surnames" placeholder="N/A"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Other Surnames Used 曾用姓氏 <span class="hint">Maiden name, professional name, etc. / 如无则填 N/A</span></label><input name="otherSurnames" data-field="Other Surnames" data-tr="name" placeholder="N/A"></div></div>
     <div class="form-row col2">
       <div class="form-group"><label>Sex 性别 <span class="req">*</span></label><select name="sex" data-field="Sex" required><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
       <div class="form-group"><label>Marital Status 婚姻状态 <span class="req">*</span></label>
@@ -198,8 +212,8 @@ body{
   <div class="section-header" onclick="toggleSection(3)"><span class="section-num">3</span><span class="section-title">Address and Phone Information 地址和联系方式</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <h3>Home Address 家庭地址</h3>
-    <div class="form-row col1"><div class="form-group"><label>Street Address 1 详细地址 <span class="req">*</span></label><input name="addrLine1" data-field="Address 1" placeholder="e.g. Room 301, No.88 Wusi Rd" required></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Street Address 2 <span class="hint">Optional</span></label><input name="addrLine2" data-field="Address 2"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Street Address 1 详细地址 <span class="req">*</span></label><input name="addrLine1" data-field="Address 1" data-tr="address" placeholder="e.g. 福建省福州市鼓楼区五四路88号301室" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Street Address 2 <span class="hint">Optional</span></label><input name="addrLine2" data-field="Address 2" data-tr="address"></div></div>
     <div class="form-row col2">
       <div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="addrCity" data-field="City" placeholder="e.g. Fuzhou" required></div>
       <div class="form-group"><label>State/Province 省/州 <span class="req">*</span></label><input name="addrState" data-field="State" placeholder="e.g. Fujian" required></div>
@@ -306,8 +320,8 @@ body{
     <h3 style="margin-top:14px;">Trip Payment 旅行费用</h3>
     <div class="form-row col1"><div class="form-group"><label>Person/Entity Paying <span class="req">*</span></label><select name="tripPayer" data-field="Trip Payer" required id="tripPayer"><option value="">Select</option><option value="SELF">SELF</option><option value="OTHER PERSON">OTHER PERSON</option><option value="COMPANY/ORG">COMPANY / ORGANIZATION</option><option value="OTHER">OTHER</option></select></div></div>
     <div id="payerBlock" style="display:none;">
-      <div class="form-row col2"><div class="form-group"><label>Name of Payer</label><input name="payerName"><label>Relationship</label><input name="payerRelation"></div></div>
-      <div class="form-row col1"><div class="form-group"><label>Address</label><input name="payerAddr"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Name of Payer</label><input name="payerName" data-tr="general"><label>Relationship</label><input name="payerRelation" data-tr="general"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Address</label><input name="payerAddr" data-tr="address"></div></div>
       <div class="form-row col2"><div class="form-group"><label>Phone</label><input name="payerPhone"><label>Email</label><input name="payerEmail" type="email"></div></div>
     </div>
   </div>
@@ -365,10 +379,10 @@ body{
   <div class="section-header" onclick="toggleSection(9)"><span class="section-num">9</span><span class="section-title">Family Information: Relatives 家庭信息：父母</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <h3>Father 父亲</h3>
-    <div class="form-row col2"><div class="form-group"><label>Surname <span class="req">*</span></label><input name="fatherSurname" data-field="Father Sur" placeholder="e.g. CHEN" required><label>Given Name <span class="req">*</span></label><input name="fatherGiven" data-field="Father Giv" placeholder="e.g. DAWEI" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Surname <span class="req">*</span></label><input name="fatherSurname" data-tr="name" data-field="Father Sur" placeholder="e.g. 陈 / CHEN" required><label>Given Name <span class="req">*</span></label><input name="fatherGiven" data-tr="name" data-field="Father Giv" placeholder="e.g. 大伟 / DAWEI" required></div></div>
     <div class="form-row col2"><div class="form-group"><label>Date of Birth</label><input type="date" name="fatherDob" data-field="Father DOB"><label>In the U.S.? <span class="req">*</span></label><select name="fatherInUS" data-field="Father US" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
     <h3 style="margin-top:14px;">Mother 母亲</h3>
-    <div class="form-row col2"><div class="form-group"><label>Surname <span class="req">*</span></label><input name="motherSurname" data-field="Mother Sur" placeholder="e.g. LIN" required><label>Given Name <span class="req">*</span></label><input name="motherGiven" data-field="Mother Giv" placeholder="e.g. MEILING" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Surname <span class="req">*</span></label><input name="motherSurname" data-tr="name" data-field="Mother Sur" placeholder="e.g. 林 / LIN" required><label>Given Name <span class="req">*</span></label><input name="motherGiven" data-tr="name" data-field="Mother Giv" placeholder="e.g. 美玲 / MEILING" required></div></div>
     <div class="form-row col2"><div class="form-group"><label>Date of Birth</label><input type="date" name="motherDob" data-field="Mother DOB"><label>In the U.S.? <span class="req">*</span></label><select name="motherInUS" data-field="Mother US" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
     <h3 style="margin-top:14px;">Immediate Relatives in U.S.</h3>
     <div class="form-row col1"><div class="form-group"><label>Any immediate relatives in the U.S.? <span class="req">*</span></label><select name="relativeInUS" data-field="Relatives US" required id="relativeInUS"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
@@ -381,10 +395,10 @@ body{
   <div class="section-header" onclick="toggleSection(10)"><span class="section-num">10</span><span class="section-title">Family Information: Spouse 配偶信息 (如适用)</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="alert alert-info" style="font-size:10px;">Complete if married / common law. Otherwise skip.</div>
-    <div class="form-row col2"><div class="form-group"><label>Spouse's Surname</label><input name="spouseSur"><label>Spouse's Given Name</label><input name="spouseGiv"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Spouse's Surname</label><input name="spouseSur" data-tr="name"><label>Spouse's Given Name</label><input name="spouseGiv" data-tr="name"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Date of Birth</label><input type="date" name="spouseDob"><label>Nationality</label><input name="spouseNat" placeholder="China"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City of Birth</label><input name="spouseBirthCity"><label>Country of Birth</label><select name="spouseBirthCty"><option value="">Select</option><option value="CHINA">CHINA</option><option value="OTHER">OTHER</option></select></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Address (if different from yours)</label><input name="spouseAddr"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address (if different from yours)</label><input name="spouseAddr" data-tr="address"></div></div>
   </div>
 </div>
 
@@ -409,12 +423,12 @@ body{
         <option value="OTHER">OTHER</option>
       </select>
     </div></div>
-    <div id="occExplain" class="alert alert-info" style="display:none;font-size:10px;"><span id="occExplainText"></span><div id="occOtherInput" hidden style="margin-top:4px;"><label>Specify occupation:</label><input name="occupationOther" style="width:100%;"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Employer / School Name <span class="req">*</span></label><input name="employerName" data-field="Employer" placeholder="e.g. X Company / Fuzhou University" required></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="employerAddr" data-field="Employer Addr"></div></div>
+    <div id="occExplain" class="alert alert-info" style="display:none;font-size:10px;"><span id="occExplainText"></span><div id="occOtherInput" hidden style="margin-top:4px;"><label>Specify occupation: 具体职业</label><input name="occupationOther" data-tr="general" style="width:100%;"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Employer / School Name 工作单位/学校 <span class="req">*</span></label><input name="employerName" data-tr="general" data-field="Employer" placeholder="e.g. 福州大学 / Fuzhou University" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="employerAddr" data-tr="address" data-field="Employer Addr"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City</label><input name="employerCity"><label>State/Province</label><input name="employerState"></div></div>
     <div class="form-row col3"><div class="form-group"><label>Postal Code</label><input name="employerZip"><label>Country</label><input name="employerCountry" placeholder="China"><label>Work Phone</label><input name="workPhone"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Monthly Salary (local currency) <span class="req">*</span></label><input name="monthlySalary" type="number" data-field="Salary" placeholder="e.g. 8000" required><label>Briefly Describe Duties <span class="req">*</span></label><input name="jobDuties" data-field="Duties" placeholder="e.g. Software Engineer" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Monthly Salary (local currency) <span class="req">*</span></label><input name="monthlySalary" type="number" data-field="Salary" placeholder="e.g. 8000" required><label>Briefly Describe Duties 工作职责简述 <span class="req">*</span></label><input name="jobDuties" data-tr="general" data-field="Duties" placeholder="e.g. 软件工程师 / Software Engineer" required></div></div>
     <div class="form-row col1"><div class="form-group"><label>Were you previously employed? <span class="req">*</span></label><select name="prevEmployed" data-field="Prev Employed" required id="prevEmployed"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
     <div class="alert alert-warning" style="font-size:10px;">If Yes, complete Section 12 (Previous Work).</div>
   </div>
@@ -426,20 +440,20 @@ body{
   <div class="section-body">
     <div class="alert alert-info" style="font-size:10px;">List all previous employment/school in the last 5 years. Leave blank if none.</div>
     <h4>Previous Employer 1</h4>
-    <div class="form-row col2"><div class="form-group"><label>Employer Name</label><input name="prevEmp1"><label>Job Title</label><input name="prevJob1"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="prevAddr1"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Employer Name</label><input name="prevEmp1" data-tr="general"><label>Job Title</label><input name="prevJob1" data-tr="general"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="prevAddr1" data-tr="address"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City</label><input name="prevCity1"><label>State</label><input name="prevState1"></div></div>
     <div class="form-row col3"><div class="form-group"><label>ZIP</label><input name="prevZip1"><label>Phone</label><input name="prevPhone1"><label>Country</label><input name="prevCty1"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Salary</label><input name="prevSal1" type="number"><label>Dates (From-To)</label><input name="prevDates1" placeholder="e.g. 2021-2023"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Duties</label><input name="prevDuties1"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Duties 职责</label><input name="prevDuties1" data-tr="general"></div></div>
     <hr style="border-color:#e0e0e0;margin:12px 0;">
     <h4>Previous Employer 2</h4>
-    <div class="form-row col2"><div class="form-group"><label>Employer Name</label><input name="prevEmp2"><label>Job Title</label><input name="prevJob2"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="prevAddr2"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Employer Name</label><input name="prevEmp2" data-tr="general"><label>Job Title</label><input name="prevJob2" data-tr="general"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="prevAddr2" data-tr="address"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City</label><input name="prevCity2"><label>State</label><input name="prevState2"></div></div>
     <div class="form-row col3"><div class="form-group"><label>ZIP</label><input name="prevZip2"><label>Phone</label><input name="prevPhone2"><label>Country</label><input name="prevCty2"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Salary</label><input name="prevSal2" type="number"><label>Dates</label><input name="prevDates2" placeholder="e.g. 2019-2021"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Duties</label><input name="prevDuties2"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Duties 职责</label><input name="prevDuties2" data-tr="general"></div></div>
   </div>
 </div>
 
@@ -451,14 +465,14 @@ body{
     <div class="form-row col2"><div class="form-group"><label>Primary Language</label><select name="lang1"><option value="">Select</option><option>Chinese (Mandarin)</option><option>Chinese (Cantonese)</option><option>English</option><option>Spanish</option><option>Other</option></select><label>English Proficiency</label><select name="englishLvl"><option value="">Select</option><option>Native/Fluent</option><option>Good</option><option>Basic</option><option>None</option></select></div></div>
 
     <h3 style="margin-top:14px;">Education History 教育背景</h3>
-    <div class="form-row col2"><div class="form-group"><label>Highest Education Level</label><select name="eduLvl"><option value="">Select</option><option>High School</option><option>Associate</option><option>Bachelor's</option><option>Master's</option><option>Doctorate</option><option>Professional (MD/JD)</option><option>Other</option></select><label>Institution Name</label><input name="eduSchool" data-field="School"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Address</label><input name="eduAddr"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Highest Education Level</label><select name="eduLvl"><option value="">Select</option><option>High School</option><option>Associate</option><option>Bachelor's</option><option>Master's</option><option>Doctorate</option><option>Professional (MD/JD)</option><option>Other</option></select><label>Institution Name 学校名称</label><input name="eduSchool" data-tr="general" data-field="School"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Address 学校地址</label><input name="eduAddr" data-tr="address"></div></div>
     <div class="form-row col3"><div class="form-group"><label>City</label><input name="eduCity"><label>State/Province</label><input name="eduState"><label>ZIP</label><input name="eduZip"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Country</label><input name="eduCty" placeholder="China"><label>Major / Course of Study</label><input name="eduMajor" placeholder="e.g. Computer Science"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Country</label><input name="eduCty" placeholder="China"><label>Major / Course of Study 专业</label><input name="eduMajor" data-tr="general" placeholder="e.g. 计算机科学 / Computer Science"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Dates Attended</label><input name="eduYears" placeholder="e.g. 2018-2022"></div></div>
 
     <h3 style="margin-top:14px;">Countries Visited (Last 5 Years) 过去5年访问国家</h3>
-    <div class="form-row col1"><div class="form-group"><label>List countries visited</label><textarea name="countriesVisited" rows="3" placeholder="Japan, 2024&#10;Thailand, 2023&#10;South Korea, 2022"></textarea></div></div>
+    <div class="form-row col1"><div class="form-group"><label>List countries visited 列举访问过的国家</label><textarea name="countriesVisited" data-tr="general" rows="3" placeholder="Japan, 2024&#10;Thailand, 2023&#10;South Korea, 2022"></textarea></div></div>
 
     <h3 style="margin-top:14px;">Organizational Memberships 组织隶属</h3>
     <div class="form-row col1"><div class="form-group"><label>Have you belonged to or contributed to any professional, social, or charitable organization?</label><select name="orgMember" data-field="Orgs"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
@@ -588,6 +602,7 @@ body{
   <button type="button" class="btn btn-outline" onclick="collapseAll()">Collapse All</button>
   <button type="button" class="btn btn-primary" onclick="validateForm()">Validate</button>
   <button type="button" class="btn btn-primary" onclick="showPreview()">Preview DS-160</button>
+  <button type="button" class="btn btn-translate" onclick="translateAllFields()" title="一键翻译所有中文内容为英文">⚡ Translate All</button>
   <button type="button" class="btn btn-success" onclick="printPDF()">Download PDF</button>
   <button type="button" class="btn btn-danger" onclick="resetForm()">Reset All</button>
 </div>
@@ -627,6 +642,129 @@ function toggleExplain(sel){var inp=sel.nextElementSibling;if(inp&&inp.tagName==
 // ── Auto Save ──
 function autoSave(){var d={};document.querySelectorAll('#ds160Form input,#ds160Form select,#ds160Form textarea').forEach(function(e){if(e.name&&e.type!=='password'&&e.type!=='checkbox'&&e.type!=='file')d[e.name]=e.value;});try{localStorage.setItem('ds160_replica2_data',JSON.stringify(d));}catch(e){}}
 function autoLoad(){try{var r=localStorage.getItem('ds160_replica2_data');if(!r)return;var d=JSON.parse(r);Object.keys(d).forEach(function(k){var e=document.querySelector('[name="'+k+'"]');if(e&&!e.value)e.value=d[k];});updateProgress();}catch(e){}}
+
+// ═══════════  Translation Engine (Chinese → English) ═══════════
+var TR_DICT={
+  // Address components
+  '省':'','市':'','区':'District','县':'County','镇':'Town','村':'Village',
+  '路':'Road','街':'Street','大道':'Avenue','巷':'Lane','弄':'Alley',
+  '号':'No.','号楼':'Building','栋':'Building','单元':'Unit','室':'Room','层':'Floor',
+  '中国':'China','北京':'Beijing','上海':'Shanghai','深圳':'Shenzhen','广州':'Guangzhou',
+  '杭州':'Hangzhou','南京':'Nanjing','成都':'Chengdu','武汉':'Wuhan','重庆':'Chongqing',
+  '天津':'Tianjin','苏州':'Suzhou','西安':"Xi'an",'长沙':'Changsha','郑州':'Zhengzhou',
+  '青岛':'Qingdao','合肥':'Hefei','宁波':'Ningbo','东莞':'Dongguan','佛山':'Foshan',
+  '无锡':'Wuxi','厦门':'Xiamen','沈阳':'Shenyang','大连':'Dalian','济南':"Ji'nan",
+  '福州':'Fuzhou','昆明':'Kunming','贵阳':'Guiyang','南宁':'Nanning','南昌':'Nanchang',
+  '太原':'Taiyuan','石家庄':'Shijiazhuang','哈尔滨':'Harbin','长春':'Changchun',
+  '兰州':'Lanzhou','乌鲁木齐':'Urumqi','呼和浩特':'Hohhot','海口':'Haikou',
+  '三亚':'Sanya','珠海':'Zhuhai','惠州':'Huizhou','中山':'Zhongshan','温州':'Wenzhou',
+  '常州':'Changzhou','徐州':'Xuzhou','南通':'Nantong','嘉兴':'Jiaxing','绍兴':'Shaoxing',
+  '泉州':'Quanzhou','烟台':'Yantai','潍坊':'Weifang','淄博':'Zibo','洛阳':'Luoyang',
+  '宜昌':'Yichang','襄阳':'Xiangyang','岳阳':'Yueyang','株洲':'Zhuzhou','柳州':'Liuzhou',
+  '桂林':'Guilin','西宁':'Xining','拉萨':'Lhasa','银川':'Yinchuan',
+  // Common terms
+  '公司':'Company','有限公司':'Co., Ltd.','集团':'Group','科技':'Technology',
+  '大学':'University','学院':'College','中学':'Middle School','小学':'Primary School',
+  '医院':'Hospital','银行':'Bank','酒店':'Hotel','饭店':'Restaurant',
+  '软件':'Software','硬件':'Hardware','网络':'Network','电子':'Electronics',
+  '贸易':'Trading','进出口':'Import & Export','实业':'Industry',
+  '花园':'Garden','小区':'Community','广场':'Plaza','中心':'Center',
+  '大厦':'Building','公寓':'Apartment','新城':'New Town',
+  // Job titles
+  '工程师':'Engineer','经理':'Manager','主管':'Supervisor','主任':'Director',
+  '教师':'Teacher','教授':'Professor','医生':'Doctor','护士':'Nurse',
+  '会计':'Accountant','销售':'Sales','行政':'Administration',
+  '程序员':'Programmer','设计师':'Designer','顾问':'Consultant',
+  '学生':'Student','退休':'Retired','无业':'Unemployed',
+  // Provinces
+  '福建省':'Fujian','广东省':'Guangdong','浙江省':'Zhejiang','江苏省':'Jiangsu',
+  '山东省':'Shandong','四川省':'Sichuan','湖北省':'Hubei','湖南省':'Hunan',
+  '河南省':'Henan','河北省':'Hebei','辽宁省':'Liaoning','吉林省':'Jilin',
+  '黑龙江省':'Heilongjiang','陕西省':'Shaanxi','甘肃省':'Gansu','青海省':'Qinghai',
+  '云南省':'Yunnan','贵州省':'Guizhou','海南省':'Hainan','山西省':'Shanxi',
+  '安徽省':'Anhui','江西省':'Jiangxi','台湾省':'Taiwan',
+  '广西':'Guangxi','西藏':'Tibet','内蒙古':'Inner Mongolia','宁夏':'Ningxia','新疆':'Xinjiang',
+  '广西壮族自治区':'Guangxi','西藏自治区':'Tibet','内蒙古自治区':'Inner Mongolia',
+  '宁夏回族自治区':'Ningxia','新疆维吾尔自治区':'Xinjiang',
+  '北京市':'Beijing','上海市':'Shanghai','天津市':'Tianjin','重庆市':'Chongqing'
+};
+function translateCN(text,type){
+  if(!text||!/[\u4e00-\u9fff]/.test(text))return text; // No Chinese chars, return as-is
+  if(type==='address')return translateAddress(text);
+  if(type==='name')return translateName(text);
+  return translateGeneral(text);
+}
+function translateGeneral(text){
+  var r=text;
+  // Replace known terms (longer matches first)
+  var keys=Object.keys(TR_DICT).sort(function(a,b){return b.length-a.length;});
+  keys.forEach(function(k){if(TR_DICT[k])r=r.split(k).join(' '+TR_DICT[k]+' ');});
+  return r.replace(/\s+/g,' ').trim();
+}
+function translateName(text){
+  // For names, keep as-is but add Pinyin-style spacing for common surnames
+  var commonSurnames=['陈','李','张','王','刘','杨','黄','赵','周','吴','徐','孙','马','朱','胡','郭','何','高','林','罗','郑','梁','谢','宋','唐','许','韩','冯','邓','曹','彭','曾','肖','田','董','袁','潘','于','蒋','蔡','余','杜','叶','程','苏','魏','吕','丁','任','沈','姚','卢','姜','崔','钟','谭','陆','汪','范','金','石','廖','贾','夏','韦','付','方','白','邹','孟','熊','秦','邱','江','尹','薛','闫','段','雷','侯','龙','史','陶','黎','贺','顾','毛','郝','龚','邵','万','钱','严','覃','武','戴','莫','孔','向','汤'];
+  var r=text;
+  commonSurnames.forEach(function(s){if(r.indexOf(s)===0)r=s+' '+r.slice(s.length);});
+  return r;
+}
+function translateAddress(cn){
+  // Parse Chinese address → English format
+  var parts=[],remaining=cn.trim();
+  // Extract: Room
+  var rm=remaining.match(/(\d+)\s*[室号]/);if(rm){parts.push('Room '+rm[1]);remaining=remaining.replace(rm[0],'');}
+  // Extract: Building/Floor
+  var bd=remaining.match(/(\d+)\s*(?:号楼|栋|幢)/);if(bd){parts.push('Building '+bd[1]);remaining=remaining.replace(bd[0],'');}
+  var fl=remaining.match(/(\d+)\s*层/);if(fl){parts.push(fl[1]+'F');remaining=remaining.replace(fl[0],'');}
+  var un=remaining.match(/(\d+)\s*单元/);if(un){parts.push('Unit '+un[1]);remaining=remaining.replace(un[0],'');}
+  // Extract: No. X Road/Street
+  var ns=remaining.match(/([\u4e00-\u9fff]+?)(?:路|街|大道|巷|弄)(\d+)\s*号?/);
+  if(ns){var sn=translateGeneral(ns[1]+ns[0].slice(ns[1].length));parts.push('No.'+ns[2]+' '+sn);remaining=remaining.replace(ns[0],'');}
+  else{var nr=remaining.match(/(\d+)\s*号\s*([\u4e00-\u9fff]+(?:路|街|大道|巷|弄))/);if(nr){var sn2=translateGeneral(nr[2]);parts.push('No.'+nr[1]+' '+sn2);remaining=remaining.replace(nr[0],'');}}
+  // Extract: District/County
+  var dist=remaining.match(/([\u4e00-\u9fff]+)(?:区|县|镇|村)/);
+  if(dist){var dn=translateGeneral(dist[0]);if(dn)parts.push(dn);remaining=remaining.replace(dist[0],'');}
+  // Extract: City
+  var city=remaining.match(/([\u4e00-\u9fff]+)市/);
+  if(city){var cn2=translateGeneral(city[1]);parts.push(cn2?(cn2+' City'):city[0]);remaining=remaining.replace(city[0],'');}
+  // Extract: Province
+  var prov=remaining.match(/([\u4e00-\u9fff]+)(?:省|自治区|特别行政区)/);
+  if(prov){var pn=translateGeneral(prov[0]);if(pn)parts.push(pn);remaining=remaining.replace(prov[0],'');}
+  // Translate remaining segments
+  var segs=remaining.split(/[,，\s]+/).filter(Boolean);
+  segs.forEach(function(s){var t=translateGeneral(s);if(t)parts.push(t);});
+  // Remove duplicates
+  var seen={};parts=parts.filter(function(p){if(seen[p])return false;seen[p]=true;return true;});
+  return parts.join(', ');
+}
+// Auto-translate on blur for inputs with data-tr attribute
+function wireTranslation(){
+  document.querySelectorAll('input[data-tr], textarea[data-tr]').forEach(function(el){
+    if(el._trWired)return;el._trWired=true;
+    var wrap=document.createElement('div');wrap.className='tr-input-wrap';
+    el.parentNode.insertBefore(wrap,el);wrap.appendChild(el);
+    var btn=document.createElement('button');btn.className='tr-btn';btn.type='button';
+    btn.title='翻译成英文';btn.textContent='⚡';
+    var res=document.createElement('div');res.className='tr-result';res.style.display='none';
+    wrap.appendChild(btn);el.parentNode.parentNode.appendChild(res);
+    btn.addEventListener('click',function(e){e.preventDefault();var v=el.value.trim();
+      if(!v||!/[\u4e00-\u9fff]/.test(v))return;
+      btn.innerHTML='<span class=\"tr-spinner\"></span>';
+      setTimeout(function(){var en=translateCN(v,el.dataset.tr);
+        el.dataset.en=en;res.textContent=en;res.style.display='block';
+        btn.textContent='✓';btn.classList.add('tr-done');
+        updateProgress();
+      },200);
+    });
+    el.addEventListener('input',function(){btn.textContent='⚡';btn.classList.remove('tr-done');res.style.display='none';delete el.dataset.en;});
+  });
+}
+function translateAllFields(){
+  var btns=document.querySelectorAll('.tr-btn:not(.tr-done)');
+  var i=0;function next(){if(i>=btns.length)return;btns[i].click();i++;setTimeout(next,80);}next();
+}
+// Wire on load
+document.addEventListener('DOMContentLoaded',function(){autoLoad();updateProgress();wireTranslation();});
 
 // ── Validate ──
 function validateForm(){expandAll();var reqs=document.querySelectorAll('#ds160Form [required]'),errs=[];reqs.forEach(function(e){if(e.type==='checkbox')return;if(!e.value||e.value.trim()===''){var l=e.closest('.form-group')?e.closest('.form-group').querySelector('label'):null;errs.push(l?l.textContent.replace(/\*/g,'').trim():e.name);e.style.borderColor='#b50909';}else{e.style.borderColor='';}});if(errs.length>0)alert('⚠ Missing '+errs.length+' required fields:\n\n'+errs.slice(0,15).join('\n'));else alert('✅ All required fields complete!');}
@@ -756,7 +894,7 @@ function generateAssessment(){
 document.addEventListener('input',(function(){var t;return function(){clearTimeout(t);t=setTimeout(function(){updateProgress();autoSave();generateAssessment();},800);}})());
 
 // ── Preview ──
-function showPreview(){var fs=document.querySelectorAll('[data-field]'),h='<h2>DS-160 Nonimmigrant Visa Application</h2><div style="text-align:center;font-size:11px;color:#666;border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:16px;">Application ID: '+document.getElementById('appIdDisplay').textContent+'</div>',ls='';fs.forEach(function(f){var s=f.closest('.section'),st=s?s.querySelector('.section-title').textContent:'';if(st!==ls){h+='<h3 style="border-bottom:1px solid #333;margin-top:12px;font-size:12px;">'+st+'</h3>';ls=st;}var l=f.closest('.form-group')?f.closest('.form-group').querySelector('label'):null,lt=l?l.textContent.replace(/\*/g,'').trim():f.name;h+='<div style="font-size:11px;margin:2px 0;"><b>'+lt+':</b> '+(f.value||'—')+'</div>';});
+function showPreview(){var fs=document.querySelectorAll('[data-field]'),h='<h2>DS-160 Nonimmigrant Visa Application</h2><div style="text-align:center;font-size:11px;color:#666;border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:16px;">Application ID: '+document.getElementById('appIdDisplay').textContent+'</div>',ls='';fs.forEach(function(f){var s=f.closest('.section'),st=s?s.querySelector('.section-title').textContent:'';if(st!==ls){h+='<h3 style="border-bottom:1px solid #333;margin-top:12px;font-size:12px;">'+st+'</h3>';ls=st;}var l=f.closest('.form-group')?f.closest('.form-group').querySelector('label'):null,lt=l?l.textContent.replace(/\*/g,'').trim():f.name;var en=f.dataset.en||'';var showVal=(en||f.value||'—');h+='<div style="font-size:11px;margin:2px 0;"><b>'+lt+':</b> '+showVal+'</div>';if(en&&f.value&&f.value!==en)h+='<div style="font-size:9px;color:#999;margin-left:8px;">原文: '+f.value+'</div>';});
   // Assessment in preview
   if(document.getElementById('assessmentResult').style.display!=='none'){
     generateAssessment();
@@ -828,7 +966,6 @@ function resetForm(){if(!confirm('Clear all data? This cannot be undone.'))retur
 
 // ── Shortcuts ──
 document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='s'){e.preventDefault();autoSave();}});
-document.addEventListener('DOMContentLoaded',function(){autoLoad();updateProgress();});
 setInterval(autoSave,30000);
 </script>
 </body>
