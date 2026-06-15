@@ -819,20 +819,15 @@ async function printPDF(){
     // Platform-aware download
     var ua=navigator.userAgent;
     var isWeChat=/MicroMessenger/i.test(ua);
-    var isMobile=/Android|iPhone|iPad|iPod/i.test(ua);
+    var isIOS=/iPhone|iPad|iPod/i.test(ua);
+    var isAndroid=/Android/i.test(ua);
+    var isMobile=isIOS||isAndroid;
     hideLoading();
     if(isWeChat){
-      // WeChat blocks all download methods — show guide overlay
-      var dataUri=pdf.output('datauristring');
-      var fname='DS-160_'+appId+'.pdf';
-      // Try direct open first
-      var w=window.open('');if(w){w.document.write('<html><head><title>'+fname+'</title></head><body style="margin:0;overflow:hidden;"><iframe src="'+dataUri+'" width="100%" height="100%" style="border:none;position:fixed;top:0;left:0;"></iframe><div style="position:fixed;bottom:16px;left:0;right:0;text-align:center;z-index:999;pointer-events:none;"><span style="background:rgba(0,0,0,.7);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-family:sans-serif;">如无法下载，请点击右上角 ··· 选择「在浏览器中打开」</span></div></body></html>');}
-      showWechatGuide(appId,dataUri);return;
+      showWechatGuide(appId);return;
     }
     if(isMobile){
-      var dataUri2=pdf.output('datauristring');
-      var w2=window.open('');if(w2){w2.document.write('<html><head><title>DS-160_'+appId+'</title></head><body style="margin:0;overflow:hidden;"><iframe src="'+dataUri2+'" width="100%" height="100%" style="border:none;position:fixed;top:0;left:0;"></iframe></body></html>');}
-      else{pdf.save('DS-160_'+appId+'.pdf');}
+      showDownloadPrompt(appId,pdf,isIOS);
     }else{
       var bl=pdf.output('blob'),a=document.createElement('a');
       a.href=URL.createObjectURL(bl);a.download='DS-160_'+appId+'.pdf';
@@ -842,19 +837,67 @@ async function printPDF(){
     if(window.consumeToken)window.consumeToken();
   }catch(e){hideLoading();alert('PDF 生成失败: '+e.message+'\n\n请尝试刷新页面后重试。');}
 }
+// Mobile download prompt with fallback chain
+function showDownloadPrompt(appId,pdf,isIOS){
+  var ov=document.createElement('div');ov.id='dlPrompt';ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:PingFang SC,Microsoft YaHei,sans-serif;';
+  var fname='DS-160_'+appId+'.pdf';
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">'+
+    '<div style="font-size:48px;margin-bottom:12px;">📄</div>'+
+    '<h2 style="font-size:18px;color:#333;margin:0 0 4px 0;">PDF 报告已生成</h2>'+
+    '<p style="font-size:13px;color:#666;margin-bottom:24px;">'+fname+'</p>'+
+    '<button id="dlPrimaryBtn" onclick="doMobileDownload()" style="width:100%;padding:14px;background:#003867;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px;">📥 下载 PDF 文件</button>'+
+    '<p id="dlStatus" style="font-size:11px;color:#999;margin-bottom:8px;"></p>'+
+    '<a id="dlFallbackLink" style="display:none;font-size:12px;color:#003867;text-decoration:underline;cursor:pointer;">如无法下载，点此备用链接</a>'+
+    '<button onclick="var o=document.getElementById(\'dlPrompt\');if(o)o.remove();" style="margin-top:16px;background:none;border:none;color:#999;font-size:13px;cursor:pointer;">关闭</button>'+
+    '</div>';
+  document.body.appendChild(ov);
+  // Store refs for download function
+  window._dlPdf=pdf;window._dlFname=fname;window._dlIsIOS=isIOS;
+  // Pre-generate fallback link
+  var dataUri=pdf.output('datauristring');
+  var fb=document.getElementById('dlFallbackLink');
+  fb.href=dataUri;fb.download=fname;
+  fb.onclick=function(){document.getElementById('dlStatus').textContent='请长按上方链接 → 下载链接';fb.style.color='#d85a30';};
+}
+function doMobileDownload(){
+  var btn=document.getElementById('dlPrimaryBtn');
+  var st=document.getElementById('dlStatus');
+  var fb=document.getElementById('dlFallbackLink');
+  btn.disabled=true;btn.style.opacity='0.6';btn.textContent='正在准备下载...';
+  try{
+    // Method 1: jsPDF save (most reliable)
+    window._dlPdf.save(window._dlFname);
+    st.textContent='下载已开始！如未弹出，请点击下方备用链接';
+    st.style.color='#2b8c4d';
+    fb.style.display='inline';
+    // Method 2: if save didn't trigger popup, show fallback immediately (iOS often needs this)
+    if(window._dlIsIOS){
+      setTimeout(function(){
+        fb.style.display='inline';
+        st.textContent='iOS 用户请点击下方链接打开 PDF，然后用分享按钮保存到文件';
+        st.style.color='#d85a30';
+      },800);
+    }else{
+      setTimeout(function(){fb.style.display='inline';},1500);
+    }
+  }catch(e){
+    st.textContent='下载失败，请使用备用链接';
+    st.style.color='#b50909';
+    fb.style.display='inline';
+  }
+}
 // WeChat guide overlay
-function showWechatGuide(appId,dataUri){
+function showWechatGuide(appId){
   var ov=document.createElement('div');ov.id='wechatGuide';ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:PingFang SC,Microsoft YaHei,sans-serif;';
-  ov.innerHTML='<div style="background:#fff;border-radius:16px;padding:40px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">'+
-    '<div style="font-size:48px;margin-bottom:16px;">📄</div>'+
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">'+
+    '<div style="font-size:48px;margin-bottom:12px;">📄</div>'+
     '<h2 style="font-size:18px;color:#333;margin:0 0 8px 0;">PDF 已生成完毕</h2>'+
-    '<p style="font-size:13px;color:#666;line-height:1.8;margin-bottom:24px;">微信内置浏览器不支持直接下载文件<br>请按以下步骤保存：</p>'+
-    '<div style="background:#f5f7fa;border-radius:10px;padding:16px;text-align:left;font-size:13px;color:#333;line-height:2;margin-bottom:20px;">'+
+    '<p style="font-size:13px;color:#666;line-height:1.8;margin-bottom:20px;">微信内置浏览器不支持下载文件<br>请按以下步骤保存：</p>'+
+    '<div style="background:#f5f7fa;border-radius:10px;padding:16px;text-align:left;font-size:13px;color:#333;line-height:2;margin-bottom:16px;">'+
     '<b>1.</b> 点击右上角 <b style="color:#d85a30;">···</b> 菜单<br>'+
     '<b>2.</b> 选择 <b style="color:#003867;">「在浏览器中打开」</b><br>'+
-    '<b>3.</b> 打开后 PDF 自动显示，即可保存</div>'+
+    '<b>3.</b> 打开后即可下载 PDF</div>'+
     '<button onclick="var o=document.getElementById(\'wechatGuide\');if(o)o.remove();" style="width:100%;padding:12px;background:#003867;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">我知道了</button>'+
-    '<p style="font-size:11px;color:#999;margin-top:16px;">如已在新窗口打开，请切换到浏览器查看</p>'+
     '</div>';
   document.body.appendChild(ov);
 }
