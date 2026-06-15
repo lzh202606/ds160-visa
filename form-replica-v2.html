@@ -739,25 +739,43 @@ function translateAddress(cn){
 }
 // Auto-translate on blur for inputs with data-tr attribute
 function wireTranslation(){
-  document.querySelectorAll('input[data-tr], textarea[data-tr]').forEach(function(el){
+  // Target ALL text inputs and textareas (exclude date/number/email)
+  document.querySelectorAll('#ds160Form input:not([type]), #ds160Form textarea').forEach(function(el){
     if(el._trWired)return;el._trWired=true;
     var btn=document.createElement('span');btn.className='tr-btn';btn.title='翻译成英文';btn.textContent='⚡';
-    btn.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';
+    btn.style.cssText='display:none;cursor:pointer;margin-left:6px;vertical-align:middle;';
     el.parentNode.insertBefore(btn,el.nextSibling);
-    var res=document.createElement('div');res.className='tr-result';res.style.cssText='font-size:10px;color:#2b8c4d;margin-top:2px;padding:2px 6px;background:#e6f4ea;border-radius:3px;word-break:break-all;line-height:1.4;display:none;';
+    var res=document.createElement('div');res.className='tr-result';
+    res.style.cssText='font-size:10px;color:#2b8c4d;margin-top:2px;padding:2px 6px;background:#e6f4ea;border-radius:3px;word-break:break-all;line-height:1.4;display:none;';
     el.parentNode.insertBefore(res,btn.nextSibling);
+    function showIfCN(){var v=el.value;btn.style.display=(/[\u4e00-\u9fff]/.test(v))?'inline-flex':'none';}
+    el.addEventListener('input',function(){showIfCN();btn.textContent='⚡';btn.className='tr-btn';btn.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn.style.pointerEvents='auto';res.style.display='none';delete el.dataset.en;});
     btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();
       var v=el.value.trim();if(!v||!/[\u4e00-\u9fff]/.test(v))return;
       btn.innerHTML='<span class=\"tr-spinner\"></span>';btn.style.pointerEvents='none';
       setTimeout(function(){try{
-        var en=translateCN(v,el.dataset.tr);
+        var type=el.dataset.tr||'general';
+        var en=translateCN(v,type);
         el.dataset.en=en;res.textContent='✓ '+en;res.style.display='block';
         btn.textContent='✓';btn.className='tr-btn tr-done';btn.style.cssText='display:inline-flex;cursor:default;margin-left:6px;vertical-align:middle;background:#2b8c4d;color:#fff;';
         updateProgress();
       }catch(err){btn.textContent='⚡';btn.className='tr-btn';btn.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn.style.pointerEvents='auto';res.textContent='翻译失败';res.style.display='block';res.style.background='#fce8e6';res.style.color='#b50909';}
       },100);
     });
-    el.addEventListener('input',function(){btn.textContent='⚡';btn.className='tr-btn';btn.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn.style.pointerEvents='auto';res.style.display='none';delete el.dataset.en;});
+    showIfCN();
+  });
+  // Also wire up elements that already have data-tr on non-text inputs (like textareas with data-tr)
+  document.querySelectorAll('textarea[data-tr]').forEach(function(el){if(el._trWired)return;el._trWired=true;
+    var btn2=document.createElement('span');btn2.className='tr-btn';btn2.title='翻译成英文';btn2.textContent='⚡';
+    btn2.style.cssText='display:none;cursor:pointer;margin-left:6px;vertical-align:middle;';
+    el.parentNode.insertBefore(btn2,el.nextSibling);
+    var res2=document.createElement('div');res2.className='tr-result';
+    res2.style.cssText='font-size:10px;color:#2b8c4d;margin-top:2px;padding:2px 6px;background:#e6f4ea;border-radius:3px;word-break:break-all;line-height:1.4;display:none;';
+    el.parentNode.insertBefore(res2,btn2.nextSibling);
+    var sh=function(){var v=el.value;btn2.style.display=(/[\u4e00-\u9fff]/.test(v))?'inline-flex':'none';};
+    el.addEventListener('input',function(){sh();btn2.textContent='⚡';btn2.className='tr-btn';btn2.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn2.style.pointerEvents='auto';res2.style.display='none';delete el.dataset.en;});
+    btn2.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var v=el.value.trim();if(!v||!/[\u4e00-\u9fff]/.test(v))return;btn2.innerHTML='<span class=\"tr-spinner\"></span>';btn2.style.pointerEvents='none';setTimeout(function(){try{var en=translateCN(v,el.dataset.tr||'general');el.dataset.en=en;res2.textContent='✓ '+en;res2.style.display='block';btn2.textContent='✓';btn2.className='tr-btn tr-done';btn2.style.cssText='display:inline-flex;cursor:default;margin-left:6px;vertical-align:middle;background:#2b8c4d;color:#fff;';updateProgress();}catch(err){btn2.textContent='⚡';btn2.className='tr-btn';btn2.style.cssText='display:inline-flex;cursor:pointer;margin-left:6px;vertical-align:middle;';btn2.style.pointerEvents='auto';res2.textContent='翻译失败';res2.style.display='block';res2.style.background='#fce8e6';res2.style.color='#b50909';}},100);});
+    sh();
   });
 }
 function translateAllFields(){
