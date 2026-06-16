@@ -392,7 +392,7 @@
 <!-- 璁块棶闄愭椂鍊掕鏃?-->
 <div class="countdown-bar" id="countdownBar">
   <span class="cd-icon">鈴?/span>
-  <span class="cd-label">閾炬帴鏈夋晥鍓╀綑鏃堕棿</span>
+  <span class="cd-label">&#x94FE;&#x63A5;&#x6709;&#x6548;&#x5269;&#x4F59;&#x65F6;&#x95F4;</span>
   <span class="cd-time" id="countdownTime">--:--:--</span>
 </div>
 <div class="header">
@@ -428,7 +428,7 @@
     填写完成后点击「生成DS-160预览」查看完整表格，确认无误后可直接打印为PDF。
   </div>
 
-  <form id="ds160Form" novalidate>
+<form id="ds160Form" novalidate>
 <!-- ═══ 1. Personal Information 1 ═══ -->
 <div class="section open" id="section-1">
   <div class="section-header" onclick="toggleSection(1)"><span class="section-num">1</span><span class="section-title">Personal Information 1 个人信息（一）</span><span class="section-arrow">▶</span></div>
@@ -871,14 +871,15 @@
 
 <!-- ═══ Buttons ═══ -->
 <div class="btn-row">
-  <button type="button" class="btn btn-outline" onclick="expandAll()">Expand All</button>
-  <button type="button" class="btn btn-outline" onclick="collapseAll()">Collapse All</button>
-  <button type="button" class="btn btn-primary" onclick="validateForm()">Validate</button>
-  <button type="button" class="btn btn-primary" onclick="showPreview()">Preview DS-160</button>
-  <button type="button" class="btn btn-success" onclick="printPDF()">Download PDF</button>
-  <button type="button" class="btn btn-danger" onclick="resetForm()">Reset All</button>
-</div>
-</form>
+      <button type="button" class="btn btn-outline" onclick="expandAll()">&#x5C55;&#x5F00;&#x5168;&#x90E8;&#x7AE0;&#x8282;</button>
+      <button type="button" class="btn btn-outline" onclick="validateForm()">&#x6821;&#x9A8C;&#x586B;&#x5199;</button>
+      <button type="button" class="btn btn-primary" onclick="showPreview()">&#x751F;&#x6210; DS-160 &#x9884;&#x89C8;</button>
+      <button type="button" class="btn btn-success" onclick="printPDF()">&#x1F4C4; &#x4E0B;&#x8F7D; PDF &#x62A5;&#x544A;</button>
+      <button type="button" class="btn btn-outline" onclick="exportJSON()">&#x1F4E4; &#x5BFC;&#x51FA;JSON</button>
+      <button type="button" class="btn btn-outline" onclick="importJSON()">&#x1F4E5; &#x5BFC;&#x5165;JSON</button>
+      <button type="button" class="btn btn-danger" onclick="resetForm()">&#x6E05;&#x7A7A;&#x91CD;&#x586B;</button>
+    </div>
+  </form></div>
 
   <!-- ═══════ 面签评估（内嵌） ═══════ -->
   <div style="text-align:center; margin-top: 32px;">
@@ -936,7 +937,50 @@ async function localHmacVerify(token) {
 }
 
 // 椤甸潰鍔犺浇鏃堕獙璇乀oken
-// 椤甸潰鍔犺浇鏃堕獙璇乀oken
+
+function checkAccessTimeLimit(tokenId, accessHours) {
+  if (!accessHours || accessHours <= 0) return { valid: true, remainingMs: Infinity };
+  var firstKey = 'ds160_first_access_' + tokenId;
+  var firstStr = localStorage.getItem(firstKey);
+  var now = Date.now();
+  if (!firstStr) {
+    localStorage.setItem(firstKey, now.toString());
+    firstStr = now.toString();
+  }
+  var firstAt = parseInt(firstStr);
+  var deadline = firstAt + accessHours * 3600000;
+  var remaining = deadline - now;
+  if (remaining <= 0) return { valid: false, remainingMs: 0 };
+  return { valid: true, remainingMs: remaining };
+}
+
+function initCountdown() {
+  var bar = document.getElementById('countdownBar');
+  if (!bar || !window.DS160_REMAINING_MS) return;
+  var remaining = window.DS160_REMAINING_MS;
+  var deadline = Date.now() + remaining;
+  bar.classList.add('show');
+  function tick() {
+    var left = deadline - Date.now();
+    if (left <= 0) {
+      bar.className = 'countdown-bar show cd-expired';
+      document.getElementById('countdownTime').textContent = '00:00:00';
+      return;
+    }
+    var h = Math.floor(left / 3600000);
+    var m = Math.floor((left % 3600000) / 60000);
+    var s = Math.floor((left % 60000) / 1000);
+    document.getElementById('countdownTime').textContent =
+      (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    if (left < 3600000) {
+      bar.className = 'countdown-bar show cd-warning';
+    } else {
+      bar.className = 'countdown-bar show';
+    }
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
 (async function validateToken() {
   const token = getQueryParam('token');
   const gate = document.getElementById('tokenGate');
@@ -944,41 +988,42 @@ async function localHmacVerify(token) {
   const title = document.getElementById('gateTitle');
   const msg = document.getElementById('gateMsg');
 
-  // 鏃燭oken 鈫?鍏佽璁块棶
-  if (!token) return;
+  // 鏃燭oken 鈫?鍏佽璁块棶锛堝吋瀹归潪浠樿垂鍦烘櫙锛?  if (!token) return;
 
-  // 蹇€熸牸寮忔鏌?  const isHMAC = token.split('.').length === 3;
+  // 瀹㈡埛绔揩閫熸牸寮忔鏌ワ紙鍏煎涓ょToken鏍煎紡锛?  const isHMAC = token.split('.').length === 3;
   const isServerToken = /^DS[0-9A-Fa-f]{12}$/.test(token);
   if (!isHMAC && !isServerToken) {
     gate.style.display = 'flex';
-    icon.textContent = '鉀?; title.textContent = '閾炬帴鏃犳晥'; msg.textContent = 'Token鏍煎紡閿欒锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨纭摼鎺ャ€?;
+    icon.textContent = '鈿狅笍'; title.textContent = '閾炬帴鏃犳晥'; msg.textContent = 'Token鏍煎紡閿欒锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨纭摼鎺ャ€?;
     return;
   }
 
   const tokenId = isHMAC ? token.split('.')[0] : token;
 
-  // 妫€鏌ユ湰鍦版槸鍚﹀凡浣跨敤
+  // 妫€鏌ユ湰鍦版槸鍚﹀凡浣跨敤锛堝揩閫熸湰鍦版鏌ワ級
   const usedKey = 'ds160_used_' + tokenId;
   if (localStorage.getItem(usedKey)) {
     gate.style.display = 'flex';
-    icon.textContent = '馃敀'; title.textContent = '閾炬帴宸蹭娇鐢?;
+    icon.textContent = '鈴憋笍'; title.textContent = '閾炬帴宸蹭娇鐢?;
     msg.innerHTML = '姝ら摼鎺ュ凡琚娇鐢ㄨ繃銆?br>姣忎釜閾炬帴浠呬緵涓€浜轰娇鐢ㄤ竴娆°€?br><br>濡傞渶鍐嶆浣跨敤锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
     return;
   }
 
-  // HMAC Token缁熶竴璧版湰鍦伴獙璇?  if (isHMAC) {
+  // 鍒ゆ柇鏄惁涓烘湰鍦版枃浠舵ā寮?  // HMAC always verifies locally (GitHub Pages + local file)
+
+  if (isHMAC) {
     const valid = await localHmacVerify(token);
     if (!valid) {
       gate.style.display = 'flex';
-      icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
-      msg.textContent = 'Token绛惧悕楠岃瘉澶辫触锛岄摼鎺ュ彲鑳借绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
+      icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548';
+      msg.textContent = 'Token\u7B7E\u540D\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u88AB\u7BE1\u6539\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
       return;
     }
     const ts = parseInt(token.split('.')[1]);
     if (ts && Date.now() - ts > 365 * 24 * 3600000) {
       gate.style.display = 'flex';
-      icon.textContent = '鈴?; title.textContent = '閾炬帴宸茶繃鏈?;
-      msg.textContent = '姝ら摼鎺ュ凡瓒呰繃鏈夋晥鏈熼檺銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
+      icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u8FC7\u671F';
+      msg.textContent = '\u6B64\u94FE\u63A5\u5DF2\u8D85\u8FC7\u6709\u6548\u671F\u9650\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
       return;
     }
     window.DS160_TOKEN_ID = tokenId;
@@ -986,13 +1031,13 @@ async function localHmacVerify(token) {
     window.consumeToken = function() {
       localStorage.setItem(usedKey, new Date().toISOString());
     };
-    // 璁块棶闄愭椂
+    // Access time limit
     const urlAccessHours = parseInt(getQueryParam('h')) || 24;
     const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
     if (!accessResult.valid) {
       gate.style.display = 'flex';
-      icon.textContent = '鈴?; title.textContent = '璁块棶宸茶繃鏈?;
-      msg.textContent = '姝ら摼鎺ョ殑璁块棶鏃堕檺宸插埌鏈燂紙' + urlAccessHours + '灏忔椂锛夈€傝鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
+      icon.textContent = '\u23F0'; title.textContent = '\u8BBF\u95EE\u5DF2\u8FC7\u671F';
+      msg.textContent = '\u6B64\u94FE\u63A5\u7684\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\uFF08' + urlAccessHours + '\u5C0F\u65F6\uFF09\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
       return;
     }
     if (accessResult.remainingMs !== Infinity) {
@@ -1002,7 +1047,7 @@ async function localHmacVerify(token) {
     return;
   }
 
-  // 鏈嶅姟绔疶oken
+  // 鏈嶅姟绔獙璇乀oken
   try {
     const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token));
     const checkData = await checkRes.json();
@@ -1012,15 +1057,14 @@ async function localHmacVerify(token) {
       window.consumeToken = function() {
         localStorage.setItem(usedKey, new Date().toISOString());
       };
-      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
-      initCountdown();
+      // 鏈嶅姟绔繑鍥炲墿浣欐椂闂?      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
     } else {
       gate.style.display = 'flex';
       icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
       msg.textContent = checkData.reason || 'Token楠岃瘉澶辫触锛岄摼鎺ュ彲鑳藉凡杩囨湡鎴栬绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
     }
   } catch(e) {
-    console.warn('Token鏈嶅姟绔獙璇佷笉鍙敤锛屽厑璁镐复鏃惰闂紙绂荤嚎妯″紡锛?);
+    // 缃戠粶涓嶅彲鐢ㄦ椂鐨勯檷绾х瓥鐣?    console.warn('Token鏈嶅姟绔獙璇佷笉鍙敤锛屽厑璁镐复鏃惰闂紙绂荤嚎妯″紡锛?);
     window.DS160_TOKEN_ID = tokenId;
     window.DS160_TOKEN = token;
     window.DS160_TOKEN_OFFLINE = true;
@@ -1029,7 +1073,6 @@ async function localHmacVerify(token) {
     };
   }
 })();
-)();
 
 // ========== 安全背景问题列表 ==========
 const securityQuestions = [
@@ -1552,59 +1595,6 @@ function deobfuscate(str) {
   if (!str) return '';
   try { return atob(str).split('').reverse().join(''); } catch(e) { return str; }
 }
-// 璁块棶闄愭椂绠＄悊
-function checkAccessTimeLimit(tokenId, accessHours) {
-  if (!accessHours || accessHours <= 0) return { valid: true, remainingMs: Infinity };
-  const key = 'ds160_access_' + tokenId;
-  const now = Date.now();
-  let info = null;
-  try { info = JSON.parse(localStorage.getItem(key)); } catch(e) {}
-  if (!info || !info.firstAccessAt) {
-    info = { firstAccessAt: now, accessHours: accessHours, accessDeadline: now + accessHours * 3600000 };
-    localStorage.setItem(key, JSON.stringify(info));
-  }
-  const remaining = info.accessDeadline - now;
-  if (remaining <= 0) return { valid: false, remainingMs: 0, accessDeadline: info.accessDeadline };
-  return { valid: true, remainingMs: remaining, accessDeadline: info.accessDeadline };
-}
-
-// 璁块棶闄愭椂鍊掕鏃?function initCountdown() {
-  if (!window.DS160_REMAINING_MS || window.DS160_REMAINING_MS === Infinity) return;
-  const bar = document.getElementById('countdownBar');
-  const timeEl = document.getElementById('countdownTime');
-  if (!bar || !timeEl) return;
-
-  let remaining = window.DS160_REMAINING_MS;
-  bar.classList.add('show');
-  updateDisplay();
-
-  const timer = setInterval(function() {
-    remaining -= 1000;
-    if (remaining <= 0) {
-      clearInterval(timer);
-      remaining = 0;
-      bar.classList.remove('cd-warning');
-      bar.classList.add('cd-expired');
-      timeEl.textContent = '00:00:00';
-      document.querySelectorAll('#submitBtn, #assessBtn, #printPdfBtn').forEach(function(btn) {
-        btn.disabled = true; btn.style.opacity = '0.5'; btn.title = '閾炬帴宸茶繃鏈?;
-      });
-      return;
-    }
-    if (remaining < 30 * 60 * 1000 && !bar.classList.contains('cd-warning')) {
-      bar.classList.add('cd-warning');
-    }
-    updateDisplay();
-  }, 1000);
-
-  function updateDisplay() {
-    var h = Math.floor(remaining / 3600000);
-    var m = Math.floor((remaining % 3600000) / 60000);
-    var s = Math.floor((remaining % 60000) / 1000);
-    timeEl.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-  }
-}
-
 
 // ── 保存前混淆敏感字段 ──
 function obfuscateData(data) {
@@ -1877,25 +1867,24 @@ function closePreview() {
 // ========== 导出PDF (jsPDF一键下载 + Token消耗) ==========
 async function printPDF() {
   const token = window.DS160_TOKEN;
-  // 如果带Token则验证，无Token则允许免费模式
   if (token) {
     const isHMAC = token.split('.').length === 3;
     if (isHMAC) {
       const tokenId = token.split('.')[0];
       const usedKey = 'ds160_used_' + tokenId;
       if (localStorage.getItem(usedKey)) {
-        alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙宸茶浣跨敤锛夛紝璇疯仈绯绘湇鍔℃彁渚涘晢鑾峰彇鏂伴摼鎺ャ€?);
+        alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF08\u5DF2\u88AB\u4F7F\u7528\uFF09\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
         return;
       }
       const valid = await localHmacVerify(token);
       if (!valid) {
-        alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙绛惧悕鏃犳晥锛夛紝璇疯仈绯绘湇鍔℃彁渚涘晢鑾峰彇鏂伴摼鎺ャ€?);
+        alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF08\u7B7E\u540D\u65E0\u6548\uFF09\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
         return;
       }
       const urlAccessHours = parseInt(getQueryParam('h')) || 24;
       const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
       if (!accessResult.valid) {
-        alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙璁块棶鏃堕檺宸插埌鏈燂級锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?);
+        alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF08\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\uFF09\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
         return;
       }
     } else {
@@ -1903,7 +1892,7 @@ async function printPDF() {
         const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + token);
         const checkData = await checkRes.json();
         if (!checkData.valid) {
-          alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙鍙兘宸茶浣跨敤鎴栬繃鏈燂級锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?);
+          alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
           return;
         }
       } catch(e) {}
