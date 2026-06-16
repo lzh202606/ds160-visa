@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -40,7 +40,7 @@
   .header h1 { font-size: 26px; margin-bottom: 6px; }
   .header p { color: #94a3b8; font-size: 14px; }
 
-  /* 璁块棶闄愭椂鍊掕鏃舵潯 */
+  /* 访问限时倒计时条 */
 .countdown-bar{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,#1e3a5f,#1a56db);color:#fff;padding:10px 20px;display:none;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:600;box-shadow:0 2px 12px rgba(26,86,219,.3)}
 .countdown-bar.show{display:flex}
 .countdown-bar .cd-icon{font-size:16px}
@@ -228,7 +228,7 @@
     .header h1 { font-size: 20px; }
   }
 
-    /* 鈹€鈹€ 闈㈢璇勪及鍐呭祵闈㈡澘 鈹€鈹€ */
+    /* ══ 面签评估内嵌面板 ══ */
   @keyframes asFadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes asPulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
   @keyframes asGlow { 0%,100% { box-shadow: 0 0 8px rgba(26,86,219,.3); } 50% { box-shadow: 0 0 24px rgba(26,86,219,.6); } }
@@ -389,9 +389,9 @@
 </aside>
 <div class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">◀</div>
 
-<!-- 璁块棶闄愭椂鍊掕鏃?-->
+<!-- 访问限时倒计时-->
 <div class="countdown-bar" id="countdownBar">
-  <span class="cd-icon">鈴?/span>
+  <span class="cd-icon">⏳/span>
   <span class="cd-label">&#x94FE;&#x63A5;&#x6709;&#x6548;&#x5269;&#x4F59;&#x65F6;&#x95F4;</span>
   <span class="cd-time" id="countdownTime">--:--:--</span>
 </div>
