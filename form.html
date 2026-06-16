@@ -996,7 +996,7 @@ function initCountdown() {
   const isServerToken = /^DS[0-9A-Fa-f]{12}$/.test(token);
   if (!isHMAC && !isServerToken) {
     gate.style.display = 'flex';
-    icon.textContent = '鈿狅笍'; title.textContent = '閾炬帴鏃犳晥'; msg.textContent = 'Token鏍煎紡閿欒锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨纭摼鎺ャ€?;
+    icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548'; msg.textContent = 'Token\u683C\u5F0F\u9519\u8BEF\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u6B63\u786E\u94FE\u63A5\u3002';
     return;
   }
 
@@ -1006,12 +1006,12 @@ function initCountdown() {
   const usedKey = 'ds160_used_' + tokenId;
   if (localStorage.getItem(usedKey)) {
     gate.style.display = 'flex';
-    icon.textContent = '鈴憋笍'; title.textContent = '閾炬帴宸蹭娇鐢?;
-    msg.innerHTML = '姝ら摼鎺ュ凡琚娇鐢ㄨ繃銆?br>姣忎釜閾炬帴浠呬緵涓€浜轰娇鐢ㄤ竴娆°€?br><br>濡傞渶鍐嶆浣跨敤锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
+    icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u4F7F\u7528';
+    msg.innerHTML = '\u6B64\u94FE\u63A5\u5DF2\u88AB\u4F7F\u7528\u8FC7\u3002<br>\u6BCF\u4E2A\u94FE\u63A5\u4EC5\u4F9B\u4E00\u4EBA\u4F7F\u7528\u4E00\u6B21\u3002<br><br>\u5982\u9700\u518D\u6B21\u4F7F\u7528\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
     return;
   }
 
-  // 鍒ゆ柇鏄惁涓烘湰鍦版枃浠舵ā寮?  // HMAC always verifies locally (GitHub Pages + local file)
+  // HMAC always verifies locally (GitHub Pages + local file)
 
   if (isHMAC) {
     const valid = await localHmacVerify(token);
@@ -1064,10 +1064,10 @@ function initCountdown() {
     } else {
       gate.style.display = 'flex';
       icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
-      msg.textContent = checkData.reason || 'Token楠岃瘉澶辫触锛岄摼鎺ュ彲鑳藉凡杩囨湡鎴栬绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
+      msg.textContent = checkData.reason || 'Token\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u5DF2\u8FC7\u671F\u6216\u88AB\u7BE1\u6539\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
     }
   } catch(e) {
-    // 缃戠粶涓嶅彲鐢ㄦ椂鐨勯檷绾х瓥鐣?    console.warn('Token鏈嶅姟绔獙璇佷笉鍙敤锛屽厑璁镐复鏃惰闂紙绂荤嚎妯″紡锛?);
+    console.warn('Token\u670D\u52A1\u7AEF\u9A8C\u8BC1\u4E0D\u53EF\u7528\uFF0C\u5141\u8BB8\u4E34\u65F6\u8BBF\u95EE\uFF08\u79BB\u7EBF\u6A21\u5F0F\uFF09');
     window.DS160_TOKEN_ID = tokenId;
     window.DS160_TOKEN = token;
     window.DS160_TOKEN_OFFLINE = true;
