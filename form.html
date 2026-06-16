@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DS-160 智能填表助手 - 美签纵横团</title>
-<script src="jspdf.umd.min.js"></script>
-<script src="html2canvas.min.js"></script>
+  <script src="jspdf.umd.min.js"></script>
+  <script src="html2canvas.min.js"></script>
 <style>
   :root {
     --primary: #1a56db;
@@ -40,7 +40,16 @@
   .header h1 { font-size: 26px; margin-bottom: 6px; }
   .header p { color: #94a3b8; font-size: 14px; }
 
-  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  /* 璁块棶闄愭椂鍊掕鏃舵潯 */
+.countdown-bar{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,#1e3a5f,#1a56db);color:#fff;padding:10px 20px;display:none;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:600;box-shadow:0 2px 12px rgba(26,86,219,.3)}
+.countdown-bar.show{display:flex}
+.countdown-bar .cd-icon{font-size:16px}
+.countdown-bar .cd-time{font-family:"SF Mono","Fira Code","Courier New",monospace;font-size:15px;font-weight:800;color:#fbbf24;min-width:80px;text-align:center}
+.countdown-bar .cd-label{color:#93c5fd}
+.countdown-bar.cd-warning{background:linear-gradient(90deg,#92400e,#d97706);animation:cdPulse 1s infinite}
+.countdown-bar.cd-expired{background:linear-gradient(90deg,#7f1d1d,#dc2626)}
+@keyframes cdPulse{0%,100%{opacity:1}50%{opacity:.7}}
+.container { max-width: 900px; margin: 0 auto; padding: 20px; }
 
   .progress-bar {
     background: var(--card-bg);
@@ -219,49 +228,153 @@
     .header h1 { font-size: 20px; }
   }
 
-  /* ── 面签评估内嵌面板 ── */
-  #assessPanel { margin-top: 32px; padding: 28px 24px; border-radius: 16px; background: #0f172a; color: #dce2f0; display: none; }
-  #assessPanel .as-score { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 16px; }
-  .as-gauge { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 900; flex-shrink: 0; }
-  .as-gauge.hi { background: rgba(46,213,115,0.12); color: #2ed573; border: 3px solid #2ed573; }
-  .as-gauge.md { background: rgba(255,174,66,0.12); color: #ffae42; border: 3px solid #ffae42; }
-  .as-gauge.lo { background: rgba(255,83,103,0.12); color: #ff5367; border: 3px solid #ff5367; }
-  .as-verdict { font-size: 14px; font-weight: 700; }
+    /* 鈹€鈹€ 闈㈢璇勪及鍐呭祵闈㈡澘 鈹€鈹€ */
+  @keyframes asFadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes asPulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+  @keyframes asGlow { 0%,100% { box-shadow: 0 0 8px rgba(26,86,219,.3); } 50% { box-shadow: 0 0 24px rgba(26,86,219,.6); } }
+  @keyframes asRingFill { from { stroke-dashoffset: 283; } }
+  @keyframes asBarGrow { from { width: 0; } }
+  @keyframes asBreathe { 0%,100% { opacity: .85; } 50% { opacity: 1; } }
+
+  #assessPanel {
+    margin-top: 32px; padding: 32px 28px; border-radius: 20px;
+    background: linear-gradient(165deg, #0a0f1e 0%, #111832 40%, #0d1428 100%);
+    color: #dce2f0; display: none; position: relative; overflow: hidden;
+    border: 1px solid rgba(100,140,255,.08);
+    box-shadow: 0 8px 48px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  #assessPanel::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(56,120,255,.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(46,213,115,.04) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  #assessPanel > * { position: relative; z-index: 1; }
+
+  /* Score Hero */
+  #assessPanel .as-score {
+    display: flex; align-items: center; justify-content: center; gap: 28px;
+    flex-wrap: wrap; margin-bottom: 24px; padding: 20px 0;
+    animation: asFadeUp .6s ease-out both;
+  }
+  .as-ring-wrap { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+  .as-ring-wrap svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+  .as-ring-bg { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 8; }
+  .as-ring-fg { fill: none; stroke-width: 8; stroke-linecap: round;
+    stroke-dasharray: 283; animation: asRingFill 1.2s ease-out both; }
+  .as-ring-fg.hi { stroke: url(#gradHi); filter: drop-shadow(0 0 6px rgba(46,213,115,.5)); }
+  .as-ring-fg.md { stroke: url(#gradMd); filter: drop-shadow(0 0 6px rgba(255,174,66,.5)); }
+  .as-ring-fg.lo { stroke: url(#gradLo); filter: drop-shadow(0 0 6px rgba(255,83,103,.5)); }
+  .as-ring-num {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 48px; font-weight: 900; letter-spacing: -2px;
+  }
+  .as-ring-num.hi { color: #2ed573; text-shadow: 0 0 20px rgba(46,213,115,.4); }
+  .as-ring-num.md { color: #ffae42; text-shadow: 0 0 20px rgba(255,174,66,.4); }
+  .as-ring-num.lo { color: #ff5367; text-shadow: 0 0 20px rgba(255,83,103,.4); }
+  .as-verdict { font-weight: 700; animation: asBreathe 3s ease-in-out infinite; }
+  .as-verdict span { font-size: 22px; display: block; margin-bottom: 4px; }
   .as-verdict .vhi { color: #2ed573; } .as-verdict .vmd { color: #ffae42; } .as-verdict .vlo { color: #ff5367; }
-  .as-verdict p { font-size: 11px; color: #6e7899; margin-top: 2px; }
-  .as-dims { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-bottom: 16px; }
-  .as-dim { background: rgba(255,255,255,0.03); border: 1px solid rgba(108,140,255,0.08); border-radius: 10px; padding: 10px 12px; font-size: 12px; }
-  .as-dim .ad-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-  .as-dim .ad-score { font-weight: 900; font-size: 18px; }
-  .as-dim .ad-bar { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
-  .as-dim .ad-fill { height: 100%; border-radius: 2px; transition: width 1s; }
-  .as-dim .ad-tip { font-size: 10px; color: #6e7899; margin-top: 4px; }
-  .as-risks { background: rgba(255,83,103,0.06); border: 1px solid rgba(255,83,103,0.2); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
-  .as-risks h4 { color: #ff5367; font-size: 13px; margin-bottom: 8px; }
-  .as-risks .ar-item { font-size: 11px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-  .as-risks .ar-item:last-child { border: none; }
-  .as-risks .ar-act { color: #5b8def; font-size: 10px; margin-top: 1px; }
-  .as-checklist { margin-bottom: 14px; }
-  .as-checklist h4 { color: #5b8def; font-size: 13px; margin-bottom: 6px; }
-  .as-checklist .cl-item { font-size: 11px; padding: 3px 0; color: #94a3b8; }
-  .as-checklist .cl-urgent { color: #ff5367; }
-  .as-checklist .cl-important { color: #ffae42; }
-  #assessBtn { padding: 12px 32px; border: none; border-radius: 10px; background: linear-gradient(135deg, #1a56db, #4870e0); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.3s; }
-  #assessBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(26,86,219,0.4); }
-  .as-full-link { display: block; text-align: center; font-size: 12px; color: #5b8def; text-decoration: none; margin-top: 12px; }
-  .as-full-link:hover { text-decoration: underline; }
+  .as-verdict p { font-size: 12px; color: #6e7899; margin-top: 4px; animation: none; }
+
+  /* Dimension Cards - Glassmorphism */
+  .as-dims {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .as-dim {
+    background: rgba(255,255,255,.03); backdrop-filter: blur(12px);
+    border: 1px solid rgba(108,140,255,.1); border-radius: 14px;
+    padding: 14px 16px; font-size: 12px;
+    transition: transform .3s, box-shadow .3s, border-color .3s;
+    animation: asFadeUp .5s ease-out both;
+  }
+  .as-dim:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.3), 0 0 0 1px rgba(108,140,255,.15);
+    border-color: rgba(108,140,255,.2);
+  }
+  .as-dim .ad-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .as-dim .ad-icon { font-size: 18px; }
+  .as-dim .ad-name { flex: 1; font-weight: 600; color: #c4cee8; }
+  .as-dim .ad-score { font-weight: 900; font-size: 20px; }
+  .as-dim .ad-score.hi { color: #2ed573; } .as-dim .ad-score.md { color: #ffae42; } .as-dim .ad-score.lo { color: #ff5367; }
+  .as-dim .ad-bar { height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; margin: 6px 0; }
+  .as-dim .ad-fill { height: 100%; border-radius: 3px; animation: asBarGrow 1s ease-out both; }
+  .as-dim .ad-fill.hi { background: linear-gradient(90deg, #2ed573, #7bed9f); }
+  .as-dim .ad-fill.md { background: linear-gradient(90deg, #ffae42, #ffc048); }
+  .as-dim .ad-fill.lo { background: linear-gradient(90deg, #ff5367, #ff7979); }
+  .as-dim .ad-tip { font-size: 10px; color: #6e7899; margin-top: 4px; line-height: 1.5; }
+
+  /* Risk Alerts */
+  .as-risks {
+    background: linear-gradient(135deg, rgba(255,83,103,.06), rgba(255,83,103,.02));
+    border: 1px solid rgba(255,83,103,.15); border-radius: 16px;
+    padding: 18px 20px; margin-bottom: 18px;
+    animation: asFadeUp .6s ease-out .3s both;
+  }
+  .as-risks h4 { color: #ff5367; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .as-risks h4::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%; background: #ff5367;
+    animation: asPulse 2s ease-in-out infinite; flex-shrink: 0;
+  }
+  .as-risks .ar-item {
+    font-size: 12px; padding: 10px 12px; margin-bottom: 6px;
+    border-left: 3px solid rgba(255,83,103,.4); border-radius: 0 8px 8px 0;
+    background: rgba(255,83,103,.04); transition: background .2s;
+  }
+  .as-risks .ar-item:hover { background: rgba(255,83,103,.08); }
+  .as-risks .ar-act { color: #5b8def; font-size: 11px; margin-top: 4px; padding-left: 2px; }
+
+  /* Checklist - Grouped Cards */
+  .as-checklist { margin-bottom: 18px; animation: asFadeUp .6s ease-out .5s both; }
+  .as-checklist h4 { color: #5b8def; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .cl-group { border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .cl-group.urgent { background: rgba(255,83,103,.06); border: 1px solid rgba(255,83,103,.12); }
+  .cl-group.important { background: rgba(255,174,66,.05); border: 1px solid rgba(255,174,66,.1); }
+  .cl-group.suggested { background: rgba(46,213,115,.04); border: 1px solid rgba(46,213,115,.08); }
+  .cl-group-title { font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .cl-group.urgent .cl-group-title { color: #ff5367; }
+  .cl-group.important .cl-group-title { color: #ffae42; }
+  .cl-group.suggested .cl-group-title { color: #2ed573; }
+  .cl-item { font-size: 11px; padding: 5px 0; color: #94a3b8; display: flex; align-items: flex-start; gap: 6px; line-height: 1.5; }
+  .cl-item::before { content: ''; flex-shrink: 0; width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid currentColor; margin-top: 2px; opacity: .5; }
+  .cl-group.urgent .cl-item { color: #ffa0a8; } .cl-group.urgent .cl-item::before { border-color: #ff5367; }
+  .cl-group.important .cl-item { color: #d4b87a; } .cl-group.important .cl-item::before { border-color: #ffae42; }
+  .cl-group.suggested .cl-item { color: #8cc9a0; } .cl-group.suggested .cl-item::before { border-color: #2ed573; }
+
+  /* Button */
+  #assessBtn {
+    padding: 14px 36px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #1a56db, #4870e0, #6c5ce7);
+    background-size: 200% 200%; animation: asGlow 3s ease-in-out infinite;
+    color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+    transition: .3s; letter-spacing: .5px;
+  }
+  #assessBtn:hover { transform: translateY(-3px); box-shadow: 0 6px 28px rgba(26,86,219,.5); background-position: 100% 0; }
+  #assessBtn:active { transform: translateY(-1px); }
+
+  .as-full-link {
+    display: block; text-align: center; font-size: 13px; color: #5b8def;
+    text-decoration: none; margin-top: 16px; padding: 10px;
+    border-radius: 10px; transition: background .2s;
+  }
+  .as-full-link:hover { background: rgba(91,141,239,.08); text-decoration: none; }
+
   @media (max-width: 600px) {
-    #assessPanel { padding: 16px 12px; }
+    #assessPanel { padding: 18px 14px; }
     .as-dims { grid-template-columns: 1fr; }
-    .as-gauge { width: 72px; height: 72px; font-size: 28px; }
-    .as-verdict span { font-size: 15px !important; }
+    .as-ring-wrap { width: 110px; height: 110px; }
+    .as-ring-wrap svg { width: 110px; height: 110px; }
+    .as-ring-num { font-size: 36px; }
+    .as-verdict span { font-size: 18px !important; }
   }
 </style>
 </head>
 <body>
 
 <!-- Token 验证门控 -->
-<div id="tokenGate" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:9999;display:none;align-items:center;justify-content:center;">
+<div id="tokenGate" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:9999;align-items:center;justify-content:center;">
   <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:48px 40px;max-width:480px;width:90%;text-align:center;color:#fff;">
     <div style="font-size:48px;margin-bottom:16px;" id="gateIcon">⏱️</div>
     <h2 style="margin-bottom:8px;" id="gateTitle">链接已失效</h2>
@@ -276,6 +389,12 @@
 </aside>
 <div class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">◀</div>
 
+<!-- 璁块棶闄愭椂鍊掕鏃?-->
+<div class="countdown-bar" id="countdownBar">
+  <span class="cd-icon">鈴?/span>
+  <span class="cd-label">閾炬帴鏈夋晥鍓╀綑鏃堕棿</span>
+  <span class="cd-time" id="countdownTime">--:--:--</span>
+</div>
 <div class="header">
   <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;">
     <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1A56DB,#2563EB);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌍</div>
@@ -336,29 +455,29 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>姓氏电码 Surname Telecode</label>
+            <label>姓氏电码 (Surname Telecode)</label>
             <input name="surnameTelecode" placeholder="4位数字电报码（选填）">
           </div>
           <div class="form-group">
-            <label>名字电码 Given Name Telecode</label>
+            <label>名字电码 (Given Name Telecode)</label>
             <input name="givenNameTelecode" placeholder="4位数字电报码（选填）">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>曾用姓氏 Other Surnames</label>
+            <label>曾用姓氏 (Other Surnames)</label>
             <input name="otherSurnames" placeholder="如改过姓氏请填写" data-dsfield="Other Surnames">
           </div>
           <div class="form-group">
-            <label>曾用名 (Other Surnames Used) <span class="hint">如无则留空</span></label>
-            <input name="otherSurnames" placeholder="如：CHAN" data-dsfield="Other Surnames">
+            <label>曾用名 (Other Given Names Used) <span class="hint">如无则留空</span></label>
+            <input name="otherGivenNames" placeholder="如：CHAN" data-dsfield="Other Given Names">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>性别 (Sex) <span class="required">*</span></label>
             <select name="sex" data-dsfield="Sex" required>
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="Male">男 Male</option>
               <option value="Female">女 Female</option>
             </select>
@@ -366,12 +485,13 @@
           <div class="form-group">
             <label>婚姻状态 (Marital Status) <span class="required">*</span></label>
             <select name="maritalStatus" data-dsfield="Marital Status" required>
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="Single">未婚 Single</option>
               <option value="Married">已婚 Married</option>
               <option value="Widowed">丧偶 Widowed</option>
               <option value="Divorced">离异 Divorced</option>
               <option value="Separated">分居 Separated</option>
+              <option value="Other">其他 Other</option>
             </select>
           </div>
         </div>
@@ -393,7 +513,7 @@
           <div class="form-group">
             <label>出生国家/地区 (Country of Birth) <span class="required">*</span></label>
             <select name="birthCountry" data-dsfield="Country of Birth" required>
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="CHINA" selected>中国 CHINA</option>
               <option value="TAIWAN">中国台湾 TAIWAN, China</option>
               <option value="HONG KONG">中国香港 HONG KONG SAR, China</option>
@@ -416,12 +536,12 @@
           <div class="form-group">
             <label>国籍 (Nationality) <span class="required">*</span></label>
             <select name="nationality" data-dsfield="Nationality" required>
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="CHINA" selected>中国 CHINA</option>
             </select>
           </div>
           <div class="form-group">
-            <label>是否持有其他国籍</label>
+            <label>是否持有其他国籍 (Other Nationality Held)</label>
             <select name="otherNationality" data-dsfield="Other Nationality">
               <option value="No">否 No</option>
               <option value="Yes">是 Yes</option>
@@ -490,7 +610,7 @@
             </select>
           </div>
         </div>
-        <h3>联系方式</h3>
+        <h3>联系方式 (Contact Information)</h3>
         <div class="form-row">
           <div class="form-group">
             <label>主要手机号 (Primary Phone) <span class="required">*</span></label>
@@ -503,8 +623,98 @@
         </div>
         <div class="form-row">
           <div class="form-group">
+            <label>邮寄地址是否与家庭住址一致 (Mailing Address Same as Home?) <span class="required">*</span></label>
+            <select name="mailingAddressSame" data-dsfield="Mailing Address Same as Home" required>
+              <option value="">-- 请选择 (Select) --</option>
+              <option value="Yes">是 Yes</option>
+              <option value="No">否 No</option>
+            </select>
+          </div>
+        </div>
+        <!-- 邮寄地址（完整字段） -->
+        <div id="mailingAddressDetail" style="display:none;">
+          <h3>邮寄地址 (Mailing Address)</h3>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1/-1;">
+              <label>邮寄地址街道 (Mailing Street Address) <span class="required">*</span></label>
+              <input name="mailingAddrLine1" placeholder="如：Room 201, No. 55 Zhongshan Road" data-dsfield="Mailing Address Line 1">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>城市 (City) <span class="required">*</span></label>
+              <input name="mailingAddrCity" placeholder="如：Fuzhou" data-dsfield="Mailing City">
+            </div>
+            <div class="form-group">
+              <label>省份 (State/Province) <span class="required">*</span></label>
+              <input name="mailingAddrState" placeholder="如：Fujian" data-dsfield="Mailing State/Province">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>邮政编码 (Postal Code)</label>
+              <input name="mailingAddrZip" placeholder="如：350002" data-dsfield="Mailing Postal Code">
+            </div>
+            <div class="form-group">
+              <label>国家 (Country) <span class="required">*</span></label>
+              <select name="mailingAddrCountry" data-dsfield="Mailing Country">
+                <option value="CHINA" selected>中国 CHINA</option>
+                <option value="USA">美国 UNITED STATES</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label>电子邮箱 (Email) <span class="required">*</span></label>
             <input name="email" type="email" placeholder="yourname@email.com" data-dsfield="Email Address" required>
+          </div>
+        </div>
+        <h3>近5年其他邮箱 (Other Email Addresses - Past 5 Years)</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>其他邮箱 1 (Other Email 1)</label>
+            <input name="email2" type="email" placeholder="过去 5 年使用过的其他邮箱">
+          </div>
+          <div class="form-group">
+            <label>其他邮箱 2 (Other Email 2)</label>
+            <input name="email3" type="email" placeholder="过去 5 年使用过的其他邮箱">
+          </div>
+          <div class="form-group">
+            <label>其他邮箱 3 (Other Email 3)</label>
+            <input name="email4" type="email" placeholder="过去 5 年使用过的其他邮箱">
+          </div>
+        </div>
+        <h3>社交媒体调查 (Social Media Identifier)</h3>
+        <div class="alert alert-info" style="font-size:12px;">
+          请提供您在过去 5 年内使用的所有社交媒体平台用户名。美国国务院使用这些信息来核实您的申请信息。
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Facebook 用户名 (Facebook Identifier)</label>
+            <input name="facebook" placeholder="@username (如无则留空)">
+          </div>
+          <div class="form-group">
+            <label>Twitter 用户名 (Twitter Identifier)</label>
+            <input name="twitter" placeholder="@username (如无则留空)">
+          </div>
+          <div class="form-group">
+            <label>Instagram 用户名 (Instagram Identifier)</label>
+            <input name="instagram" placeholder="@username (如无则留空)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>LinkedIn 用户名 (LinkedIn Identifier)</label>
+            <input name="linkedin" placeholder="username (如无则留空)">
+          </div>
+          <div class="form-group">
+            <label>微信 (WeChat)</label>
+            <input name="wechat" placeholder="微信号/用户名 (如无则留空)">
+          </div>
+          <div class="form-group">
+            <label>其他社交媒体 (Other Social Media)</label>
+            <input name="otherSocialMedia" placeholder="平台名称 + 用户名">
           </div>
         </div>
       </div>
@@ -573,7 +783,7 @@
           <div class="form-group">
             <label>赴美主要目的 (Purpose of Trip) <span class="required">*</span></label>
             <select name="tripPurpose" data-dsfield="Purpose of Trip" required id="tripPurpose" onchange="onVisaTypeChange()">
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="F1">留学 F1 - 学术学生</option>
               <option value="B1/B2">商务/旅游 B1/B2</option>
               <option value="B1">商务 B1</option>
@@ -586,9 +796,9 @@
             </select>
           </div>
           <div class="form-group">
-            <label>计划签证类型 <span class="required">*</span></label>
+            <label>计划签证类型 (Visa Type) <span class="required">*</span></label>
             <select name="visaType" data-dsfield="Visa Type" required>
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="F1">F1 - 学生签证</option>
               <option value="B1/B2">B1/B2 - 商务/旅游</option>
               <option value="B1">B1 - 商务</option>
@@ -598,16 +808,51 @@
             </select>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>预期到达美国日期 (Intended Date of Arrival) <span class="required">*</span></label>
-            <input type="date" name="arrivalDate" data-dsfield="Intended Date of Arrival" required>
-          </div>
-          <div class="form-group">
-            <label>预期停留时长 (Length of Stay) <span class="required">*</span></label>
-            <input name="stayLength" placeholder="如：2 weeks / 4 years" data-dsfield="Intended Length of Stay" required>
-          </div>
-        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>预期到达美国日期 (Intended Date of Arrival) <span class="required">*</span></label>
+	            <input type="date" name="arrivalDate" data-dsfield="Intended Date of Arrival" required>
+	          </div>
+	          <div class="form-group">
+	            <label>预期停留时长 (Length of Stay) <span class="required">*</span></label>
+	            <input name="stayLength" placeholder="如：2 weeks / 4 years" data-dsfield="Intended Length of Stay" required>
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>是否已制定具体旅行计划？(Specific Travel Plans) <span class="required">*</span></label>
+	            <select name="travelPlans" data-dsfield="Specific Travel Plans" required id="travelPlansSelect">
+	              <option value="">-- 请选择 (Select) --</option>
+	              <option value="Yes">是 Yes</option>
+	              <option value="No">否 No</option>
+	            </select>
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group" style="grid-column: 1/-1;">
+	            <label>计划旅游地点/景点 (Places to Visit)</label>
+	            <input name="travelPlaces" placeholder="列出计划参观的城市和景点，如：New York, Washington DC, Las Vegas" data-dsfield="Places to Visit">
+	          </div>
+	        </div>
+	        <!-- 航班信息（选了具体旅行计划后显示） -->
+	        <div id="flightInfoRow" style="display:none;">
+	          <div class="form-row">
+	            <div class="form-group">
+	              <label>到达美国航班号 (Flight to U.S.) <span class="hint">如：CA981, DL123</span></label>
+	              <input name="arrivalFlight" placeholder="航班号" data-dsfield="Arrival Flight">
+	            </div>
+	            <div class="form-group">
+	              <label>离开美国日期 (Intended Date of Departure)</label>
+	              <input type="date" name="departureDate" data-dsfield="Intended Date of Departure">
+	            </div>
+	          </div>
+	          <div class="form-row">
+	            <div class="form-group">
+	              <label>离开美国航班号 (Flight from U.S.) <span class="hint">如：DL124, UA456</span></label>
+	              <input name="departureFlight" placeholder="航班号" data-dsfield="Departure Flight">
+	            </div>
+	          </div>
+	        </div>
         <h3>在美地址 (U.S. Address)</h3>
         <div class="form-row">
           <div class="form-group" style="grid-column: 1/-1;">
@@ -622,29 +867,61 @@
           </div>
           <div class="form-group">
             <label>州 (State) <span class="required">*</span></label>
-            <select name="usAddrState" data-dsfield="U.S. State" required>
-              <option value="">-- 请选择 --</option>
-              <option value="CA">CA - California</option>
-              <option value="NY">NY - New York</option>
-              <option value="TX">TX - Texas</option>
-              <option value="MA">MA - Massachusetts</option>
-              <option value="IL">IL - Illinois</option>
-              <option value="FL">FL - Florida</option>
-              <option value="WA">WA - Washington</option>
-              <option value="PA">PA - Pennsylvania</option>
-              <option value="MI">MI - Michigan</option>
-              <option value="OH">OH - Ohio</option>
-              <option value="GA">GA - Georgia</option>
-              <option value="NC">NC - North Carolina</option>
-              <option value="NJ">NJ - New Jersey</option>
-              <option value="VA">VA - Virginia</option>
-              <option value="MD">MD - Maryland</option>
-              <option value="AZ">AZ - Arizona</option>
-              <option value="CO">CO - Colorado</option>
-              <option value="OR">OR - Oregon</option>
-              <option value="CT">CT - Connecticut</option>
-              <option value="IN">IN - Indiana</option>
-            </select>
+		            <select name="usAddrState" data-dsfield="U.S. State" required>
+		              <option value="">-- 请选择 (Select) --</option>
+		              <option value="AL">AL - 阿拉巴马 Alabama</option>
+		              <option value="AK">AK - 阿拉斯加 Alaska</option>
+		              <option value="AZ">AZ - 亚利桑那 Arizona</option>
+		              <option value="AR">AR - 阿肯色 Arkansas</option>
+		              <option value="CA">CA - 加利福尼亚 California</option>
+		              <option value="CO">CO - 科罗拉多 Colorado</option>
+		              <option value="CT">CT - 康涅狄格 Connecticut</option>
+		              <option value="DE">DE - 特拉华 Delaware</option>
+		              <option value="DC">DC - 哥伦比亚特区 District of Columbia</option>
+		              <option value="FL">FL - 佛罗里达 Florida</option>
+		              <option value="GA">GA - 佐治亚 Georgia</option>
+		              <option value="HI">HI - 夏威夷 Hawaii</option>
+		              <option value="ID">ID - 爱达荷 Idaho</option>
+		              <option value="IL">IL - 伊利诺伊 Illinois</option>
+		              <option value="IN">IN - 印第安纳 Indiana</option>
+		              <option value="IA">IA - 艾奥瓦 Iowa</option>
+		              <option value="KS">KS - 堪萨斯 Kansas</option>
+		              <option value="KY">KY - 肯塔基 Kentucky</option>
+		              <option value="LA">LA - 路易斯安那 Louisiana</option>
+		              <option value="ME">ME - 缅因 Maine</option>
+		              <option value="MD">MD - 马里兰 Maryland</option>
+		              <option value="MA">MA - 马萨诸塞 Massachusetts</option>
+		              <option value="MI">MI - 密歇根 Michigan</option>
+		              <option value="MN">MN - 明尼苏达 Minnesota</option>
+		              <option value="MS">MS - 密西西比 Mississippi</option>
+		              <option value="MO">MO - 密苏里 Missouri</option>
+		              <option value="MT">MT - 蒙大拿 Montana</option>
+		              <option value="NE">NE - 内布拉斯加 Nebraska</option>
+		              <option value="NV">NV - 内华达 Nevada</option>
+		              <option value="NH">NH - 新罕布什尔 New Hampshire</option>
+		              <option value="NJ">NJ - 新泽西 New Jersey</option>
+		              <option value="NM">NM - 新墨西哥 New Mexico</option>
+		              <option value="NY">NY - 纽约 New York</option>
+		              <option value="NC">NC - 北卡罗来纳 North Carolina</option>
+		              <option value="ND">ND - 北达科他 North Dakota</option>
+		              <option value="OH">OH - 俄亥俄 Ohio</option>
+		              <option value="OK">OK - 俄克拉何马 Oklahoma</option>
+		              <option value="OR">OR - 俄勒冈 Oregon</option>
+		              <option value="PA">PA - 宾夕法尼亚 Pennsylvania</option>
+		              <option value="PR">PR - 波多黎各 Puerto Rico</option>
+		              <option value="RI">RI - 罗德岛 Rhode Island</option>
+		              <option value="SC">SC - 南卡罗来纳 South Carolina</option>
+		              <option value="SD">SD - 南达科他 South Dakota</option>
+		              <option value="TN">TN - 田纳西 Tennessee</option>
+		              <option value="TX">TX - 得克萨斯 Texas</option>
+		              <option value="UT">UT - 犹他 Utah</option>
+		              <option value="VT">VT - 佛蒙特 Vermont</option>
+		              <option value="VA">VA - 弗吉尼亚 Virginia</option>
+		              <option value="WA">WA - 华盛顿 Washington</option>
+		              <option value="WV">WV - 西弗吉尼亚 West Virginia</option>
+		              <option value="WI">WI - 威斯康星 Wisconsin</option>
+		              <option value="WY">WY - 怀俄明 Wyoming</option>
+		            </select>
           </div>
         </div>
         <div class="form-row">
@@ -676,7 +953,7 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group">
-            <label>是否有同行人</label>
+            <label>是否有同行人 (Traveling with Others?)</label>
             <select name="hasCompanion" data-dsfield="Traveling with Others">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
@@ -685,7 +962,7 @@
         </div>
         <div class="form-row" id="companionNames" style="display:none;">
           <div class="form-group" style="grid-column: 1/-1;">
-            <label>同行人姓名及关系</label>
+            <label>同行人姓名及关系 (Companion Name & Relationship)</label>
             <textarea name="companionDetails" placeholder="填写同行人的全名和与你的关系。如：LI SI (spouse)&#10;多个同行人请换行填写" data-dsfield="Companion Details"></textarea>
           </div>
         </div>
@@ -702,7 +979,7 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group">
-            <label>是否曾去过美国</label>
+            <label>是否曾去过美国 (Have You Been to the U.S.?)</label>
             <select name="prevUSTravel" data-dsfield="Previous US Travel">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
@@ -711,33 +988,30 @@
         </div>
         <div class="form-row" id="prevTravelDetails" style="display:none;">
           <div class="form-group" style="grid-column: 1/-1;">
-            <label>最近5次赴美记录 (日期 + 停留时长)</label>
+            <label>最近5次赴美记录 (Previous U.S. Travel - Date & Duration)</label>
             <textarea name="prevTravelRecord" placeholder="如：2022-06-15 to 2022-07-10 (25 days) Tourism" data-dsfield="Previous Travel Record"></textarea>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>是否曾持有美国驾照</label>
-            <select name="usDriverLicense" data-dsfield="US Driver License">
-              <option value="No" selected>否 No</option>
-              <option value="Yes">是 Yes</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>是否曾获得美国签证</label>
+            <label>是否曾获得美国签证 (Have You Held a U.S. Visa?)</label>
             <select name="prevVisa" data-dsfield="Previous US Visa">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
             </select>
           </div>
           <div class="form-group">
-            <label>是否有签证被撤销/取消</label>
-            <select name="visaRevoked" data-dsfield="Visa Revoked">
+            <label>是否曾有签证被拒签或撤销 (Visa Ever Refused or Revoked?)</label>
+            <select name="visaRevoked" data-dsfield="Visa Revoked" id="visaRevokedSelect">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
             </select>
+          </div>
+        </div>
+        <div class="form-row" id="visaRevokedDetail" style="display:none;">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>拒签/撤销详情说明 (Refusal/Revocation Details)</label>
+            <textarea name="visaRevokedExplain" placeholder="请说明何时、何地、何种签证类型被拒签或撤销，以及拒签原因" data-dsfield="Visa Revoked Explanation" rows="2"></textarea>
           </div>
         </div>
       </div>
@@ -755,7 +1029,7 @@
           <div class="form-group">
             <label>联系人类型 (Contact Type) <span class="required">*</span></label>
             <select name="contactType" data-dsfield="Contact Type" required>
-              <option value="">-- 请选择 --</option>
+              <option value="">-- 请选择 (Select) --</option>
               <option value="SCHOOL OFFICIAL">学校官员 School Official (F签证)</option>
               <option value="FRIEND">朋友 Friend</option>
               <option value="RELATIVE">亲属 Relative</option>
@@ -764,7 +1038,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>联系人姓名/机构名 <span class="required">*</span></label>
+            <label>联系人姓名/机构名 (Contact Name/Organization) <span class="required">*</span></label>
             <input name="contactName" placeholder="F签证填DSO姓名；B签证填酒店/联系人名" data-dsfield="Contact Name" required>
           </div>
         </div>
@@ -777,21 +1051,42 @@
         <div class="form-row">
           <div class="form-group">
             <label>与申请人关系 (Relationship) <span class="required">*</span></label>
-            <select name="contactRelation" data-dsfield="Relationship to You" required>
-              <option value="">-- 请选择 --</option>
-              <option value="SCHOOL OFFICIAL">学校官员 School Official</option>
-              <option value="FRIEND">朋友 Friend</option>
-              <option value="SPOUSE">配偶 Spouse</option>
-              <option value="RELATIVE">亲属 Relative</option>
-              <option value="EMPLOYER">雇主 Employer</option>
-              <option value="BUSINESS ASSOCIATE">商业伙伴 Business Associate</option>
-            </select>
+	            <select name="contactRelation" data-dsfield="Relationship to You" required>
+	              <option value="">-- 请选择 (Select) --</option>
+	              <option value="SCHOOL OFFICIAL">学校官员 School Official</option>
+	              <option value="FRIEND">朋友 Friend</option>
+	              <option value="SPOUSE">配偶 Spouse</option>
+	              <option value="RELATIVE">亲属 Relative</option>
+	              <option value="EMPLOYER">雇主 Employer</option>
+	              <option value="BUSINESS ASSOCIATE">商业伙伴 Business Associate</option>
+	              <option value="OTHER">其他 Other</option>
+	            </select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group" style="grid-column: 1/-1;">
             <label>联系人地址 (Contact Address)</label>
             <input name="contactAddr" placeholder="F签证填DSO办公室地址" data-dsfield="Contact Address">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>联系人城市 (City)</label>
+            <input name="contactCity" placeholder="联系人所在城市" data-dsfield="Contact City">
+          </div>
+          <div class="form-group">
+            <label>联系人州 (State)</label>
+            <input name="contactState" placeholder="联系人所在州" data-dsfield="Contact State">
+          </div>
+          <div class="form-group">
+            <label>联系人邮编 (ZIP Code)</label>
+            <input name="contactZip" placeholder="联系人邮编" data-dsfield="Contact ZIP Code">
+          </div>
+        </div>
+        <div class="form-row" id="contactRelationOtherRow" style="display:none;">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label>请说明具体关系 (Specify Relationship)</label>
+            <input name="contactRelationOther" placeholder="请详细说明与联系人的关系" data-dsfield="Contact Relationship Other">
           </div>
         </div>
         <div class="form-row">
@@ -815,7 +1110,7 @@
         <span class="section-status"></span>
       </div>
       <div class="section-body">
-        <h3>父亲信息</h3>
+        <h3>父亲信息 (Father's Information)</h3>
         <div class="form-row">
           <div class="form-group">
             <label>父亲姓氏 (Surname) <span class="required">*</span></label>
@@ -828,11 +1123,11 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>父亲出生日期</label>
+            <label>父亲出生日期 (Father's Date of Birth)</label>
             <input type="date" name="fatherDob" data-dsfield="Father DOB">
           </div>
           <div class="form-group">
-            <label>父亲是否在美国</label>
+            <label>父亲是否在美国 (Is Father in the U.S.?)</label>
             <select name="fatherInUS" data-dsfield="Father in US">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
@@ -840,7 +1135,7 @@
           </div>
         </div>
 
-        <h3>母亲信息</h3>
+        <h3>母亲信息 (Mother's Information)</h3>
         <div class="form-row">
           <div class="form-group">
             <label>母亲姓氏 (Surname) <span class="required">*</span></label>
@@ -853,11 +1148,11 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>母亲出生日期</label>
+            <label>母亲出生日期 (Mother's Date of Birth)</label>
             <input type="date" name="motherDob" data-dsfield="Mother DOB">
           </div>
           <div class="form-group">
-            <label>母亲是否在美国</label>
+            <label>母亲是否在美国 (Is Mother in the U.S.?)</label>
             <select name="motherInUS" data-dsfield="Mother in US">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
@@ -865,10 +1160,10 @@
           </div>
         </div>
 
-        <h3>美国直系亲属</h3>
+        <h3>美国直系亲属 (Immediate Relatives in U.S.)</h3>
         <div class="form-row">
           <div class="form-group">
-            <label>是否有直系亲属在美国</label>
+            <label>是否有直系亲属在美国 (Any Immediate Relatives in U.S.?)</label>
             <select name="relativeInUS" data-dsfield="Immediate Relatives in US">
               <option value="No" selected>否 No</option>
               <option value="Yes">是 Yes</option>
@@ -885,42 +1180,95 @@
         <span class="section-title">工作/教育信息 Work / Education / Training</span>
         <span class="section-status"></span>
       </div>
-      <div class="section-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>当前职业状态 (Primary Occupation) <span class="required">*</span></label>
-            <select name="occupation" data-dsfield="Primary Occupation" required>
-              <option value="">-- 请选择 --</option>
-              <option value="STUDENT">学生 Student</option>
-              <option value="EMPLOYED">在职 Employed</option>
-              <option value="SELF-EMPLOYED">自雇 Self-employed</option>
-              <option value="UNEMPLOYED">无业 Unemployed</option>
-              <option value="RETIRED">退休 Retired</option>
-              <option value="HOMEMAKER">家庭主妇/夫 Homemaker</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>当前雇主/学校名称 <span class="required">*</span></label>
-            <input name="employerName" placeholder="如：X Company / Fuzhou University" data-dsfield="Employer/School Name" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group" style="grid-column: 1/-1;">
-            <label>雇主/学校地址</label>
-            <input name="employerAddr" placeholder="填写详细地址" data-dsfield="Employer/School Address">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>月薪（人民币）</label>
-            <input name="monthlySalary" type="number" placeholder="如：8000" data-dsfield="Monthly Salary (CNY)">
-          </div>
-          <div class="form-group">
-            <label>工作职责简述</label>
-            <input name="jobDuties" placeholder="如：Software Engineer / Full-time Student" data-dsfield="Job Duties">
-          </div>
-        </div>
-      </div>
+	      <div class="section-body">
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>当前职业状态 (Primary Occupation) <span class="required">*</span></label>
+	            <select name="occupation" data-dsfield="Primary Occupation" required id="occupationSelect">
+	              <option value="">-- 请选择 (Select) --</option>
+	              <option value="BUSINESS">商业/贸易 Business</option>
+	              <option value="COMMUNICATIONS">通讯/传媒 Communications</option>
+	              <option value="COMPUTER SCIENCE">计算机科学 Computer Science</option>
+	              <option value="CULINARY/FOOD SERVICES">餐饮/食品服务 Culinary/Food Services</option>
+	              <option value="EDUCATION">教育/教学 Education</option>
+	              <option value="ENGINEERING">工程 Engineering</option>
+	              <option value="EMPLOYED">在职员工 Employed</option>
+	              <option value="HOMEWORK">家庭代工 Homework</option>
+	              <option value="HOMEMAKER">家庭主妇/夫 Homemaker</option>
+	              <option value="LEGAL PROFESSION">法律职业 Legal Profession</option>
+	              <option value="MEDICAL/HEALTH">医疗/健康 Medical/Health</option>
+	              <option value="MILITARY">军事 Military</option>
+	              <option value="NATURAL SCIENCE">自然科学 Natural Science</option>
+	              <option value="NOT EMPLOYED">未就业 Not Employed</option>
+	              <option value="PHYSICAL SCIENCE">物理科学 Physical Science</option>
+	              <option value="RELIGIOUS VOCATION">宗教神职 Religious Vocation</option>
+	              <option value="RESEARCH">研究 Research</option>
+	              <option value="RETIRED">退休 Retired</option>
+	              <option value="SELF-EMPLOYED">自雇 Self-employed</option>
+	              <option value="SOCIAL SCIENCE">社会科学 Social Science</option>
+	              <option value="STUDENT">学生 Student</option>
+	              <option value="UNEMPLOYED">失业 Unemployed</option>
+	              <option value="OTHER">其他 Other</option>
+	            </select>
+	          </div>
+	          <div class="form-group">
+		            <label>当前雇主/学校名称 (Employer/School Name) <span class="required">*</span></label>
+	            <input name="employerName" placeholder="如：X Company / Fuzhou University" data-dsfield="Employer/School Name" required>
+	          </div>
+	        </div>
+	        <div class="form-row" id="occupationOtherRow" style="display:none;">
+	          <div class="form-group" style="grid-column: 1/-1;">
+		            <label>请说明您的职业 (Specify Occupation)</label>
+	            <input name="occupationOther" placeholder="请详细说明您的职业类型" data-dsfield="Occupation Other">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group" style="grid-column: 1/-1;">
+		            <label>雇主/学校地址 (Employer/School Address)</label>
+	            <input name="employerAddr" placeholder="填写详细地址" data-dsfield="Employer/School Address">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>工作城市 (City)</label>
+	            <input name="workCity" placeholder="工作所在城市" data-dsfield="Work City">
+	          </div>
+	          <div class="form-group">
+	            <label>工作省份/州 (State/Province)</label>
+	            <input name="workState" placeholder="工作所在省或州" data-dsfield="Work State/Province">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>工作邮编 (Postal Code)</label>
+	            <input name="workZip" placeholder="工作地邮编" data-dsfield="Work Postal Code">
+	          </div>
+	          <div class="form-group">
+	            <label>工作电话 (Work Phone)</label>
+	            <input name="workPhone" placeholder="工作单位联系电话" data-dsfield="Work Phone">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>月薪/收入 (Monthly Income) <span class="required">*</span></label>
+	            <input name="monthlySalary" type="number" placeholder="如：8000（人民币）" data-dsfield="Monthly Salary (CNY)" required>
+	          </div>
+	          <div class="form-group">
+		            <label>工作职责简述 (Brief Job Duties)</label>
+	            <input name="jobDuties" placeholder="如：Software Engineer / Full-time Student" data-dsfield="Job Duties">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>之前是否有过工作经历？(Were you previously employed?) <span class="required">*</span></label>
+	            <select name="previouslyEmployed" data-dsfield="Previously Employed" required>
+	              <option value="">-- 请选择 (Select) --</option>
+	              <option value="No">否 No</option>
+	              <option value="Yes">是 Yes</option>
+	            </select>
+	          </div>
+	        </div>
+	      </div>
     </div>
 
     <!-- ============ 第11节：安全与背景 ============ -->
@@ -950,20 +1298,20 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>护照簿编号 Passport Book Number</label>
+	            <label>护照簿编号 (Passport Book Number)</label>
             <input name="passportBookNo" placeholder="非中国护照请填写">
           </div>
           <div class="form-group" style="flex:1;">
-            <label>是否曾遗失护照</label>
-            <select name="passportLost"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否曾遗失护照 (Ever Lost a Passport?)</label>
+            <select name="passportLost"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
         </div>
         <div class="form-row" id="passportLostDetail" style="display:none;">
           <div class="form-group flex-2">
-            <label>遗失护照号码</label><input name="passportLostNo" placeholder="如遗失过请填写">
+	            <label>遗失护照号码 (Lost Passport Number)</label><input name="passportLostNo" placeholder="如遗失过请填写">
           </div>
           <div class="form-group flex-2">
-            <label>遗失国家/城市</label><input name="passportLostPlace" placeholder="">
+	            <label>遗失国家/城市 (Country/City Where Lost)</label><input name="passportLostPlace" placeholder="">
           </div>
         </div>
       </div>
@@ -979,43 +1327,43 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>是否曾获得美国签证</label>
-            <select name="hadUSVisa"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否曾获得美国签证 (Previously Held U.S. Visa?)</label>
+	            <select name="hadUSVisa"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
           <div class="form-group flex-2">
-            <label>上次获签日期</label>
+	            <label>上次获签日期 (Last Visa Issue Date)</label>
             <input type="date" name="lastVisaDate">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>是否曾被拒签</label>
-            <select name="visaRefused"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否曾被拒签 (Ever Refused a U.S. Visa?)</label>
+            <select name="visaRefused"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
           <div class="form-group flex-2" id="visaRefusedDetail" style="display:none;">
-            <label>拒签说明</label>
+	            <label>拒签说明 (Refusal Explanation)</label>
             <input name="visaRefusedExplain" placeholder="请说明何时/何地/何原因被拒签">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>是否曾被拒绝入境美国</label>
-            <select name="entryDenied"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否曾被拒绝入境美国 (Ever Denied Entry to U.S.?)</label>
+            <select name="entryDenied"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
           <div class="form-group flex-2">
-            <label>是否曾逾期停留美国</label>
-            <select name="overstayed"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否曾逾期停留美国 (Ever Overstayed in U.S.?)</label>
+            <select name="overstayed"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>是否有移民违规记录</label>
-            <select name="immigrationViolation"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否有移民违规记录 (Any Immigration Violation?)</label>
+            <select name="immigrationViolation"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
         </div>
         <div class="form-row" id="immigrationViolationDetail" style="display:none;">
           <div class="form-group" style="flex:1;">
-            <label>违规说明</label><textarea name="immigrationViolationExplain" rows="2" placeholder="请详细说明"></textarea>
+	            <label>违规说明 (Violation Explanation)</label><textarea name="immigrationViolationExplain" rows="2" placeholder="请详细说明"></textarea>
           </div>
         </div>
       </div>
@@ -1031,35 +1379,35 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>配偶姓氏 Spouse's Surname</label>
+	            <label>配偶姓氏 (Spouse's Surname)</label>
             <input name="spouseSurname" placeholder="如已婚请填写">
           </div>
           <div class="form-group flex-2">
-            <label>配偶名字 Spouse's Given Name</label>
+	            <label>配偶名字 (Spouse's Given Name)</label>
             <input name="spouseGivenName" placeholder="">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>配偶出生日期</label>
+	            <label>配偶出生日期 (Spouse's Date of Birth)</label>
             <input type="date" name="spouseDob">
           </div>
           <div class="form-group flex-2">
-            <label>配偶国籍</label>
+	            <label>配偶国籍 (Spouse's Nationality)</label>
             <input name="spouseNationality" placeholder="China">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>配偶出生城市</label><input name="spouseBirthCity" placeholder="">
+	            <label>配偶出生城市 (Spouse's City of Birth)</label><input name="spouseBirthCity" placeholder="">
           </div>
           <div class="form-group flex-2">
-            <label>配偶出生国家</label><input name="spouseBirthCountry" placeholder="China">
+	            <label>配偶出生国家 (Spouse's Country of Birth)</label><input name="spouseBirthCountry" placeholder="China">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>配偶地址（如不同住）</label><input name="spouseAddress" placeholder="同住可不填">
+	            <label>配偶地址，如不同住 (Spouse's Address, if Different)</label><input name="spouseAddress" placeholder="同住可不填">
           </div>
         </div>
       </div>
@@ -1076,20 +1424,33 @@
         <div class="alert alert-info">仅 F/M/J 类签证需填写。其他签证类型请跳过。</div>
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>SEVIS ID</label><input name="sevisId" placeholder="N00XXXXXXXXX">
+	            <label>SEVIS ID (学生追踪号)</label><input name="sevisId" placeholder="N00XXXXXXXXX">
           </div>
           <div class="form-group flex-2">
-            <label>学校/项目名称</label><input name="sevisSchool" placeholder="">
+	            <label>学校/项目名称 (School/Program Name)</label><input name="sevisSchool" placeholder="">
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group flex-2">
-            <label>学校地址</label><input name="sevisSchoolAddr" placeholder="">
-          </div>
-          <div class="form-group flex-2">
-            <label>学习课程/专业</label><input name="sevisMajor" placeholder="">
-          </div>
-        </div>
+	        <div class="form-row">
+	          <div class="form-group flex-2">
+		            <label>学校地址 (School Address)</label><input name="sevisSchoolAddr" placeholder="">
+	          </div>
+	          <div class="form-group flex-2">
+		            <label>学习课程/专业 (Course of Study/Major)</label><input name="sevisMajor" placeholder="">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>学校城市 (City)</label><input name="sevisSchoolCity" placeholder="学校所在城市" data-dsfield="SEVIS School City">
+	          </div>
+	          <div class="form-group">
+	            <label>学校州 (State)</label><input name="sevisSchoolState" placeholder="学校所在州" data-dsfield="SEVIS School State">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+	            <label>学校邮编 (ZIP Code)</label><input name="sevisSchoolZip" placeholder="学校邮编" data-dsfield="SEVIS School ZIP">
+	          </div>
+	        </div>
       </div>
     </div>
 
@@ -1104,7 +1465,7 @@
         <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">列出过去5年内访问过的所有国家和地区（不含本国和美国）</p>
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>访问过的国家/地区（每行一个）</label>
+	            <label>访问过的国家/地区 (Countries Visited, one per line)</label>
             <textarea name="countriesVisited" rows="4" placeholder="Japan, 2024&#10;Thailand, 2023&#10;..."></textarea>
           </div>
         </div>
@@ -1120,14 +1481,11 @@
       </div>
       <div class="section-body">
         <div class="form-row">
-          <div class="form-group flex-2">
-            <label>母语/主要语言</label>
-            <select name="primaryLanguage"><option value="">请选择</option><option>Chinese (Mandarin)</option><option>Chinese (Cantonese)</option><option>English</option><option>Spanish</option><option>Other</option></select>
+          <div class="form-group" style="flex:1;">
+	            <label>母语/主要语言 (Primary Language)</label>
+            <select name="primaryLanguage"><option value="">-- 请选择 (Select) --</option><option>普通话 Chinese (Mandarin)</option><option>粤语 Chinese (Cantonese)</option><option>英语 English</option><option>西班牙语 Spanish</option><option>其他 Other</option></select>
           </div>
-          <div class="form-group flex-2">
-            <label>英语能力</label>
-            <select name="englishLevel"><option value="">请选择</option><option>Native/Fluent</option><option>Good</option><option>Basic</option><option>None</option></select>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -1142,21 +1500,21 @@
       <div class="section-body">
         <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">需提供两位不与你同住的联系人（朋友/同事/亲戚），不一定是美国人</p>
         <div class="form-row">
-          <div class="form-group flex-2"><label>联系人1 姓名</label><input name="ref1Name" placeholder=""></div>
-          <div class="form-group flex-2"><label>联系人1 电话</label><input name="ref1Phone" placeholder=""></div>
+	          <div class="form-group flex-2"><label>联系人1 姓名 (Contact 1 Name)</label><input name="ref1Name" placeholder=""></div>
+	          <div class="form-group flex-2"><label>联系人1 电话 (Contact 1 Phone)</label><input name="ref1Phone" placeholder=""></div>
         </div>
         <div class="form-row">
-          <div class="form-group flex-2"><label>联系人1 邮箱</label><input name="ref1Email" placeholder=""></div>
-          <div class="form-group flex-2"><label>与你的关系</label><input name="ref1Relation" placeholder="Friend"></div>
+	          <div class="form-group flex-2"><label>联系人1 邮箱 (Contact 1 Email)</label><input name="ref1Email" placeholder=""></div>
+	          <div class="form-group flex-2"><label>与你的关系 (Relationship to You)</label><input name="ref1Relation" placeholder="Friend"></div>
         </div>
         <hr style="border-color:#334155;margin:12px 0;">
         <div class="form-row">
-          <div class="form-group flex-2"><label>联系人2 姓名</label><input name="ref2Name" placeholder=""></div>
-          <div class="form-group flex-2"><label>联系人2 电话</label><input name="ref2Phone" placeholder=""></div>
+	          <div class="form-group flex-2"><label>联系人2 姓名 (Contact 2 Name)</label><input name="ref2Name" placeholder=""></div>
+	          <div class="form-group flex-2"><label>联系人2 电话 (Contact 2 Phone)</label><input name="ref2Phone" placeholder=""></div>
         </div>
         <div class="form-row">
-          <div class="form-group flex-2"><label>联系人2 邮箱</label><input name="ref2Email" placeholder=""></div>
-          <div class="form-group flex-2"><label>与你的关系</label><input name="ref2Relation" placeholder="Colleague"></div>
+	          <div class="form-group flex-2"><label>联系人2 邮箱 (Contact 2 Email)</label><input name="ref2Email" placeholder=""></div>
+	          <div class="form-group flex-2"><label>与你的关系 (Relationship to You)</label><input name="ref2Relation" placeholder="Colleague"></div>
         </div>
       </div>
     </div>
@@ -1171,18 +1529,18 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group flex-2">
-            <label>是否曾在军队服役</label>
-            <select name="militaryService"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否曾在军队服役 (Military Service?)</label>
+            <select name="militaryService"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
         </div>
         <div id="militaryDetail" style="display:none;">
           <div class="form-row">
-            <div class="form-group flex-2"><label>国家/地区</label><input name="militaryCountry" placeholder=""></div>
-            <div class="form-group flex-2"><label>军种/兵种</label><input name="militaryBranch" placeholder=""></div>
+	            <div class="form-group flex-2"><label>国家/地区 (Country/Region)</label><input name="militaryCountry" placeholder=""></div>
+	            <div class="form-group flex-2"><label>军种/兵种 (Branch of Service)</label><input name="militaryBranch" placeholder=""></div>
           </div>
           <div class="form-row">
-            <div class="form-group flex-2"><label>军衔/职位</label><input name="militaryRank" placeholder=""></div>
-            <div class="form-group flex-2"><label>服役起止日期</label><input name="militaryDates" placeholder="2010-2012"></div>
+	            <div class="form-group flex-2"><label>军衔/职位 (Rank/Position)</label><input name="militaryRank" placeholder=""></div>
+	            <div class="form-group flex-2"><label>服役起止日期 (Service Dates)</label><input name="militaryDates" placeholder="2010-2012"></div>
           </div>
         </div>
       </div>
@@ -1198,13 +1556,13 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>是否属于/资助过任何专业/社会/慈善组织</label>
-            <select name="orgMember"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否属于/资助过任何专业/社会/慈善组织 (Member of Any Professional/Social/Charitable Organization?)</label>
+            <select name="orgMember"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
         </div>
         <div class="form-row" id="orgDetail" style="display:none;">
           <div class="form-group" style="flex:1;">
-            <label>组织名称及性质（每行一个）</label>
+	            <label>组织名称及性质 (Organization Name & Nature, one per line)</label>
             <textarea name="orgName" rows="2" placeholder="Organization name, purpose"></textarea>
           </div>
         </div>
@@ -1221,13 +1579,13 @@
       <div class="section-body">
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label>是否接受过枪支/爆炸物/核/生物/化学相关特殊培训</label>
-            <select name="specialTraining"><option value="">请选择</option><option>No</option><option>Yes</option></select>
+	            <label>是否接受过特殊培训 (Specialized Skills/Firearms/Explosives/Nuclear Training?)</label>
+            <select name="specialTraining"><option value="">-- 请选择 (Select) --</option><option>否 No</option><option>是 Yes</option></select>
           </div>
         </div>
         <div class="form-row" id="specialTrainingDetail" style="display:none;">
           <div class="form-group" style="flex:1;">
-            <label>培训详情说明</label>
+	            <label>培训详情说明 (Training Details)</label>
             <textarea name="specialTrainingExplain" rows="2" placeholder="请详细说明"></textarea>
           </div>
         </div>
@@ -1241,26 +1599,43 @@
         <span class="section-title">过往工作履历 Previous Employment (5 Years)</span>
         <span class="section-status"></span>
       </div>
-      <div class="section-body">
-        <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">列出过去5年内除现职外的所有工作经历（如无则跳过）</p>
-        <div class="form-row">
-          <div class="form-group flex-2"><label>曾任职1 雇主/学校</label><input name="prevEmployer1" placeholder=""></div>
-          <div class="form-group flex-2"><label>职务</label><input name="prevJob1" placeholder=""></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group flex-2"><label>起止日期</label><input name="prevEmpDates1" placeholder="2021-2023"></div>
-          <div class="form-group flex-2"><label>地址/电话</label><input name="prevEmpAddr1" placeholder=""></div>
-        </div>
-        <hr style="border-color:#334155;margin:10px 0;">
-        <div class="form-row">
-          <div class="form-group flex-2"><label>曾任职2 雇主/学校</label><input name="prevEmployer2" placeholder=""></div>
-          <div class="form-group flex-2"><label>职务</label><input name="prevJob2" placeholder=""></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group flex-2"><label>起止日期</label><input name="prevEmpDates2" placeholder=""></div>
-          <div class="form-group flex-2"><label>地址/电话</label><input name="prevEmpAddr2" placeholder=""></div>
-        </div>
-      </div>
+	      <div class="section-body">
+	        <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">列出过去5年内除现职外的所有工作经历（如无则跳过）</p>
+	        <div class="form-row">
+		          <div class="form-group flex-2"><label>曾任职1 雇主/学校 (Previous Employer 1)</label><input name="prevEmployer1" placeholder=""></div>
+		          <div class="form-group flex-2"><label>职务 (Position)</label><input name="prevJob1" placeholder=""></div>
+	        </div>
+	        <div class="form-row">
+		          <div class="form-group flex-2"><label>起止日期 (Dates of Employment)</label><input name="prevEmpDates1" placeholder="2021-2023"></div>
+		          <div class="form-group flex-2"><label>地址 (Address)</label><input name="prevEmpAddr1" placeholder="工作单位地址"></div>
+	        </div>
+	        <div class="form-row">
+		          <div class="form-group"><label>工作城市 (Work City)</label><input name="prevEmp1City" placeholder="工作城市" data-dsfield="Previous Employer 1 City"></div>
+		          <div class="form-group"><label>工作省份/州 (Work State/Province)</label><input name="prevEmp1State" placeholder="工作省/州" data-dsfield="Previous Employer 1 State"></div>
+		          <div class="form-group"><label>工作邮编 (Work ZIP Code)</label><input name="prevEmp1Zip" placeholder="邮编" data-dsfield="Previous Employer 1 ZIP"></div>
+	        </div>
+	        <div class="form-row">
+		          <div class="form-group flex-2"><label>工作电话 (Work Phone)</label><input name="prevEmp1Phone" placeholder="单位联系电话" data-dsfield="Previous Employer 1 Phone"></div>
+		          <div class="form-group flex-2"><label>月薪 (Monthly Salary, RMB)</label><input name="prevSalary1" type="number" placeholder="月薪金额" data-dsfield="Previous Employer 1 Salary"></div>
+	        </div>
+	        <hr style="border-color:#334155;margin:10px 0;">
+	        <div class="form-row">
+		          <div class="form-group flex-2"><label>曾任职2 雇主/学校 (Previous Employer 2)</label><input name="prevEmployer2" placeholder=""></div>
+		          <div class="form-group flex-2"><label>职务 (Position)</label><input name="prevJob2" placeholder=""></div>
+	        </div>
+	        <div class="form-row">
+		          <div class="form-group flex-2"><label>起止日期 (Dates of Employment)</label><input name="prevEmpDates2" placeholder=""></div>
+		          <div class="form-group flex-2"><label>地址 (Address)</label><input name="prevEmpAddr2" placeholder="工作单位地址"></div>
+	        </div>
+	        <div class="form-row">
+		          <div class="form-group"><label>工作城市 (Work City)</label><input name="prevEmp2City" placeholder="工作城市" data-dsfield="Previous Employer 2 City"></div>
+		          <div class="form-group"><label>工作省份/州 (Work State/Province)</label><input name="prevEmp2State" placeholder="工作省/州" data-dsfield="Previous Employer 2 State"></div>
+		          <div class="form-group"><label>工作邮编 (Work ZIP Code)</label><input name="prevEmp2Zip" placeholder="邮编" data-dsfield="Previous Employer 2 ZIP"></div>
+	        </div>
+	        <div class="form-row">
+		          <div class="form-group flex-2"><label>工作电话 (Work Phone)</label><input name="prevEmp2Phone" placeholder="单位联系电话" data-dsfield="Previous Employer 2 Phone"></div>
+	        </div>
+	      </div>
     </div>
 
     <!-- ============ 第23节：教育背景 ============ -->
@@ -1270,25 +1645,38 @@
         <span class="section-title">教育背景 Education History</span>
         <span class="section-status"></span>
       </div>
-      <div class="section-body">
-        <div class="form-row">
-          <div class="form-group flex-2">
-            <label>最高学历 Highest Education Level</label>
-            <select name="eduLevel"><option value="">请选择</option><option>High School</option><option>Associate</option><option>Bachelor's</option><option>Master's</option><option>Doctorate</option><option>Other</option></select>
-          </div>
-          <div class="form-group flex-2">
-            <label>学校/机构名称</label><input name="eduSchool" placeholder="">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group flex-2">
-            <label>专业/研究方向</label><input name="eduMajor" placeholder="">
-          </div>
-          <div class="form-group flex-2">
-            <label>就读起止年份</label><input name="eduYears" placeholder="如：2018-2022">
-          </div>
-        </div>
-      </div>
+	      <div class="section-body">
+	        <div class="form-row">
+	          
+	          <div class="form-group flex-2">
+		            <label>学校/机构名称 (Institution Name)</label><input name="eduSchool" placeholder="">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group flex-2">
+		            <label>专业/研究方向 (Major/Field of Study)</label><input name="eduMajor" placeholder="">
+	          </div>
+	          <div class="form-group flex-2">
+		            <label>就读起止年份 (Years Attended)</label><input name="eduYears" placeholder="如：2018-2022">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+		            <label>学校城市 (School City)</label><input name="eduSchoolCity" placeholder="学校所在城市" data-dsfield="Education School City">
+	          </div>
+	          <div class="form-group">
+		            <label>学校省份/州 (School State/Province)</label><input name="eduSchoolState" placeholder="学校所在省或州" data-dsfield="Education School State">
+	          </div>
+	        </div>
+	        <div class="form-row">
+	          <div class="form-group">
+		            <label>学校邮编 (School ZIP Code)</label><input name="eduSchoolZip" placeholder="邮编" data-dsfield="Education School ZIP">
+	          </div>
+	          <div class="form-group">
+		            <label>学校国家 (School Country)</label><input name="eduSchoolCountry" placeholder="China" data-dsfield="Education School Country">
+	          </div>
+	        </div>
+	      </div>
     </div>
 
     <!-- ============ 操作按钮 ============ -->
@@ -1297,6 +1685,8 @@
       <button type="button" class="btn btn-outline" onclick="validateForm()">校验填写</button>
       <button type="button" class="btn btn-primary" onclick="showPreview()">生成 DS-160 预览</button>
       <button type="button" class="btn btn-success" onclick="printPDF()">下载 PDF 文件</button>
+      <button type="button" class="btn btn-outline" onclick="exportJSON()">📤 导出JSON</button>
+      <button type="button" class="btn btn-outline" onclick="importJSON()">📥 导入JSON</button>
       <button type="button" class="btn btn-danger" onclick="resetForm()">清空重填</button>
     </div>
   </form>
@@ -1324,25 +1714,39 @@
 </div>
 
 <script>
-// ═════════════ Token 验证 ═════════════
-const SECRET = 'ds160-secret-key-2026';
-
-async function hmacVerify(message, signature, secret) {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
-  );
-  const sigBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-  return crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(message));
-}
+// ═════════════ Token 验证（安全版：前端不存储密钥） ═════════════
+// 注意：HMAC密钥已从前端移除，Token验证改为服务端API校验
+// 保留客户端快速格式检查作为第一层过滤
 
 function getQueryParam(name) {
-  const url = new URL(window.location.href);
-  return url.searchParams.get(name);
+  // 鍏煎 file:/// 鏈湴鏂囦欢妯″紡锛歎RL.searchParams 鍦ㄦ煇浜涙祻瑙堝櫒瀵规湰鍦版枃浠朵笉宸ヤ綔
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams && url.searchParams.get(name)) return url.searchParams.get(name);
+  } catch(e) {}
+  // Fallback: 鎵嬪姩瑙ｆ瀽 location.search
+  const qs = window.location.search || window.location.hash;
+  if (qs) {
+    const match = qs.match(new RegExp('[?&]' + name + '=([^&]+)'));
+    if (match) return decodeURIComponent(match[1]);
+  }
+  return null;
 }
 
-// 页面加载时验证Token
+// HMAC-SHA256 鏈湴楠岃瘉锛堟棤闇€鏈嶅姟绔級
+async function localHmacVerify(token) {
+  const HMAC_SECRET = 'ds160-secret-key-2026';
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  const [id, ts, sig] = parts;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', encoder.encode(HMAC_SECRET), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('HMAC', key, encoder.encode(id + '.' + ts));
+  const expected = btoa(String.fromCharCode(...new Uint8Array(sigBuf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return sig === expected;
+}
+
+// 椤甸潰鍔犺浇鏃堕獙璇乀oken
 (async function validateToken() {
   const token = getQueryParam('token');
   const gate = document.getElementById('tokenGate');
@@ -1350,58 +1754,85 @@ function getQueryParam(name) {
   const title = document.getElementById('gateTitle');
   const msg = document.getElementById('gateMsg');
 
-  // 无Token → 允许访问（兼容非付费场景）
-  if (!token) return;
+  // 鏃燭oken 鈫?鍏佽璁块棶锛堝吋瀹归潪浠樿垂鍦烘櫙锛?  if (!token) return;
 
-  // 解析 Token: id.timestamp.signature
-  const parts = token.split('.');
-  if (parts.length !== 3) {
+  // 瀹㈡埛绔揩閫熸牸寮忔鏌ワ紙鍏煎涓ょToken鏍煎紡锛?  const isHMAC = token.split('.').length === 3;
+  const isServerToken = /^DS[0-9A-Fa-f]{12}$/.test(token);
+  if (!isHMAC && !isServerToken) {
     gate.style.display = 'flex';
-    icon.textContent = '🚫'; title.textContent = '链接无效'; msg.textContent = 'Token格式错误，请联系服务提供商获取正确链接。';
+    icon.textContent = '鈿狅笍'; title.textContent = '閾炬帴鏃犳晥'; msg.textContent = 'Token鏍煎紡閿欒锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨纭摼鎺ャ€?;
     return;
   }
 
-  const [id, ts, sig] = parts;
-  const payload = `${id}.${ts}`;
+  const tokenId = isHMAC ? token.split('.')[0] : token;
 
-  // 验证 HMAC 签名
-  const valid = await hmacVerify(payload, sig, SECRET);
-  if (!valid) {
-    gate.style.display = 'flex';
-    icon.textContent = '🚫'; title.textContent = '链接无效'; msg.textContent = 'Token签名验证失败，链接可能被篡改。';
-    return;
-  }
-
-  // 检查是否已使用（localStorage）
-  const usedKey = 'ds160_used_' + id;
+  // 妫€鏌ユ湰鍦版槸鍚﹀凡浣跨敤锛堝揩閫熸湰鍦版鏌ワ級
+  const usedKey = 'ds160_used_' + tokenId;
   if (localStorage.getItem(usedKey)) {
     gate.style.display = 'flex';
-    icon.textContent = '⏱️'; title.textContent = '链接已使用';
-    msg.innerHTML = '此链接已被使用过。<br>每个链接仅供一人使用一次。<br><br>如需再次使用，请联系服务提供商获取新链接。';
+    icon.textContent = '鈴憋笍'; title.textContent = '閾炬帴宸蹭娇鐢?;
+    msg.innerHTML = '姝ら摼鎺ュ凡琚娇鐢ㄨ繃銆?br>姣忎釜閾炬帴浠呬緵涓€浜轰娇鐢ㄤ竴娆°€?br><br>濡傞渶鍐嶆浣跨敤锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
     return;
   }
 
-  // Token 有效，注入到页面
-  window.DS160_TOKEN_ID = id;
-  window.DS160_TOKEN = token;
-  // 标记已使用（PDF下载成功时通过 consumeToken() 触发）
-  window.consumeToken = function() {
-    localStorage.setItem(usedKey, new Date().toISOString());
-  };
+  // 鍒ゆ柇鏄惁涓烘湰鍦版枃浠舵ā寮?  const isLocalFile = window.location.protocol === 'file:';
+
+  if (isLocalFile && isHMAC) {
+    // 鏈湴鏂囦欢妯″紡 + HMAC Token 鈫?鏈湴楠岃瘉绛惧悕
+    const valid = await localHmacVerify(token);
+    if (valid) {
+      window.DS160_TOKEN_ID = tokenId;
+      window.DS160_TOKEN = token;
+      window.consumeToken = function() {
+        localStorage.setItem(usedKey, new Date().toISOString());
+      };
+    } else {
+      gate.style.display = 'flex';
+      icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
+      msg.textContent = 'Token绛惧悕楠岃瘉澶辫触锛岄摼鎺ュ彲鑳借绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
+    }
+    return;
+  }
+
+  // 鏈嶅姟绔獙璇乀oken
+  try {
+    const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token));
+    const checkData = await checkRes.json();
+    if (checkData.valid) {
+      window.DS160_TOKEN_ID = tokenId;
+      window.DS160_TOKEN = token;
+      window.consumeToken = function() {
+        localStorage.setItem(usedKey, new Date().toISOString());
+      };
+      // 鏈嶅姟绔繑鍥炲墿浣欐椂闂?      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
+    } else {
+      gate.style.display = 'flex';
+      icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
+      msg.textContent = checkData.reason || 'Token楠岃瘉澶辫触锛岄摼鎺ュ彲鑳藉凡杩囨湡鎴栬绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
+    }
+  } catch(e) {
+    // 缃戠粶涓嶅彲鐢ㄦ椂鐨勯檷绾х瓥鐣?    console.warn('Token鏈嶅姟绔獙璇佷笉鍙敤锛屽厑璁镐复鏃惰闂紙绂荤嚎妯″紡锛?);
+    window.DS160_TOKEN_ID = tokenId;
+    window.DS160_TOKEN = token;
+    window.DS160_TOKEN_OFFLINE = true;
+    window.consumeToken = function() {
+      localStorage.setItem(usedKey, new Date().toISOString());
+    };
+  }
 })();
 
 // ========== 安全背景问题列表 ==========
 const securityQuestions = [
-  "是否患有传染性疾病、精神或身体障碍？",
-  "是否曾因违法行为被逮捕或定罪？",
-  "是否曾涉及毒品买卖或使用？",
-  "是否曾从事卖淫或组织卖淫？",
-  "是否曾参与或计划参与恐怖活动？",
-  "是否曾违反美国移民法？",
-  "是否曾企图以虚假信息获取美国签证？",
-  "是否曾被美国驱逐出境？",
-  "是否曾绑架或以其他方式扣留儿童？",
-  "是否曾参与种族灭绝或酷刑？",
+  "是否患有传染性疾病、精神或身体障碍？(Do you have a communicable disease or mental/physical disorder?)",
+  "是否曾因违法行为被逮捕或定罪？(Have you ever been arrested or convicted?)",
+  "是否曾涉及毒品买卖或使用？(Have you been involved in drug trafficking or use?)",
+  "是否曾从事卖淫或组织卖淫？(Have you been involved in prostitution?)",
+  "是否曾参与或计划参与恐怖活动？(Have you ever planned or engaged in terrorist activities?)",
+  "是否曾违反美国移民法？(Have you ever violated U.S. immigration law?)",
+  "是否曾企图以虚假信息获取美国签证？(Have you ever attempted to obtain a visa by fraud?)",
+  "是否曾被美国驱逐出境？(Have you ever been deported from the U.S.?)",
+  "是否曾绑架或以其他方式扣留儿童？(Have you ever abducted or retained a child?)",
+  "是否曾参与种族灭绝或酷刑？(Have you ever participated in genocide or torture?)",
 ];
 
 // 生成安全背景问题
@@ -1434,16 +1865,29 @@ function expandAll() {
 
 // ========== 动态联动 ==========
 document.querySelector('[name="hasCompanion"]').addEventListener('change', function() {
-  document.getElementById('companionNames').style.display = this.value === 'Yes' ? 'grid' : 'none';
+  document.getElementById('companionNames').style.display = this.value.includes('Yes') ? 'grid' : 'none';
 });
 document.querySelector('[name="prevUSTravel"]').addEventListener('change', function() {
-  document.getElementById('prevTravelDetails').style.display = this.value === 'Yes' ? 'grid' : 'none';
+  document.getElementById('prevTravelDetails').style.display = this.value.includes('Yes') ? 'grid' : 'none';
+});
+// 邮寄地址联动
+document.querySelector('[name="mailingAddressSame"]').addEventListener('change', function() {
+  const detail = document.getElementById('mailingAddressDetail');
+  if (detail) {
+    detail.style.display = this.value.includes('No') ? 'grid' : 'none';
+  }
+});
+document.querySelector('[name="passportLost"]').addEventListener('change', function() {
+  const detail = document.getElementById('passportLostDetail');
+  if (detail) {
+    detail.style.display = this.value.includes('Yes') ? 'grid' : 'none';
+  }
 });
 
 document.querySelectorAll('#securityQuestions select').forEach(sel => {
   sel.addEventListener('change', function() {
     const explain = this.parentElement.querySelector('input');
-    if (explain) explain.style.display = this.value === 'Yes' ? 'inline-block' : 'none';
+    if (explain) explain.style.display = this.value.includes('Yes') ? 'inline-block' : 'none';
   });
 });
 
@@ -1536,13 +1980,37 @@ function onVisaTypeChange() {
   watch('passportLost', function(){ document.getElementById('passportLostDetail').style.display = this.value==='Yes'?'flex':'none'; });
   watch('visaRefused', function(){ document.getElementById('visaRefusedDetail').style.display = this.value==='Yes'?'flex':'none'; });
   watch('immigrationViolation', function(){ document.getElementById('immigrationViolationDetail').style.display = this.value==='Yes'?'flex':'none'; });
-  watch('militaryService', function(){ document.getElementById('militaryDetail').style.display = this.value==='Yes'?'block':'none'; });
-  watch('orgMember', function(){ document.getElementById('orgDetail').style.display = this.value==='Yes'?'flex':'none'; });
-  watch('specialTraining', function(){ document.getElementById('specialTrainingDetail').style.display = this.value==='Yes'?'flex':'none'; });
+  watch('militaryService', function(){ document.getElementById('militaryDetail').style.display = this.value.includes('Yes')?'block':'none'; });
+  watch('orgMember', function(){ document.getElementById('orgDetail').style.display = this.value.includes('Yes')?'flex':'none'; });
+  watch('specialTraining', function(){ document.getElementById('specialTrainingDetail').style.display = this.value.includes('Yes')?'flex':'none'; });
+
+  // 旅行计划联动：选Yes显示航班信息
+  watch('travelPlans', function(){
+    const flightInfo = document.getElementById('flightInfoRow');
+    if (flightInfo) flightInfo.style.display = this.value.includes('Yes') ? 'block' : 'none';
+  });
+
+  // 签证拒签/撤销联动
+  watch('visaRevoked', function(){
+    const detail = document.getElementById('visaRevokedDetail');
+    if (detail) detail.style.display = this.value.includes('Yes') ? 'grid' : 'none';
+  });
+
+  // 联系人关系Other联动
+  watch('contactRelation', function(){
+    const otherRow = document.getElementById('contactRelationOtherRow');
+    if (otherRow) otherRow.style.display = this.value === 'OTHER' ? 'grid' : 'none';
+  });
+
+  // 职业Other联动
+  watch('occupation', function(){
+    const otherRow = document.getElementById('occupationOtherRow');
+    if (otherRow) otherRow.style.display = this.value === 'OTHER' ? 'grid' : 'none';
+  });
 })();
 
 // ========== 进度条 ==========
-const coreFields = 80;
+const coreFields = 100;
 setInterval(() => {
   const inputs = document.querySelectorAll('input, select, textarea');
   let filled = 0;
@@ -1705,6 +2173,88 @@ function validateForm() {
     oks.push({ text: '安全背景问题全部回答 ✓' });
   }
 
+  // 9. Conditional required fields
+  // 9a. F/J/M visas → SEVIS ID required
+  if (vType === 'F1' || vType === 'F2' || vType === 'J1' || vType === 'J2' || vType === 'M1') {
+    if (!d.sevisId) {
+      errors.push({ text: 'F/J/M签证必须填写SEVIS ID（来自I-20或DS-2019表）' });
+    }
+    if (!d.sevisSchool) {
+      warnings.push({ text: 'F/J/M签证建议填写就读学校/项目名称' });
+    }
+  }
+
+  // 9b. Married → spouse info
+  if (d.maritalStatus === 'MARRIED' || d.maritalStatus === '已婚') {
+    if (!d.spouseSurname && !d.spouseGivenName) {
+      warnings.push({ text: '婚姻状况为已婚，建议填写配偶信息' });
+    }
+  }
+
+  // 9c. Has companion → companion details
+  if (d.hasCompanion === 'Yes' || d.hasCompanion.includes('Yes')) {
+    if (!d.companionDetails) {
+      errors.push({ text: '选择了有旅伴，必须填写旅伴详细信息' });
+    }
+  }
+
+  // 9d. Visa revoked → explanation
+  if (d.visaRevoked === 'Yes' || d.visaRevoked.includes('Yes')) {
+    if (!d.visaRevokedDetail) {
+      errors.push({ text: '签证曾被撤销，必须填写撤销详情说明' });
+    }
+  }
+
+  // 9e. Visa refused → explanation
+  if (d.visaRefused === 'Yes' || d.visaRefused.includes('Yes')) {
+    if (!d.visaRefusedExplain) {
+      errors.push({ text: '曾被拒签，必须填写拒签说明' });
+    }
+  }
+
+  // 9f. Lost passport → details
+  if (d.passportLost === 'Yes' || d.passportLost.includes('Yes')) {
+    if (!d.passportLostNo && !d.passportLostPlace) {
+      warnings.push({ text: '曾遗失护照，建议填写遗失护照号或遗失地点' });
+    }
+  }
+
+  // 9g. Contact relation OTHER → specify
+  if (d.contactRelation === 'OTHER') {
+    if (!d.contactRelationOther) {
+      errors.push({ text: '在美联系人关系选择了"其他"，必须具体说明关系' });
+    }
+  }
+
+  // 9h. Occupation OTHER → specify
+  if (d.occupation === 'OTHER') {
+    if (!d.occupationOther) {
+      errors.push({ text: '职业选择了"其他"，必须具体说明职业' });
+    }
+  }
+
+  // 10. English name validation — no Chinese in name fields
+  const nameFields = ['surname','givenName','otherSurnames','otherGivenNames','fatherSurname','fatherGivenName','motherSurname','motherGivenName','spouseSurname','spouseGivenName'];
+  nameFields.forEach(function(nf) {
+    if (d[nf] && /[\u4e00-\u9fff\u3400-\u4dbf]/.test(d[nf])) {
+      errors.push({ text: '姓名字段含中文字符: ' + nf + '，请使用护照上的英文/拼音' });
+    }
+  });
+
+  // 11. National ID format (Chinese 18-digit)
+  if (d.nationalId && /^\d{17}[\dXx]$/.test(d.nationalId)) {
+    var nid = d.nationalId;
+    var weights2 = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+    var checkChars2 = '10X98765432';
+    var sum2 = 0;
+    for (var wi2 = 0; wi2 < 17; wi2++) sum2 += parseInt(nid[wi2]) * weights2[wi2];
+    if (checkChars2[sum2 % 11] !== nid[17].toUpperCase()) {
+      errors.push({ text: '身份证号校验位不正确，请核实（最后一位应为' + checkChars2[sum2 % 11] + '）' });
+    } else {
+      oks.push({ text: '身份证号格式校验通过 ✓' });
+    }
+  }
+
   // 9. Build result modal
   const totalIssues = criticals.length + errors.length + warnings.length;
   const allItems = [
@@ -1774,9 +2324,55 @@ function showValModal(title, score, items, allClear) {
   document.body.appendChild(overlay);
 }
 
-// ========== 自动保存 ==========
-let saveTimer = null;
+// ========== 自动保存（含敏感数据混淆） ==========
+var saveTimer = null;
 const SAVE_DRAFT_KEY = 'ds160_form_draft';
+const SAVE_VERSIONS_KEY = 'ds160_form_versions';
+const MAX_VERSIONS = 3;
+
+// ── 敏感字段列表（存储时混淆处理） ──
+const SENSITIVE_FIELDS = ['passportNo','nationalId','ssn','taxpayerId','passportBookNo'];
+
+// ── 简单混淆/解混淆（Base64 + 反转，防止明文暴露） ──
+function obfuscate(str) {
+  if (!str) return '';
+  try { return btoa(str.split('').reverse().join('')); } catch(e) { return str; }
+}
+function deobfuscate(str) {
+  if (!str) return '';
+  try { return atob(str).split('').reverse().join(''); } catch(e) { return str; }
+}
+
+// ── 保存前混淆敏感字段 ──
+function obfuscateData(data) {
+  var copy = Object.assign({}, data);
+  SENSITIVE_FIELDS.forEach(function(f) {
+    if (copy[f]) copy[f] = '__enc__' + obfuscate(copy[f]);
+  });
+  return copy;
+}
+
+// ── 读取后解混淆敏感字段 ──
+function deobfuscateData(data) {
+  var copy = Object.assign({}, data);
+  SENSITIVE_FIELDS.forEach(function(f) {
+    if (copy[f] && copy[f].startsWith('__enc__')) {
+      copy[f] = deobfuscate(copy[f].substring(7));
+    }
+  });
+  return copy;
+}
+
+// ── 版本化自动保存（保留最近3个版本） ──
+function saveDraftVersion(data) {
+  try {
+    var versions = JSON.parse(localStorage.getItem(SAVE_VERSIONS_KEY) || '[]');
+    versions.push({ ts: Date.now(), data: data });
+    // 只保留最近3个版本
+    if (versions.length > MAX_VERSIONS) versions = versions.slice(versions.length - MAX_VERSIONS);
+    localStorage.setItem(SAVE_VERSIONS_KEY, JSON.stringify(versions));
+  } catch(e) {}
+}
 
 function autoSave() {
   const el = document.getElementById('saveIndicator');
@@ -1794,14 +2390,26 @@ function autoSave() {
       for (let [k, v] of fd) {
         if (v && v.toString().trim()) data[k] = v.toString().trim();
       }
-      localStorage.setItem(SAVE_DRAFT_KEY, JSON.stringify(data));
+      // 混淆敏感字段后存储
+      const safeData = obfuscateData(data);
+      localStorage.setItem(SAVE_DRAFT_KEY, JSON.stringify(safeData));
       localStorage.setItem(SAVE_DRAFT_KEY + '_ts', Date.now().toString());
 
-      // Also sync individual fields for assessment page
+      // Also sync individual fields for assessment page（敏感字段不单独存储）
       for (let [k, v] of fd) {
-        if (v && v.toString().trim()) {
+        if (v && v.toString().trim() && SENSITIVE_FIELDS.indexOf(k) === -1) {
           localStorage.setItem('ds160_' + k, v.toString().trim());
         }
+      }
+
+      // 版本化保存（每5分钟存一个版本）
+      var lastVerTs = 0;
+      try {
+        var vers = JSON.parse(localStorage.getItem(SAVE_VERSIONS_KEY) || '[]');
+        if (vers.length > 0) lastVerTs = vers[vers.length - 1].ts;
+      } catch(e) {}
+      if (Date.now() - lastVerTs > 5 * 60 * 1000) {
+        saveDraftVersion(safeData);
       }
 
       const t = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -1829,6 +2437,7 @@ function getSaveTime() {
   } catch (e) { return '未知时间'; }
 }
 
+// ── 改进的草稿恢复提示（带版本选择） ──
 function restoreDraftPrompt() {
   try {
     const raw = localStorage.getItem(SAVE_DRAFT_KEY);
@@ -1836,16 +2445,19 @@ function restoreDraftPrompt() {
     const data = JSON.parse(raw);
     if (!data || Object.keys(data).length === 0) return;
 
+    // 解混淆敏感字段
+    const plainData = deobfuscateData(data);
+
     const t = getSaveTime();
-    const fields = Object.keys(data).length;
-    if (confirm('📋 检测到上次填写的数据（' + fields + '个字段，' + t + '）\n\n是否恢复继续填写？')) {
-      for (let [k, v] of Object.entries(data)) {
-        const el = document.querySelector('[name="' + k + '"]');
-        if (el && !el.value) {
-          if (el.type === 'checkbox') el.checked = v === 'on' || v === 'true';
-          else el.value = v;
-        }
-      }
+    const fields = Object.keys(plainData).length;
+
+    // 检查是否有历史版本
+    var versions = [];
+    try { versions = JSON.parse(localStorage.getItem(SAVE_VERSIONS_KEY) || '[]'); } catch(e) {}
+    var versionInfo = versions.length > 1 ? ('\n\n📦 可用版本: ' + versions.length + ' 个') : '';
+
+    if (confirm('📋 检测到上次填写的数据（' + fields + '个字段，' + t + '）' + versionInfo + '\n\n是否恢复继续填写？')) {
+      restoreFormData(plainData);
       const el = document.getElementById('saveIndicator');
       if (el) { el.textContent = '✅ 已恢复 ' + fields + '个字段'; el.className = 'save-indicator saved'; }
     } else {
@@ -1857,6 +2469,97 @@ function restoreDraftPrompt() {
     // corrupted data, ignore
   }
 }
+
+function restoreFormData(data) {
+  for (let [k, v] of Object.entries(data)) {
+    const el = document.querySelector('[name="' + k + '"]');
+    if (el) {
+      if (el.type === 'checkbox') el.checked = v === 'on' || v === 'true';
+      else if (el.type === 'radio') {
+        var radio = document.querySelector('[name="'+k+'"][value="'+v+'"]');
+        if (radio) radio.checked = true;
+      }
+      else el.value = v;
+    }
+  }
+  // 触发条件显示元素的更新
+  ['mailingAddrSame','hasCompanion','prevUSTravel','visaRevoked','contactRelation','occupation','travelPlans','passportLost'].forEach(function(name) {
+    var el = document.querySelector('[name="'+name+'"]');
+    if (el) el.dispatchEvent(new Event('change'));
+  });
+}
+
+// ── JSON 导出 ──
+function exportJSON() {
+  try {
+    const form = document.getElementById('ds160Form');
+    const fd = new FormData(form);
+    const data = {};
+    for (let [k, v] of fd) {
+      if (v && v.toString().trim()) data[k] = v.toString().trim();
+    }
+    data._exportTime = new Date().toISOString();
+    data._exportVersion = '2.0';
+    // 导出时混淆敏感字段
+    var safeExport = obfuscateData(data);
+
+    const blob = new Blob([JSON.stringify(safeExport, null, 2)], { type: 'application/json;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'DS160_' + (data.surname || 'data') + '_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch(e) {
+    alert('导出失败: ' + e.message);
+  }
+}
+
+// ── JSON 导入 ──
+function importJSON() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        // 删除元数据字段
+        delete data._exportTime;
+        delete data._exportVersion;
+        // 解混淆敏感字段
+        var plainData = deobfuscateData(data);
+
+        var fieldCount = Object.keys(plainData).length;
+        if (confirm('📄 读取到 ' + fieldCount + ' 个字段数据\n\n是否导入并覆盖当前表单？（空字段不会被覆盖）')) {
+          restoreFormData(plainData);
+          var el = document.getElementById('saveIndicator');
+          if (el) { el.textContent = '✅ 已导入 ' + fieldCount + '个字段'; el.className = 'save-indicator saved'; }
+          autoSave();
+        }
+      } catch(err) {
+        alert('导入失败: 文件格式不正确，请确保是DS-160导出的JSON文件');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ── beforeunload 离开提醒 ──
+window.addEventListener('beforeunload', function(e) {
+  var form = document.getElementById('ds160Form');
+  if (!form) return;
+  var fd = new FormData(form);
+  var filled = 0;
+  for (var kv of fd) { if (kv[1] && kv[1].toString().trim()) filled++; }
+  if (filled > 5) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 // Attach auto-save listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -1933,315 +2636,313 @@ async function printPDF() {
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW = 190;
-    const margin = 10;
-    let y = 12;
+
+    // ── Build form data HTML for html2canvas rendering (full Chinese support) ──
+    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fieldRow(label, value) {
+      if (!value) value = 'N/A';
+      return '<tr><td class="fl">'+esc(label)+'</td><td class="fv">'+esc(value)+'</td></tr>';
+    }
+    function sectionHead(title) {
+      return '</table><div class="sec">'+esc(title)+'</div><table class="ftable">';
+    }
+    function spacerRow() {
+      return '<tr><td colspan="2" style="height:8px;"></td></tr>';
+    }
+
+    // Build all sections HTML
+    var formHTML = '<div id="__pdfForm" style="width:760px;background:#fff;font-family:\'Microsoft YaHei\',\'PingFang SC\',Arial,sans-serif;color:#1e293b;line-height:1.6;padding:0;">';
 
     // Title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text('U.S. DEPARTMENT of STATE', 105, y, { align: 'center' }); y += 5;
-    doc.text('CONSULAR ELECTRONIC APPLICATION CENTER', 105, y, { align: 'center' }); y += 6;
-    doc.setFontSize(10);
-    doc.text('Online Nonimmigrant Visa Application (DS-160)', 105, y, { align: 'center' }); y += 4;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(100);
-    doc.text('Preview generated by ' + new Date().toLocaleString('zh-CN'), 105, y, { align: 'center' }); y += 3;
-    doc.text('FOR REFERENCE ONLY — Submit at ceac.state.gov', 105, y, { align: 'center' });
-    doc.setTextColor(0);
-    y += 6;
+    formHTML += '<div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:28px 24px 18px;text-align:center;">'+
+      '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:2px;">U.S. DEPARTMENT OF STATE</div>'+
+      '<div style="font-size:11px;color:#94a3b8;margin-top:4px;">CONSULAR ELECTRONIC APPLICATION CENTER</div>'+
+      '<div style="font-size:12px;color:#cbd5e1;margin-top:6px;">Online Nonimmigrant Visa Application (DS-160)</div>'+
+      '<div style="font-size:10px;color:#64748b;margin-top:4px;">预览生成于 '+new Date().toLocaleString('zh-CN')+' · 仅供参考 — 请至 ceac.state.gov 提交</div></div>';
 
-    function drawLine() { y += 0.5; doc.setDrawColor(180); doc.line(margin, y, margin + pageW, y); y += 1; }
-    function newPage() { doc.addPage(); y = 12; }
+    formHTML += '<style>'+
+      '.ftable{width:100%;border-collapse:collapse;margin:0 20px;}'+
+      '.fl{width:38%;padding:5px 10px;font-weight:700;font-size:11px;color:#1e3a5f;border-bottom:1px solid #f1f5f9;vertical-align:top;}'+
+      '.fv{width:62%;padding:5px 10px;font-size:11px;color:#334155;border-bottom:1px solid #f1f5f9;vertical-align:top;word-break:break-all;}'+
+      '.sec{background:#e8f0fe;padding:6px 12px;font-weight:800;font-size:12px;color:#1a56db;margin:12px 20px 0;border-radius:4px 4px 0 0;}'+
+      '</style>';
 
-    function section(title) {
-      if (y > 260) newPage();
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setFillColor(235, 240, 255);
-      doc.rect(margin, y, pageW, 5, 'F');
-      doc.setTextColor(26, 86, 219);
-      doc.text(title, margin + 2, y + 3.5);
-      doc.setTextColor(0);
-      y += 7;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-    }
-
-    function field(label, value) {
-      if (!value) value = 'N/A';
-      if (y > 270) newPage();
-      const labelW = 65;
-      // Truncate value if too long
-      const maxLen = 80;
-      if (value.length > maxLen) value = value.substring(0, maxLen) + '...';
-
-      doc.setFont('helvetica', 'bold');
-      doc.text(label + ':', margin + 2, y + 3);
-      doc.setFont('helvetica', 'normal');
-      doc.text(value.substring(0, 85), margin + 2 + labelW, y + 3);
-      y += 4.5;
-    }
-
-    function spacer() { y += 3; }
+    formHTML += '<table class="ftable">';
 
     // ===== Section 1 =====
-    section('1. Personal Information 1');
-    field('Surnames', data.surname);
-    field('Given Names', data.givenName);
-    field('Full Name in Native Alphabet', data.nativeName);
-    if (data.otherSurnames) field('Other Surnames', data.otherSurnames);
-    field('Sex', data.sex);
-    field('Marital Status', data.maritalStatus);
-    field('Date of Birth', data.dob);
-    field('Place of Birth', (data.birthCity||'') + ', ' + (data.birthState||'') + ', ' + (data.birthCountry||''));
-    spacer();
+    formHTML += sectionHead('1. 个人信息(一) Personal Information 1');
+    formHTML += fieldRow('姓氏 (Surnames)', data.surname);
+    formHTML += fieldRow('名字 (Given Names)', data.givenName);
+    formHTML += fieldRow('中文全名 (Full Name in Native Alphabet)', data.nativeName);
+    if (data.otherSurnames) formHTML += fieldRow('曾用姓氏 (Other Surnames)', data.otherSurnames);
+    if (data.otherGivenNames) formHTML += fieldRow('曾用名 (Other Given Names)', data.otherGivenNames);
+    formHTML += fieldRow('性别 (Sex)', data.sex);
+    formHTML += fieldRow('婚姻状况 (Marital Status)', data.maritalStatus);
+    formHTML += fieldRow('出生日期 (Date of Birth)', data.dob);
+    formHTML += fieldRow('出生地点 (Place of Birth)', (data.birthCity||'') + ', ' + (data.birthState||'') + ', ' + (data.birthCountry||''));
+    formHTML += spacerRow();
 
     // ===== Section 2 =====
-    section('2. Personal Information 2');
-    field('Nationality', data.nationality);
-    field('Other Nationalities', data.otherNationality || 'No');
-    field('National ID Number', data.nationalId || 'N/A');
-    field('U.S. Social Security Number', data.ssn || 'Does Not Apply');
-    field('U.S. Taxpayer ID', data.taxpayerId || 'Does Not Apply');
-    spacer();
+    formHTML += sectionHead('2. 个人信息(二) Personal Information 2');
+    formHTML += fieldRow('国籍 (Nationality)', data.nationality);
+    formHTML += fieldRow('其他国籍 (Other Nationality Held)', data.otherNationality || 'No');
+    formHTML += fieldRow('身份证号 (National ID Number)', data.nationalId || 'N/A');
+    formHTML += fieldRow('美国社保号 (U.S. SSN)', data.ssn || 'Does Not Apply');
+    formHTML += fieldRow('纳税人号 (U.S. Taxpayer ID)', data.taxpayerId || 'Does Not Apply');
+    formHTML += spacerRow();
 
     // ===== Section 3 =====
-    section('3. Address and Phone');
-    field('Home Address', data.addrLine1);
-    if (data.addrLine2) field('Address Line 2', data.addrLine2);
-    field('City', data.addrCity);
-    field('State/Province', data.addrState);
-    field('Postal Code', data.addrZip);
-    field('Country', data.addrCountry);
-    field('Primary Phone', data.phone);
-    if (data.phone2) field('Secondary Phone', data.phone2);
-    field('Email', data.email);
-    spacer();
+    formHTML += sectionHead('3. 地址和联系方式 Address and Phone');
+    formHTML += fieldRow('家庭住址 (Home Address)', data.addrLine1);
+    if (data.addrLine2) formHTML += fieldRow('住址第二行 (Address Line 2)', data.addrLine2);
+    formHTML += fieldRow('城市 (City)', data.addrCity);
+    formHTML += fieldRow('省份 (State/Province)', data.addrState);
+    formHTML += fieldRow('邮编 (Postal Code)', data.addrZip);
+    formHTML += fieldRow('国家 (Country)', data.addrCountry);
+    formHTML += fieldRow('邮寄地址一致 (Mailing Address Same)', data.mailingAddrSame || 'Yes');
+    if ((data.mailingAddrSame||'').includes('No')) {
+      formHTML += fieldRow('邮寄地址 (Mailing Address)', data.mailingAddrLine1);
+      if (data.mailingAddrCity) formHTML += fieldRow('邮寄城市 (Mailing City)', data.mailingAddrCity);
+      if (data.mailingAddrState) formHTML += fieldRow('邮寄省份 (Mailing State)', data.mailingAddrState);
+      if (data.mailingAddrZip) formHTML += fieldRow('邮寄邮编 (Mailing ZIP)', data.mailingAddrZip);
+      if (data.mailingAddrCountry) formHTML += fieldRow('邮寄国家 (Mailing Country)', data.mailingAddrCountry);
+    }
+    formHTML += fieldRow('主要电话 (Primary Phone)', data.phone);
+    if (data.phone2) formHTML += fieldRow('备用电话 (Secondary Phone)', data.phone2);
+    formHTML += fieldRow('电子邮箱 (Email)', data.email);
+    formHTML += spacerRow();
 
     // ===== Section 4 =====
-    section('4. Passport Information');
-    field('Passport Type', data.passportType);
-    field('Passport Number', data.passportNo);
-    field('Country of Issuance', data.passportCountry);
-    field('City of Issuance', data.passportCity);
-    field('Issuance Date', data.passportIssue);
-    field('Expiration Date', data.passportExpiry);
-    spacer();
+    formHTML += sectionHead('4. 护照信息 Passport Information');
+    formHTML += fieldRow('护照类型 (Passport Type)', data.passportType);
+    formHTML += fieldRow('护照号码 (Passport Number)', data.passportNo);
+    formHTML += fieldRow('签发国 (Country of Issuance)', data.passportCountry);
+    formHTML += fieldRow('签发城市 (City of Issuance)', data.passportCity);
+    formHTML += fieldRow('签发日期 (Issuance Date)', data.passportIssue);
+    formHTML += fieldRow('有效期至 (Expiration Date)', data.passportExpiry);
+    formHTML += spacerRow();
 
     // ===== Section 5 =====
-    section('5. Travel Information');
-    field('Purpose of Trip', data.tripPurpose);
-    field('Visa Type', data.visaType);
-    field('Intended Arrival Date', data.arrivalDate);
-    field('Length of Stay', data.stayLength);
-    field('U.S. Address', data.usAddrLine1);
-    field('U.S. City', data.usAddrCity);
-    field('U.S. State', data.usAddrState);
-    field('U.S. ZIP Code', data.usAddrZip);
-    field('Trip Payer', data.tripPayer);
-    spacer();
+    formHTML += sectionHead('5. 旅行信息 Travel Information');
+    formHTML += fieldRow('旅行目的 (Purpose of Trip)', data.tripPurpose);
+    formHTML += fieldRow('签证类型 (Visa Type)', data.visaType);
+    formHTML += fieldRow('预计抵达日期 (Intended Arrival Date)', data.arrivalDate);
+    formHTML += fieldRow('停留天数 (Length of Stay)', data.stayLength);
+    if (data.travelPlans) formHTML += fieldRow('行程安排 (Travel Plans)', data.travelPlans);
+    if (data.travelPlaces) formHTML += fieldRow('旅行地点 (Travel Destinations)', data.travelPlaces);
+    if ((data.travelPlans||'').includes('Yes')) {
+      if (data.arrivalFlight) formHTML += fieldRow('抵达航班 (Arrival Flight)', data.arrivalFlight);
+      if (data.departureDate) formHTML += fieldRow('离境日期 (Departure Date)', data.departureDate);
+      if (data.departureFlight) formHTML += fieldRow('离境航班 (Departure Flight)', data.departureFlight);
+    }
+    formHTML += fieldRow('在美住址 (U.S. Address)', data.usAddrLine1);
+    formHTML += fieldRow('在美城市 (U.S. City)', data.usAddrCity);
+    formHTML += fieldRow('在美州名 (U.S. State)', data.usAddrState);
+    formHTML += fieldRow('在美邮编 (U.S. ZIP Code)', data.usAddrZip);
+    formHTML += fieldRow('旅行费用支付 (Trip Payer)', data.tripPayer);
+    formHTML += spacerRow();
 
     // ===== Section 6 =====
-    section('6. Travel Companions');
-    field('Traveling with Others', data.hasCompanion || 'No');
-    if (data.companionDetails) field('Companion Details', data.companionDetails);
-    spacer();
+    formHTML += sectionHead('6. 旅伴信息 Travel Companions');
+    formHTML += fieldRow('是否有旅伴 (Traveling with Others)', data.hasCompanion || 'No');
+    if (data.companionDetails) formHTML += fieldRow('旅伴详情 (Companion Details)', data.companionDetails);
+    formHTML += spacerRow();
 
     // ===== Section 7 =====
-    section('7. Previous U.S. Travel');
-    field('Previously in the U.S.', data.prevUSTravel || 'No');
-    if (data.prevTravelRecord) field('Previous Travel Record', data.prevTravelRecord);
-    field('U.S. Driver License', data.usDriverLicense || 'No');
-    field('Previous U.S. Visa', data.prevVisa || 'No');
-    field('Visa Ever Revoked', data.visaRevoked || 'No');
-    spacer();
+    formHTML += sectionHead('7. 赴美历史 Previous U.S. Travel');
+    formHTML += fieldRow('曾赴美 (Previously in the U.S.)', data.prevUSTravel || 'No');
+    if (data.prevTravelRecord) formHTML += fieldRow('赴美记录 (Previous Travel Record)', data.prevTravelRecord);
+    formHTML += fieldRow('曾获美签 (Previous U.S. Visa)', data.prevVisa || 'No');
+    formHTML += fieldRow('签证曾被撤销 (Visa Ever Revoked)', data.visaRevoked || 'No');
+    if ((data.visaRevoked||'').includes('Yes') && data.visaRevokedDetail) formHTML += fieldRow('撤销详情 (Revocation Details)', data.visaRevokedDetail);
+    formHTML += spacerRow();
 
     // ===== Section 8 =====
-    section('8. U.S. Point of Contact');
-    field('Contact Type', data.contactType);
-    field('Contact Name', data.contactName);
-    if (data.contactOrg) field('Organization', data.contactOrg);
-    field('Relationship', data.contactRelation);
-    if (data.contactAddr) field('Contact Address', data.contactAddr);
-    if (data.contactPhone) field('Contact Phone', data.contactPhone);
-    if (data.contactEmail) field('Contact Email', data.contactEmail);
-    spacer();
+    formHTML += sectionHead('8. 在美联系人 U.S. Point of Contact');
+    formHTML += fieldRow('联系人类型 (Contact Type)', data.contactType);
+    formHTML += fieldRow('联系人姓名 (Contact Name)', data.contactName);
+    if (data.contactOrg) formHTML += fieldRow('机构 (Organization)', data.contactOrg);
+    formHTML += fieldRow('关系 (Relationship)', data.contactRelation);
+    if ((data.contactRelation||'') === 'OTHER' && data.contactRelationOther) formHTML += fieldRow('其他关系 (Relationship - Other)', data.contactRelationOther);
+    if (data.contactAddr) formHTML += fieldRow('联系人地址 (Contact Address)', data.contactAddr);
+    if (data.contactCity) formHTML += fieldRow('联系人城市 (Contact City)', data.contactCity);
+    if (data.contactState) formHTML += fieldRow('联系人州 (Contact State)', data.contactState);
+    if (data.contactZip) formHTML += fieldRow('联系人邮编 (Contact ZIP)', data.contactZip);
+    if (data.contactPhone) formHTML += fieldRow('联系人电话 (Contact Phone)', data.contactPhone);
+    if (data.contactEmail) formHTML += fieldRow('联系人邮箱 (Contact Email)', data.contactEmail);
+    formHTML += spacerRow();
 
     // ===== Section 9 =====
-    section('9. Family Information');
-    field('Father', (data.fatherSurname||'') + ' ' + (data.fatherGivenName||''));
-    field('Father DOB', data.fatherDob || 'N/A');
-    field('Father in U.S.', data.fatherInUS || 'No');
-    field('Mother', (data.motherSurname||'') + ' ' + (data.motherGivenName||''));
-    field('Mother DOB', data.motherDob || 'N/A');
-    field('Mother in U.S.', data.motherInUS || 'No');
-    field('Immediate Relatives in U.S.', data.relativeInUS || 'No');
-    spacer();
+    formHTML += sectionHead('9. 家庭信息 Family Information');
+    formHTML += fieldRow('父亲 (Father)', (data.fatherSurname||'') + ' ' + (data.fatherGivenName||''));
+    formHTML += fieldRow('父亲出生日期 (Father DOB)', data.fatherDob || 'N/A');
+    formHTML += fieldRow('父亲在美 (Father in U.S.)', data.fatherInUS || 'No');
+    formHTML += fieldRow('母亲 (Mother)', (data.motherSurname||'') + ' ' + (data.motherGivenName||''));
+    formHTML += fieldRow('母亲出生日期 (Mother DOB)', data.motherDob || 'N/A');
+    formHTML += fieldRow('母亲在美 (Mother in U.S.)', data.motherInUS || 'No');
+    formHTML += fieldRow('直系亲属在美 (Immediate Relatives in U.S.)', data.relativeInUS || 'No');
+    formHTML += spacerRow();
 
     // ===== Section 10 =====
-    section('10. Work / Education / Training');
-    field('Primary Occupation', data.occupation);
-    field('Employer / School', data.employerName);
-    if (data.employerAddr) field('Address', data.employerAddr);
-    if (data.monthlySalary) field('Monthly Salary (CNY)', data.monthlySalary);
-    if (data.jobDuties) field('Duties', data.jobDuties);
-    spacer();
+    formHTML += sectionHead('10. 工作/教育 Work / Education / Training');
+    formHTML += fieldRow('主要职业 (Primary Occupation)', data.occupation);
+    if ((data.occupation||'') === 'OTHER' && data.occupationOther) formHTML += fieldRow('其他职业 (Occupation - Other)', data.occupationOther);
+    formHTML += fieldRow('雇主/学校 (Employer/School)', data.employerName);
+    if (data.employerAddr) formHTML += fieldRow('地址 (Address)', data.employerAddr);
+    if (data.workCity) formHTML += fieldRow('工作城市 (Work City)', data.workCity);
+    if (data.workState) formHTML += fieldRow('工作省份 (Work State/Province)', data.workState);
+    if (data.workZip) formHTML += fieldRow('工作邮编 (Work Postal Code)', data.workZip);
+    if (data.workPhone) formHTML += fieldRow('工作电话 (Work Phone)', data.workPhone);
+    formHTML += fieldRow('月薪 (Monthly Salary, CNY)', data.monthlySalary || 'N/A');
+    if (data.jobDuties) formHTML += fieldRow('工作职责 (Duties)', data.jobDuties);
+    if (data.previouslyEmployed) formHTML += fieldRow('曾被雇佣 (Previously Employed)', data.previouslyEmployed);
+    formHTML += spacerRow();
 
     // ===== Section 11 =====
-    section('11. Security and Background');
-    const secQuestions = [
-      'Communicable disease, physical or mental disorder',
-      'Arrested or convicted for offense or crime',
-      'Illegal drug trade, production, or use',
-      'Prostitution or procurement of prostitutes',
-      'Terrorist activities involvement',
-      'Violated U.S. immigration law',
-      'Attempted to obtain visa by fraud',
-      'Deported from the United States',
-      'Abducted or detained a child',
-      'Participated in genocide or torture',
+    formHTML += sectionHead('11. 安全与背景 Security and Background');
+    var secQuestions = [
+      '传染病 (Communicable Disease)',
+      '逮捕或定罪 (Arrested or Convicted)',
+      '毒品交易 (Illegal Drug Trade)',
+      '卖淫 (Prostitution)',
+      '恐怖活动 (Terrorist Activities)',
+      '违反移民法 (Violated Immigration Law)',
+      '签证欺诈 (Visa Fraud)',
+      '驱逐出境 (Deported)',
+      '绑架儿童 (Child Abduction)',
+      '种族灭绝或酷刑 (Genocide or Torture)',
     ];
-    let allNo = true;
-    for (let i = 0; i < secQuestions.length; i++) {
-      const ans = data['security_q' + i] || 'No';
-      if (ans === 'Yes') allNo = false;
-      field((i+1) + '. ' + secQuestions[i], ans);
+    var allNo = true;
+    for (var qi = 0; qi < secQuestions.length; qi++) {
+      var ans = data['security_q' + qi] || 'No';
+      if (ans.includes('Yes')) allNo = false;
+      formHTML += fieldRow((qi+1) + '. ' + secQuestions[qi], ans);
     }
     if (allNo) {
-      if (y > 260) newPage();
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7);
-      doc.setTextColor(100);
-      doc.text('All security and background questions answered: No', margin + 2, y + 3);
-      doc.setTextColor(0);
-      y += 5;
+      formHTML += '<tr><td colspan="2" style="padding:4px 10px;font-size:10px;color:#64748b;font-style:italic;">所有安全与背景问题均回答: No</td></tr>';
     }
+    formHTML += spacerRow();
 
     // ===== Section 12: Passport Additional =====
     if (data.passportBookNo || data.passportLost) {
-      if (y > 250) { doc.addPage(); y = 12; }
-      section('12. Passport Additional Information');
-      if (data.passportBookNo) field('Passport Book Number', data.passportBookNo);
-      field('Ever Lost Passport', data.passportLost || 'No');
-      if ((data.passportLost||'') === 'Yes') {
-        if (data.passportLostNo) field('Lost Passport Number', data.passportLostNo);
-        if (data.passportLostPlace) field('Lost Passport Place', data.passportLostPlace);
+      formHTML += sectionHead('12. 护照补充信息 Passport Additional');
+      if (data.passportBookNo) formHTML += fieldRow('护照本编号 (Passport Book Number)', data.passportBookNo);
+      formHTML += fieldRow('曾遗失护照 (Ever Lost Passport)', data.passportLost || 'No');
+      if ((data.passportLost||'').includes('Yes')) {
+        if (data.passportLostNo) formHTML += fieldRow('遗失护照号 (Lost Passport Number)', data.passportLostNo);
+        if (data.passportLostPlace) formHTML += fieldRow('遗失地点 (Lost Passport Place)', data.passportLostPlace);
       }
-      spacer();
+      formHTML += spacerRow();
     }
 
     // ===== Section 13: US Travel History Detailed =====
-    if (y > 250) { doc.addPage(); y = 12; }
-    section('13. Previous US Travel History');
-    field('Had US Visa Before', data.hadUSVisa || 'N/A');
-    if (data.lastVisaDate) field('Last Visa Issue Date', data.lastVisaDate);
-    field('Ever Refused Visa', data.visaRefused || 'No');
-    if ((data.visaRefused||'') === 'Yes' && data.visaRefusedExplain) field('Refusal Explanation', data.visaRefusedExplain);
-    field('Ever Denied Entry', data.entryDenied || 'No');
-    field('Ever Overstayed', data.overstayed || 'No');
-    field('Immigration Violation', data.immigrationViolation || 'No');
-    if ((data.immigrationViolation||'') === 'Yes' && data.immigrationViolationExplain) field('Violation Explanation', data.immigrationViolationExplain);
-    spacer();
+    formHTML += sectionHead('13. 赴美旅行详细 Previous US Travel History');
+    formHTML += fieldRow('曾获美签 (Had US Visa Before)', data.hadUSVisa || 'N/A');
+    if (data.lastVisaDate) formHTML += fieldRow('上次签证日期 (Last Visa Issue Date)', data.lastVisaDate);
+    formHTML += fieldRow('曾被拒签 (Ever Refused Visa)', data.visaRefused || 'No');
+    if ((data.visaRefused||'').includes('Yes') && data.visaRefusedExplain) formHTML += fieldRow('拒签说明 (Refusal Explanation)', data.visaRefusedExplain);
+    formHTML += fieldRow('曾被拒绝入境 (Ever Denied Entry)', data.entryDenied || 'No');
+    formHTML += fieldRow('曾逾期滞留 (Ever Overstayed)', data.overstayed || 'No');
+    formHTML += fieldRow('移民违规 (Immigration Violation)', data.immigrationViolation || 'No');
+    if ((data.immigrationViolation||'').includes('Yes') && data.immigrationViolationExplain) formHTML += fieldRow('违规说明 (Violation Explanation)', data.immigrationViolationExplain);
+    formHTML += spacerRow();
 
     // ===== Section 14: Spouse Info =====
     if (data.spouseSurname || data.spouseGivenName) {
-      if (y > 250) { doc.addPage(); y = 12; }
-      section('14. Spouse Information');
-      field('Spouse Name', (data.spouseSurname||'') + ' ' + (data.spouseGivenName||''));
-      if (data.spouseDob) field('Spouse DOB', data.spouseDob);
-      if (data.spouseNationality) field('Spouse Nationality', data.spouseNationality);
-      if (data.spouseBirthCity) field('Spouse Birth Place', (data.spouseBirthCity||'') + ', ' + (data.spouseBirthCountry||''));
-      if (data.spouseAddress) field('Spouse Address', data.spouseAddress);
-      spacer();
+      formHTML += sectionHead('14. 配偶信息 Spouse Information');
+      formHTML += fieldRow('配偶姓名 (Spouse Name)', (data.spouseSurname||'') + ' ' + (data.spouseGivenName||''));
+      if (data.spouseDob) formHTML += fieldRow('配偶出生日期 (Spouse DOB)', data.spouseDob);
+      if (data.spouseNationality) formHTML += fieldRow('配偶国籍 (Spouse Nationality)', data.spouseNationality);
+      if (data.spouseBirthCity) formHTML += fieldRow('配偶出生地 (Spouse Birth Place)', (data.spouseBirthCity||'') + ', ' + (data.spouseBirthCountry||''));
+      if (data.spouseAddress) formHTML += fieldRow('配偶地址 (Spouse Address)', data.spouseAddress);
+      formHTML += spacerRow();
     }
 
     // ===== Section 15: SEVIS =====
     if (data.sevisId) {
-      if (y > 250) { doc.addPage(); y = 12; }
-      section('15. SEVIS Information');
-      field('SEVIS ID', data.sevisId);
-      if (data.sevisSchool) field('School/Program', data.sevisSchool);
-      if (data.sevisSchoolAddr) field('School Address', data.sevisSchoolAddr);
-      if (data.sevisMajor) field('Major/Course', data.sevisMajor);
-      spacer();
+      formHTML += sectionHead('15. SEVIS信息 SEVIS Information');
+      formHTML += fieldRow('SEVIS ID', data.sevisId);
+      if (data.sevisSchool) formHTML += fieldRow('学校/项目 (School/Program)', data.sevisSchool);
+      if (data.sevisSchoolAddr) formHTML += fieldRow('学校地址 (School Address)', data.sevisSchoolAddr);
+      if (data.sevisSchoolCity) formHTML += fieldRow('学校城市 (School City)', data.sevisSchoolCity);
+      if (data.sevisSchoolState) formHTML += fieldRow('学校所在州 (School State)', data.sevisSchoolState);
+      if (data.sevisSchoolZip) formHTML += fieldRow('学校邮编 (School ZIP Code)', data.sevisSchoolZip);
+      if (data.sevisMajor) formHTML += fieldRow('专业/课程 (Major/Course)', data.sevisMajor);
+      formHTML += spacerRow();
     }
 
     // ===== Section 16: Countries Visited =====
     if (data.countriesVisited) {
-      if (y > 240) { doc.addPage(); y = 12; }
-      section('16. Countries Visited (Past 5 Years)');
-      const cvList = data.countriesVisited.split('\n').filter(l=>l.trim());
-      cvList.forEach(c => { if (y > 270) { doc.addPage(); y = 12; } doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.text('• ' + c.trim(), margin+4, y+2); y += 4.5; });
-      spacer();
+      formHTML += sectionHead('16. 近5年访问国家 Countries Visited (Past 5 Years)');
+      var cvList = data.countriesVisited.split('\n').filter(function(l){return l.trim();});
+      formHTML += '<tr><td colspan="2" style="padding:5px 10px;font-size:11px;">'+cvList.map(function(c){return '• '+esc(c.trim());}).join('<br>')+'</td></tr>';
+      formHTML += spacerRow();
     }
 
     // ===== Section 17: Languages =====
-    if (data.primaryLanguage || data.englishLevel) {
-      if (y > 260) { doc.addPage(); y = 12; }
-      section('17. Languages');
-      if (data.primaryLanguage) field('Primary Language', data.primaryLanguage);
-      if (data.englishLevel) field('English Proficiency', data.englishLevel);
-      spacer();
+    if (data.primaryLanguage) {
+      formHTML += sectionHead('17. 语言能力 Languages');
+      if (data.primaryLanguage) formHTML += fieldRow('母语 (Primary Language)', data.primaryLanguage);
+      formHTML += spacerRow();
     }
 
     // ===== Section 18: Additional Contacts =====
     if (data.ref1Name || data.ref2Name) {
-      if (y > 250) { doc.addPage(); y = 12; }
-      section('18. Additional US Contacts');
-      if (data.ref1Name) {
-        field('Contact 1', data.ref1Name + ' | ' + (data.ref1Relation||'N/A') + ' | ' + (data.ref1Phone||'') + ' | ' + (data.ref1Email||''));
-      }
-      if (data.ref2Name) {
-        if (y > 270) { doc.addPage(); y = 12; }
-        field('Contact 2', data.ref2Name + ' | ' + (data.ref2Relation||'N/A') + ' | ' + (data.ref2Phone||'') + ' | ' + (data.ref2Email||''));
-      }
-      spacer();
+      formHTML += sectionHead('18. 额外在美联系人 Additional US Contacts');
+      if (data.ref1Name) formHTML += fieldRow('联系人1 (Contact 1)', data.ref1Name + ' | ' + (data.ref1Relation||'N/A') + ' | ' + (data.ref1Phone||'') + ' | ' + (data.ref1Email||''));
+      if (data.ref2Name) formHTML += fieldRow('联系人2 (Contact 2)', data.ref2Name + ' | ' + (data.ref2Relation||'N/A') + ' | ' + (data.ref2Phone||'') + ' | ' + (data.ref2Email||''));
+      formHTML += spacerRow();
     }
 
     // ===== Section 19-21: Military, Orgs, Skills =====
-    if ((data.militaryService||'') === 'Yes' || (data.orgMember||'') === 'Yes' || (data.specialTraining||'') === 'Yes') {
-      if (y > 250) { doc.addPage(); y = 12; }
-      section('19-21. Military / Organizations / Special Skills');
-      field('Military Service', data.militaryService || 'No');
-      if ((data.militaryService||'') === 'Yes') {
-        if (data.militaryCountry) field('  Country', data.militaryCountry);
-        if (data.militaryBranch) field('  Branch', data.militaryBranch);
-        if (data.militaryRank) field('  Rank', data.militaryRank);
-        if (data.militaryDates) field('  Service Dates', data.militaryDates);
+    if ((data.militaryService||'').includes('Yes') || (data.orgMember||'').includes('Yes') || (data.specialTraining||'').includes('Yes')) {
+      formHTML += sectionHead('19-21. 军事/组织/特殊技能 Military / Organizations / Special Skills');
+      formHTML += fieldRow('军事服役 (Military Service)', data.militaryService || 'No');
+      if ((data.militaryService||'').includes('Yes')) {
+        if (data.militaryCountry) formHTML += fieldRow('  国家 (Country)', data.militaryCountry);
+        if (data.militaryBranch) formHTML += fieldRow('  军种 (Branch)', data.militaryBranch);
+        if (data.militaryRank) formHTML += fieldRow('  军衔 (Rank)', data.militaryRank);
+        if (data.militaryDates) formHTML += fieldRow('  服役时间 (Service Dates)', data.militaryDates);
       }
-      field('Organization Member', data.orgMember || 'No');
-      if ((data.orgMember||'') === 'Yes' && data.orgName) field('  Org Details', data.orgName);
-      field('Special Training', data.specialTraining || 'No');
-      if ((data.specialTraining||'') === 'Yes' && data.specialTrainingExplain) field('  Training Details', data.specialTrainingExplain);
-      spacer();
+      formHTML += fieldRow('组织成员 (Organization Member)', data.orgMember || 'No');
+      if ((data.orgMember||'').includes('Yes') && data.orgName) formHTML += fieldRow('  组织详情 (Org Details)', data.orgName);
+      formHTML += fieldRow('特殊训练 (Special Training)', data.specialTraining || 'No');
+      if ((data.specialTraining||'').includes('Yes') && data.specialTrainingExplain) formHTML += fieldRow('  训练详情 (Training Details)', data.specialTrainingExplain);
+      formHTML += spacerRow();
     }
 
     // ===== Section 22: Previous Employment =====
     if (data.prevEmployer1) {
-      if (y > 240) { doc.addPage(); y = 12; }
-      section('22. Previous Employment (Past 5 Years)');
-      field('Employer 1', (data.prevEmployer1||'') + ' | ' + (data.prevJob1||'') + ' | ' + (data.prevEmpDates1||''));
-      if (data.prevEmpAddr1) field('  Address/Phone', data.prevEmpAddr1);
+      formHTML += sectionHead('22. 近5年工作经历 Previous Employment (Past 5 Years)');
+      formHTML += fieldRow('前雇主1 (Employer 1)', (data.prevEmployer1||'') + ' | ' + (data.prevJob1||'') + ' | ' + (data.prevEmpDates1||''));
+      if (data.prevEmpAddr1) formHTML += fieldRow('  地址 (Address)', data.prevEmpAddr1);
+      if (data.prevEmp1City || data.prevEmp1State) formHTML += fieldRow('  城市/州 (City/State)', (data.prevEmp1City||'') + ', ' + (data.prevEmp1State||'') + ' ' + (data.prevEmp1Zip||''));
+      if (data.prevEmp1Phone) formHTML += fieldRow('  电话 (Phone)', data.prevEmp1Phone);
+      if (data.prevSalary1) formHTML += fieldRow('  薪资 (Salary)', data.prevSalary1);
       if (data.prevEmployer2) {
-        if (y > 270) { doc.addPage(); y = 12; }
-        field('Employer 2', (data.prevEmployer2||'') + ' | ' + (data.prevJob2||'') + ' | ' + (data.prevEmpDates2||''));
-        if (data.prevEmpAddr2) field('  Address/Phone', data.prevEmpAddr2);
+        formHTML += fieldRow('前雇主2 (Employer 2)', (data.prevEmployer2||'') + ' | ' + (data.prevJob2||'') + ' | ' + (data.prevEmpDates2||''));
+        if (data.prevEmpAddr2) formHTML += fieldRow('  地址 (Address)', data.prevEmpAddr2);
+        if (data.prevEmp2City || data.prevEmp2State) formHTML += fieldRow('  城市/州 (City/State)', (data.prevEmp2City||'') + ', ' + (data.prevEmp2State||'') + ' ' + (data.prevEmp2Zip||''));
+        if (data.prevEmp2Phone) formHTML += fieldRow('  电话 (Phone)', data.prevEmp2Phone);
       }
-      spacer();
+      formHTML += spacerRow();
     }
 
     // ===== Section 23: Education =====
-    if (data.eduLevel || data.eduSchool) {
-      if (y > 255) { doc.addPage(); y = 12; }
-      section('23. Education History');
-      if (data.eduLevel) field('Highest Education Level', data.eduLevel);
-      if (data.eduSchool) field('Institution', data.eduSchool);
-      if (data.eduMajor) field('Major/Field', data.eduMajor);
-      if (data.eduYears) field('Years Attended', data.eduYears);
-      spacer();
+    if (data.eduSchool) {
+      formHTML += sectionHead('23. 教育背景 Education History');
+      if (data.eduSchool) formHTML += fieldRow('院校 (Institution)', data.eduSchool);
+      if (data.eduSchoolCity || data.eduSchoolState) formHTML += fieldRow('院校所在地 (School Location)', (data.eduSchoolCity||'') + ', ' + (data.eduSchoolState||'') + ' ' + (data.eduSchoolZip||'') + (data.eduSchoolCountry ? ', ' + data.eduSchoolCountry : ''));
+      if (data.eduMajor) formHTML += fieldRow('专业 (Major/Field)', data.eduMajor);
+      if (data.eduYears) formHTML += fieldRow('在读年限 (Years Attended)', data.eduYears);
+      formHTML += spacerRow();
     }
+
+    formHTML += '</table>';
+
+    // Footer
+    formHTML += '<div style="padding:12px 20px;border-top:2px solid #e2e8f0;margin-top:8px;text-align:center;font-size:9px;color:#94a3b8;">'+
+      'DS-160 表格预览 · 仅供参考，请至 ceac.state.gov 提交官方申请 · Generated by DS-160 智能填表助手</div></div>';
 
     // ═════════════ 面签风险评估 v3.0 (完整版) ═════════════
     (function(){
@@ -2256,8 +2957,8 @@ async function printPDF() {
       const hasRelUS=relUS==='yes'||relUS==='是';
       const hadVisaBefore=(data.hadUSVisa||'').toLowerCase()==='yes';
       const visaRefused=(data.visaRefused||'').toLowerCase()==='yes';
-      const military=(data.militaryService||'').toLowerCase()==='yes';
-      const specTrain=(data.specialTraining||'').toLowerCase()==='yes';
+      const military=(data.militaryService||'').includes('Yes');
+      const specTrain=(data.specialTraining||'').includes('Yes');
 
       // 8维度评分
       let s1=30; if(hasJob)s1+=15; else if(isStudent)s1+=10; if(isMarried)s1+=15; if(hasRelUS)s1-=20;
@@ -2322,13 +3023,11 @@ async function printPDF() {
       suggested.push('练习英语自我介绍和面签常见问题');
       if(overall>=60)suggested.push('充分准备，顺利出签！');
 
-      // --- 渲染到PDF (html2canvas完美中文+排版) ---
-      doc.addPage();
+      // --- Build assessment HTML ---
       var sc=overall,scC='#2ed573',scL='低风险',scD='材料整体扎实，面签通过率较高。';
       if(sc<60){scC='#ff5367';scL='高风险';scD='多项指标偏低，建议先优化材料再预约面签。';}
       else if(sc<80){scC='#ffae42';scL='中等风险';scD='存在薄弱环节，建议补充材料并加强应答准备。';}
 
-      // Build assessment HTML with premium design
       var dimsHTML=dims.map(function(d,i){
         var c='#'+d.color.map(function(v){return('0'+v.toString(16)).slice(-2);}).join('');
         var lvl=d.score>=80?'优秀':d.score>=60?'良好':'待加强';
@@ -2354,142 +3053,176 @@ async function printPDF() {
         '<div style="background:#f0fdf4;border-radius:8px;padding:8px 12px;">'+suggested.map(function(i){return'<div style="font-size:11px;color:#065f46;padding:3px 0;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;background:#059669;border-radius:50%;flex-shrink:0;"></span>'+i+'</div>';}).join('')+'</div></div>';
 
       var assessHTML='<div id="__pdfAssess" style="width:760px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);font-family:\"Microsoft YaHei\",\"PingFang SC\",Arial,sans-serif;color:#1f2937;line-height:1.7;">'+
-        // Header
         '<div style="background:linear-gradient(135deg,#1e3a5f 0%,#1a56db 50%,#3b82f6 100%);padding:28px 30px 22px;text-align:center;">'+
         '<div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:2px;">面签风险评估报告</div>'+
         '<div style="font-size:11px;color:#93c5fd;margin-top:4px;letter-spacing:1px;">VISA INTERVIEW RISK ASSESSMENT</div></div>'+
-        // Score card
         '<div style="margin:0 30px;margin-top:-16px;background:#ffffff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.08);padding:18px 22px;display:flex;align-items:center;gap:18px;">'+
         '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,'+scC+','+scC+'dd);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;box-shadow:0 4px 16px '+scC+'40;">'+sc+'</div>'+
         '<div><div style="font-weight:900;font-size:17px;color:#1f2937;">综合过签指数 <span style="color:'+scC+';">'+scL+'</span></div><div style="font-size:12px;color:#6b7280;margin-top:3px;">'+scD+'</div></div></div>'+
-        // Dimensions
         '<div style="margin:20px 30px 0;"><div style="font-weight:800;font-size:15px;color:#1f2937;margin-bottom:10px;display:flex;align-items:center;gap:8px;"><span style="display:inline-block;width:4px;height:18px;background:#1a56db;border-radius:2px;"></span>八维度评分</div>'+
         '<div style="display:flex;flex-direction:column;gap:6px;">'+dimsHTML+'</div></div>'+
-        // Risk + Checklist
         '<div style="margin:0 30px;">'+risksHTML+clHTML+'</div>'+
-        // Footer
         '<div style="margin:20px 30px 0;padding:16px 0;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af;">过签侠 v3.0 · 面签风险评估引擎 · 仅供参考，最终由签证官独立判断</div></div>';
 
-      // Render HTML to canvas via html2canvas, then embed
+      // --- Build confirmation page HTML (html2canvas for Chinese support) ---
+      var confirmHTML='<div id="__pdfConfirm" style="width:760px;background:#fff;font-family:\'Microsoft YaHei\',\'PingFang SC\',Arial,sans-serif;color:#1e293b;line-height:1.6;padding:30px 20px;">'+
+        '<div style="text-align:center;background:#f5f5ff;padding:16px 0;border-radius:8px;">'+
+        '<div style="font-size:14px;font-weight:700;color:#1a56db;">U.S. Department of State</div>'+
+        '<div style="font-size:10px;color:#64748b;margin-top:4px;">NONIMMIGRANT VISA APPLICATION</div></div>'+
+        '<div style="text-align:center;margin:20px 0;border:2px dashed #ccc;border-radius:8px;padding:20px;">'+
+        '<div style="font-size:8px;color:#9ca3af;">[ 条形码 - 提交至 ceac.state.gov 后由系统自动生成 ]</div></div>'+
+        '<div style="font-weight:800;font-size:12px;color:#1e3a5f;margin-bottom:8px;">Application Summary 申请摘要</div>'+
+        '<table style="width:100%;border-collapse:collapse;">'+
+        '<tr><td style="padding:4px 8px;font-weight:700;font-size:11px;color:#1e3a5f;border-bottom:1px solid #f1f5f9;width:40%;">Confirmation Number 确认号</td><td style="padding:4px 8px;font-size:11px;border-bottom:1px solid #f1f5f9;">AA'+Math.random().toString(36).toUpperCase().substring(2,12)+'</td></tr>'+
+        '<tr><td style="padding:4px 8px;font-weight:700;font-size:11px;color:#1e3a5f;border-bottom:1px solid #f1f5f9;">Applicant Name 申请人</td><td style="padding:4px 8px;font-size:11px;border-bottom:1px solid #f1f5f9;">'+esc(data.surname||'')+', '+esc(data.givenName||'')+'</td></tr>'+
+        '<tr><td style="padding:4px 8px;font-weight:700;font-size:11px;color:#1e3a5f;border-bottom:1px solid #f1f5f9;">Visa Type 签证类型</td><td style="padding:4px 8px;font-size:11px;border-bottom:1px solid #f1f5f9;">'+esc(data.visaType||data.tripPurpose||'N/A')+'</td></tr>'+
+        '<tr><td style="padding:4px 8px;font-weight:700;font-size:11px;color:#1e3a5f;border-bottom:1px solid #f1f5f9;">Passport Number 护照号</td><td style="padding:4px 8px;font-size:11px;border-bottom:1px solid #f1f5f9;">'+esc(data.passportNo||'N/A')+'</td></tr>'+
+        '<tr><td style="padding:4px 8px;font-weight:700;font-size:11px;color:#1e3a5f;border-bottom:1px solid #f1f5f9;">Date Generated 生成时间</td><td style="padding:4px 8px;font-size:11px;border-bottom:1px solid #f1f5f9;">'+new Date().toLocaleString('zh-CN')+'</td></tr>'+
+        '</table>'+
+        '<div style="margin-top:16px;border:2px solid #c83232;border-radius:6px;padding:10px 12px;background:#fef2f2;">'+
+        '<div style="font-size:10px;font-weight:700;color:#c83232;">⚠️ IMPORTANT: This is a PREVIEW generated for reference only.</div>'+
+        '<div style="font-size:9px;color:#64748b;margin-top:2px;">请至 https://ceac.state.gov 提交您的官方申请。</div></div>'+
+        '<div style="margin-top:12px;padding-top:8px;border-top:1px solid #e2e8f0;text-align:center;font-size:8px;color:#94a3b8;">Generated by DS-160 智能填表助手 + 过签侠面签评估 | Not an official US document<br>Submit online at: https://ceac.state.gov</div></div>';
+
+      // ── Render all HTML to PDF via html2canvas ──
+      // Create a hidden container with all three HTML blocks
       var tmpDiv=document.createElement('div');
-      tmpDiv.innerHTML=assessHTML;
       tmpDiv.style.position='absolute';tmpDiv.style.left='-9999px';tmpDiv.style.top='0';
+      tmpDiv.innerHTML=formHTML + assessHTML + confirmHTML;
       document.body.appendChild(tmpDiv);
+
+      var formEl=tmpDiv.querySelector('#__pdfForm');
       var assessEl=tmpDiv.querySelector('#__pdfAssess');
-
-      // Need async handling for html2canvas
-      var _saveData=data,_saveFn=function(canvas){
-        document.body.removeChild(tmpDiv);
-        var imgData=canvas.toDataURL('image/png');
-        var imgW=190,imgH=imgW*canvas.height/canvas.width;
-        doc.addImage(imgData,'PNG',10,12,imgW,imgH);
-        // Continue with DS-160 confirmation page
-        doc.addPage();
-        y=12;
-        doc.setFillColor(245,245,255);
-        doc.rect(margin-2,y-2,pageW+4,30,'F');
-        doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(26,86,219);
-        doc.text('U.S. Department of State',105,y+5,{align:'center'});
-        doc.setFontSize(8);doc.setTextColor(80);
-        doc.text('NONIMMIGRANT VISA APPLICATION',105,y+12,{align:'center'});y+=22;
-        doc.setTextColor(0);
-        doc.setDrawColor(200);doc.setLineDash([2,2],0);
-        doc.rect(margin+40,y,pageW-80,25);
-        doc.setLineDash([],0);
-        doc.setFontSize(6);doc.setTextColor(140);
-        doc.text('[ 条形码 - 提交至 ceac.state.gov 后由系统自动生成 ]',105,y+13,{align:'center'});y+=30;
-        doc.setFontSize(7);doc.setTextColor(0);
-        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Application Summary',margin,y);y+=5;
-        doc.setFont('helvetica','normal');doc.setFontSize(7);
-        field('Confirmation Number','AA'+Math.random().toString(36).toUpperCase().substring(2,12));
-        field('Applicant Name',(_saveData.surname||'')+', '+(_saveData.givenName||''));
-        field('Visa Type',_saveData.visaType||_saveData.tripPurpose||'N/A');
-        field('Passport Number',_saveData.passportNo||'N/A');
-        field('Date Generated',new Date().toLocaleString('zh-CN'));y+=4;
-        doc.setDrawColor(200,50,50);doc.rect(margin,y,pageW,14);
-        doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(200,50,50);
-        doc.text('IMPORTANT: This is a PREVIEW generated for reference only.',margin+2,y+3);y+=5;
-        doc.setFont('helvetica','normal');
-        doc.text('Submit your application at https://ceac.state.gov.',margin+2,y+3);y+=14;
-        doc.setTextColor(0);
-        if(y>240){doc.addPage();y=12;}
-        y+=5;doc.setDrawColor(0);doc.line(margin,y,margin+pageW,y);y+=4;
-        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(130);
-        doc.text('Generated by DS-160 Form Filler + 过签侠面签评估 | Not an official US document',105,y,{align:'center'});
-        y+=3.5;doc.text('Submit online at: https://ceac.state.gov',105,y,{align:'center'});doc.setTextColor(0);
-
-        // Save PDF
-        var fname='DS160_'+(_saveData.surname||'APPLICATION')+'_'+(_saveData.givenName||'')+'_面签评估.pdf';
-        var blob=doc.output('blob');
-        var url=URL.createObjectURL(blob);
-        var a=document.createElement('a');a.href=url;a.download=fname;a.style.display='none';
-        document.body.appendChild(a);a.click();
-        setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
-
-        // Save to localStorage
-        try{var fd2=new FormData(document.getElementById('ds160Form'));var sd={};for(var kv of fd2){if(kv[1])sd[kv[0]]=kv[1];}localStorage.setItem('ds160_form_data',JSON.stringify(sd));}catch(e){}
-        if(window.consumeToken)window.consumeToken();
-        try{fetch((window.API_BASE||'')+'/api/consume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:window.DS160_TOKEN||''})});}catch(e){}
-        saveCustomerRecord(_saveData);
-        showAssessmentPrompt();
-      };
+      var confirmEl=tmpDiv.querySelector('#__pdfConfirm');
 
       // Show loading overlay
       var loadTip=document.createElement('div');
       loadTip.id='__pdfLoading';loadTip.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#fff;padding:20px 32px;border-radius:12px;font-size:14px;z-index:9999;text-align:center;';
-      loadTip.innerHTML='⏳ 正在生成评估报告...<br><span style=\"font-size:11px;color:#aaa;\">请稍候</span>';
+      loadTip.innerHTML='⏳ 正在生成PDF报告（支持中文）...<br><span style="font-size:11px;color:#aaa;">请稍候，可能需要10-30秒</span>';
       document.body.appendChild(loadTip);
 
-      html2canvas(assessEl,{scale:1.5,backgroundColor:'#ffffff',logging:false}).then(function(canvas){
-        var tip=document.getElementById('__pdfLoading');if(tip)tip.remove();
-        _saveFn(canvas);
-      }).catch(function(e){
-        var tip=document.getElementById('__pdfLoading');if(tip)tip.remove();
-        document.body.removeChild(tmpDiv);
-        alert('评估报告生成失败: '+e.message);
-        doc.save('DS160_'+(data.surname||'APPLICATION')+'_'+(data.givenName||'')+'.pdf');
+      // Render form data first, then assessment, then confirmation — all via html2canvas
+      var _saveData=data;
+      var renderScale=1.5;
+
+      // Helper: render an element to canvas, add as PDF pages
+      function renderElementToPdf(el, callback) {
+        html2canvas(el, {scale:renderScale, backgroundColor:'#ffffff', logging:false}).then(function(canvas){
+          callback(canvas);
+        }).catch(function(e){
+          callback(null, e);
+        });
+      }
+
+      // Chain: form → assess → confirm → save
+      renderElementToPdf(formEl, function(formCanvas, err1) {
+        if (err1 || !formCanvas) {
+          document.body.removeChild(tmpDiv);
+          var tip=document.getElementById('__pdfLoading');if(tip)tip.remove();
+          alert('PDF表单数据渲染失败: '+(err1?err1.message:'未知错误'));
+          return;
+        }
+
+        // Add form pages to PDF (split tall canvas into A4 pages)
+        var imgW=190;
+        var imgH=imgW*formCanvas.height/formCanvas.width;
+        var pageH=277; // A4 usable height in mm
+        var pages=Math.ceil(imgH/pageH);
+        for (var p=0; p<pages; p++) {
+          if (p>0) doc.addPage();
+          // Calculate source crop for this page
+          var srcY=p*pageH*formCanvas.width/imgW;
+          var srcH=pageH*formCanvas.width/imgW;
+          if (srcY+srcH > formCanvas.height) srcH=formCanvas.height-srcY;
+          // Create a temporary canvas for this page slice
+          var pageCanvas=document.createElement('canvas');
+          pageCanvas.width=formCanvas.width;
+          pageCanvas.height=Math.min(srcH, formCanvas.height-srcY);
+          var pctx=pageCanvas.getContext('2d');
+          pctx.drawImage(formCanvas, 0, srcY, formCanvas.width, pageCanvas.height, 0, 0, formCanvas.width, pageCanvas.height);
+          var pageImgData=pageCanvas.toDataURL('image/png');
+          var thisPageH=imgW*pageCanvas.height/formCanvas.width;
+          doc.addImage(pageImgData,'PNG',10,10,imgW,thisPageH);
+        }
+
+        // Now render assessment
+        renderElementToPdf(assessEl, function(assessCanvas, err2) {
+          if (err2 || !assessCanvas) {
+            // Skip assessment, go to confirmation
+            renderConfirmation();
+            return;
+          }
+
+          // Add assessment pages
+          doc.addPage();
+          var aImgW=190;
+          var aImgH=aImgW*assessCanvas.height/assessCanvas.width;
+          var aPages=Math.ceil(aImgH/pageH);
+          for (var ap=0; ap<aPages; ap++) {
+            if (ap>0) doc.addPage();
+            var aSrcY=ap*pageH*assessCanvas.width/aImgW;
+            var aSrcH=pageH*assessCanvas.width/aImgW;
+            if (aSrcY+aSrcH > assessCanvas.height) aSrcH=assessCanvas.height-aSrcY;
+            var aPageCanvas=document.createElement('canvas');
+            aPageCanvas.width=assessCanvas.width;
+            aPageCanvas.height=Math.min(aSrcH, assessCanvas.height-aSrcY);
+            var apctx=aPageCanvas.getContext('2d');
+            apctx.drawImage(assessCanvas, 0, aSrcY, assessCanvas.width, aPageCanvas.height, 0, 0, assessCanvas.width, aPageCanvas.height);
+            var aPageImg=aPageCanvas.toDataURL('image/png');
+            var aThisH=aImgW*aPageCanvas.height/assessCanvas.width;
+            doc.addImage(aPageImg,'PNG',10,10,aImgW,aThisH);
+          }
+
+          renderConfirmation();
+        });
+
+        function renderConfirmation() {
+          renderElementToPdf(confirmEl, function(confirmCanvas, err3) {
+            // Remove hidden elements
+            document.body.removeChild(tmpDiv);
+            var tip=document.getElementById('__pdfLoading');if(tip)tip.remove();
+
+            if (confirmCanvas) {
+              doc.addPage();
+              var cImgW=190;
+              var cImgH=cImgW*confirmCanvas.height/confirmCanvas.width;
+              doc.addImage(confirmCanvas.toDataURL('image/png'),'PNG',10,12,cImgW,Math.min(cImgH,277));
+            }
+
+            // Save PDF
+            var fname='DS160_'+(_saveData.surname||'APPLICATION')+'_'+(_saveData.givenName||'')+'_面签评估.pdf';
+            var blob=doc.output('blob');
+            var url=URL.createObjectURL(blob);
+            var a=document.createElement('a');a.href=url;a.download=fname;a.style.display='none';
+            document.body.appendChild(a);a.click();
+            setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
+
+            // Save to localStorage（混淆敏感数据）
+            try{var fd2=new FormData(document.getElementById('ds160Form'));var sd={};for(var kv of fd2){if(kv[1])sd[kv[0]]=kv[1];}var safeSd=obfuscateData(sd);localStorage.setItem('ds160_form_data',JSON.stringify(safeSd));}catch(e){}
+            if(window.consumeToken)window.consumeToken();
+            try{fetch((window.API_BASE||'')+'/api/consume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:window.DS160_TOKEN||''})});}catch(e){}
+            saveCustomerRecord(_saveData);
+            showAssessmentPrompt();
+
+            // PDF下载后清除临时敏感数据（延迟30秒，确保文件已保存）
+            setTimeout(function(){
+              try {
+                // 清除单独存储的敏感字段
+                SENSITIVE_FIELDS.forEach(function(f) {
+                  localStorage.removeItem('ds160_' + f);
+                });
+              } catch(e) {}
+            }, 30000);
+          });
+        }
       });
 
-      // Return early - save logic is handled in _saveFn callback
+      // Return early - save logic is handled in callbacks
       return;
     })();
 
-    // ═════════════ 以下为html2canvas失败时的fallback ═════════════
-    // (正常情况不会执行到这里，因为在_saveFn中已完成PDF生成)
-    { let _fallback=1; if(_fallback)return; }
-
-    // 保存表单数据到localStorage（供面签评估页面使用）
-    try {
-      const form = document.getElementById('ds160Form');
-      const fd = new FormData(form);
-      const saveData = {};
-      for (let [k,v] of fd) { if(v) saveData[k] = v; }
-      localStorage.setItem('ds160_form_data', JSON.stringify(saveData));
-      // 也存关键字段（可被其他页面读取）
-      Object.keys(saveData).forEach(k => {
-        localStorage.setItem('ds160_'+k, saveData[k]);
-      });
-    } catch(e) {}
-
-    // 消耗Token - 标记此链接已被使用
-    if (window.consumeToken) window.consumeToken();
-
-    // 服务端消耗（部署了Express后端时生效）
-    try {
-      await fetch((window.API_BASE||'') + '/api/consume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: window.DS160_TOKEN || '' })
-      });
-    } catch(e) {
-      // 服务端不可用时，仅靠localStorage消耗（纯前端模式）
-    }
-
-    // 客户数据留存
-    saveCustomerRecord(data);
-
-    // 显示面签评估入口
-    showAssessmentPrompt();
+    // (正常情况不会执行到这里，因为在callback中已完成PDF生成)
+    return;
   } catch(e) {
     // jsPDF失败：降级为浏览器打印
     alert('PDF生成失败，改为浏览器打印。\n请按 Ctrl+P 或使用浏览器的打印功能保存为PDF。');
@@ -2561,8 +3294,12 @@ function resetForm() {
   if (confirm('确定要清空所有已填内容吗？此操作不可撤销！')) {
     document.getElementById('ds160Form').reset();
     document.querySelectorAll('.error').forEach(e => e.classList.remove('error'));
-    document.getElementById('companionNames').style.display = 'none';
-    document.getElementById('prevTravelDetails').style.display = 'none';
+    // Reset conditional display elements
+    var ids = ['companionNames','prevTravelDetails','mailingAddressDetail','flightInfoRow','visaRevokedDetail','contactRelationOtherRow','occupationOtherRow'];
+    ids.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
   }
 }
 
@@ -2597,19 +3334,19 @@ function runAssess() {
   const im = !!(m === 'married' || mR === '已婚' || mR === 'MARRIED');
   const iF = sx === 'female' || sx === 'f' || sx === '女';
   const hasJ = !!(o && o !== 'unemployed' && o !== 'retired' && o !== '无业' && o !== '退休' && o !== '学生' && o !== 'student');
-  const hasRel = rUS === 'yes' || rUS === '是';
+  const hasRel = rUS.toLowerCase() === 'yes' || rUS.includes('是');
   let age = 0;
   if (data.dob) { const d = new Date(data.dob); if (!isNaN(d.getTime())) { age = new Date().getFullYear() - d.getFullYear(); const n = new Date(); if (n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate())) age--; } }
 
   const dims = [
     { name: '国内约束力', icon: '🏠', score: 30 + (hasJ ? 15 : 0) + (im ? 15 : 0) - (hasRel ? 20 : 0), tip: '' },
     { name: '财务能力', icon: '💰', score: 25 + (sal >= 30000 ? 30 : sal >= 20000 ? 25 : sal >= 10000 ? 20 : sal >= 5000 ? 10 : 0) + ((data.tripPayer || '').toLowerCase() === 'self' ? 10 : 0) + (data.employerName ? 10 : 0), tip: '' },
-    { name: '旅行记录', icon: '✈️', score: 30 + ((data.prevUSTravel || data.prevVisa || '').toLowerCase() === 'yes' ? 25 : ((data.countriesVisited || '').split(/[\n,，]/).filter(Boolean).length > 0 ? 15 : 0)) + ((data.visaRevoked || '').toLowerCase() === 'yes' ? -30 : 0) + ((data.hadUSVisa || '').toLowerCase() === 'yes' && (data.visaRevoked || '').toLowerCase() !== 'yes' ? 10 : 0), tip: '' },
+    { name: '旅行记录', icon: '✈️', score: 30 + ((data.prevUSTravel || data.prevVisa || '').includes('Yes') ? 25 : ((data.countriesVisited || '').split(/[\n,，]/).filter(Boolean).length > 0 ? 15 : 0)) + ((data.visaRevoked || '').includes('Yes') ? -30 : 0) + ((data.hadUSVisa || '').includes('Yes') && (data.visaRevoked || '').includes('No') ? 10 : 0), tip: '' },
     { name: '背景稳定', icon: '🧭', score: 40 + (age >= 40 ? 25 : age >= 35 ? 20 : age >= 25 ? 15 : age >= 18 ? 5 : 0) + (im ? 10 : 0) - (iF && age < 30 && !im ? 5 : 0), tip: '' },
     { name: '目的合理', icon: '🎯', score: 35 + (v === 'F1' || v === 'F2' ? 15 : v === 'B1' || v === 'B2' || v === 'B1/B2' ? 10 : 0) + ((data.tripPurpose || '').length >= 10 ? 20 : (data.tripPurpose || '').length >= 3 ? 10 : 0) + ((parseInt(data.stayLength) > 0 && parseInt(data.stayLength) <= 30) ? 10 : (parseInt(data.stayLength) > 30 && parseInt(data.stayLength) <= 90) ? 5 : 0), tip: '' },
     { name: '材料完整', icon: '📋', score: 40 + Math.round(['surname', 'givenName', 'dob', 'passportNo', 'tripPurpose', 'contactName', 'occupation'].filter(k => data[k] && data[k].toString().trim()).length / 7 * 30) + (data.passportExpiry ? (new Date(data.passportExpiry) > new Date(Date.now() + 180 * 86400000) ? 10 : 0) : 0) + (data.email ? 5 : 0), tip: '' },
-    { name: '安全审查', icon: '🔐', score: 50 + ((data.hadUSVisa || '').toLowerCase() === 'yes' && (data.visaRefused || '').toLowerCase() !== 'yes' ? 15 : 0) + ((data.visaRefused || '').toLowerCase() === 'yes' ? -20 : 0) + ((data.militaryService || '').toLowerCase() === 'yes' ? -10 : 0) + ((data.specialTraining || '').toLowerCase() === 'yes' ? -15 : 0) + ((data.countriesVisited || '').length > 0 ? 5 : 0) + (data.organization ? -5 : 0), tip: '' },
-    { name: '时间节点', icon: '📅', score: 50 + ([5, 6, 7].includes(new Date().getMonth()) ? -10 : [10, 11].includes(new Date().getMonth()) ? -5 : 10) + ((data.hadUSVisa || '').toLowerCase() === 'yes' ? 10 : 0), tip: '' }
+    { name: '安全审查', icon: '🔐', score: 50 + ((data.hadUSVisa || '').includes('Yes') && (data.visaRefused || '').includes('No') ? 15 : 0) + ((data.visaRefused || '').includes('Yes') ? -20 : 0) + ((data.militaryService || '').includes('Yes') ? -10 : 0) + ((data.specialTraining || '').includes('Yes') ? -15 : 0) + ((data.countriesVisited || '').length > 0 ? 5 : 0) + (data.organization ? -5 : 0), tip: '' },
+    { name: '时间节点', icon: '📅', score: 50 + ([5, 6, 7].includes(new Date().getMonth()) ? -10 : [10, 11].includes(new Date().getMonth()) ? -5 : 10) + ((data.hadUSVisa || '').includes('Yes') ? 10 : 0), tip: '' }
   ];
   dims.forEach(d => { d.score = Math.max(0, Math.min(100, d.score)); d.color = d.score >= 80 ? '#2ed573' : d.score >= 60 ? '#ffae42' : '#ff5367'; });
 
@@ -2629,7 +3366,7 @@ function runAssess() {
   if (dims[4].score < 60) dims[4].tip = '赴美目的需更详细明确';
   else dims[4].tip = '目的明确计划清晰 ✅';
   if (data.passportExpiry) { const e = new Date(data.passportExpiry); const sm = new Date(); sm.setMonth(sm.getMonth() + 6); if (e <= sm) dims[5].tip = '⚠️ 护照有效期不足6个月！'; else dims[5].tip = '材料填写完整 ✅'; } else dims[5].tip = '材料填写完整 ✅';
-  const vR = (data.visaRefused || '').toLowerCase() === 'yes';
+  const vR = (data.visaRefused || '').includes('Yes');
   if (vR) dims[6].tip = '⚠️ 有拒签史，需针对性准备';
   else if (dims[6].score < 60) dims[6].tip = '安全审查风险偏高';
   else dims[6].tip = '安全审查低风险 ✅';
@@ -2648,7 +3385,7 @@ function runAssess() {
   if (vR) risks.push({ text: '有美国签证拒签史', action: '准备好解释"情况有何变化"的有力回答' });
   if (hasRel) risks.push({ text: '在美有亲属', action: '主动强调国内约束力——工作、配偶、子女、房产' });
   if (iF && age < 30 && !im) risks.push({ text: '年轻单身女性', action: '展示稳定工作、家庭纽带、清晰回国计划' });
-  if ((data.militaryService || '').toLowerCase() === 'yes' || (data.specialTraining || '').toLowerCase() === 'yes') risks.push({ text: '军事/特殊技能背景', action: '可能触发行政审查，准备详细说明材料' });
+  if ((data.militaryService || '').includes('Yes') || (data.specialTraining || '').includes('Yes')) risks.push({ text: '军事/特殊技能背景', action: '可能触发行政审查，准备详细说明材料' });
   if (dims[0].score < 50 && !hasRel) risks.push({ text: '国内约束力不足', action: '加强工作证明、房产证、家庭关系等材料' });
   const topRisks = risks.slice(0, 3);
 
@@ -2670,25 +3407,57 @@ function runAssess() {
   // Render
   document.getElementById('assessPanel').style.display = 'block';
   document.getElementById('assessContent').innerHTML = `
+    <!-- SVG Gradient Defs -->
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <linearGradient id="gradHi" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#2ed573"/>
+          <stop offset="100%" style="stop-color:#7bed9f"/>
+        </linearGradient>
+        <linearGradient id="gradMd" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ffae42"/>
+          <stop offset="100%" style="stop-color:#ffc048"/>
+        </linearGradient>
+        <linearGradient id="gradLo" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ff5367"/>
+          <stop offset="100%" style="stop-color:#ff7979"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
     <div class="as-score">
-      <div class="as-gauge ${asCls(overall)}">${overall}</div>
+      <div class="as-ring-wrap">
+        <svg viewBox="0 0 100 100">
+          <circle class="as-ring-bg" cx="50" cy="50" r="45"/>
+          <circle class="as-ring-fg ${asCls(overall)}" cx="50" cy="50" r="45"
+            style="stroke-dashoffset: ${283 - Math.round(283 * overall / 100)}; animation-delay: .2s;"/>
+        </svg>
+        <div class="as-ring-num ${asCls(overall)}">${overall}</div>
+      </div>
       <div class="as-verdict">
-        <span class="v${asCls(overall)}" style="font-size:18px;display:block;">${vt}</span>
-        <p style="margin-top:2px;">${vd}</p>
+        <span class="v${asCls(overall)}">${vt}</span>
+        <p>${vd}</p>
       </div>
     </div>
-    ${topRisks.length > 0 ? `<div class="as-risks"><h4>🔴 主要风险点</h4>${topRisks.map((r,i) => `<div class="ar-item"><strong>${i+1}. ${r.text}</strong><div class="ar-act">💡 ${r.action}</div></div>`).join('')}</div>` : ''}
-    <div class="as-dims">${dims.map(d => `
-      <div class="as-dim">
-        <div class="ad-top"><span>${d.icon}</span><span style="flex:1;font-weight:600;">${d.name}</span><span class="ad-score" style="color:${d.color}">${d.score}</span></div>
-        <div class="ad-bar"><div class="ad-fill" style="width:${d.score}%;background:${d.color}"></div></div>
+
+    ${topRisks.length > 0 ? `<div class="as-risks"><h4>主要风险点</h4>${topRisks.map((r,i) => `<div class="ar-item" style="animation-delay:${.1*(i+1)}s"><strong>${i+1}. ${r.text}</strong><div class="ar-act">💡 ${r.action}</div></div>`).join('')}</div>` : ''}
+
+    <div class="as-dims">${dims.map((d,i) => `
+      <div class="as-dim" style="animation-delay:${.08*i}s">
+        <div class="ad-top">
+          <span class="ad-icon">${d.icon}</span>
+          <span class="ad-name">${d.name}</span>
+          <span class="ad-score ${asCls(d.score)}">${d.score}</span>
+        </div>
+        <div class="ad-bar"><div class="ad-fill ${asCls(d.score)}" style="width:${d.score}%;animation-delay:${.3+.08*i}s"></div></div>
         <div class="ad-tip">${d.tip}</div>
       </div>`).join('')}</div>
+
     <div class="as-checklist">
       <h4>📋 面签行动清单</h4>
-      ${urgent.length ? urgent.map(i => `<div class="cl-item cl-urgent">🔴 ${i}</div>`).join('') : ''}
-      ${important.map(i => `<div class="cl-item cl-important">🟡 ${i}</div>`).join('')}
-      ${suggested.map(i => `<div class="cl-item">🟢 ${i}</div>`).join('')}
+      ${urgent.length ? `<div class="cl-group urgent"><div class="cl-group-title">🔴 紧急事项</div>${urgent.map(i => `<div class="cl-item">${i}</div>`).join('')}</div>` : ''}
+      <div class="cl-group important"><div class="cl-group-title">🟡 重要材料</div>${important.map(i => `<div class="cl-item">${i}</div>`).join('')}</div>
+      <div class="cl-group suggested"><div class="cl-group-title">🟢 建议准备</div>${suggested.map(i => `<div class="cl-item">${i}</div>`).join('')}</div>
     </div>`;
   document.getElementById('assessPanel').scrollIntoView({ behavior: 'smooth' });
   setTimeout(function(){ var btn=document.getElementById('assessBtn'); if(btn){ btn.textContent='🛡️ 刷新评估报告'; btn.disabled=false; btn.style.opacity=''; } }, 300);
@@ -2696,29 +3465,29 @@ function runAssess() {
 
 // ═════════════ 章节导航 + 实时校验 ═════════════
 const CHAPTERS = [
-  {id:1, name:'个人信息(一)', fields:['surname','givenName']},
-  {id:2, name:'个人信息(二)', fields:['dob','sex','maritalStatus','birthCity','birthProvince']},
-  {id:3, name:'地址和联系方式', fields:['homeAddr','homeCity','homePhone','email']},
-  {id:4, name:'护照信息', fields:['passportType','passportNo','passportIssue','passportExpiry']},
-  {id:5, name:'旅行信息', fields:['tripPurpose','visaType','arrivalDate','stayLength']},
-  {id:6, name:'旅伴信息', fields:['companions','companionNames']},
-  {id:7, name:'赴美历史', fields:['prevUSTravel','prevVisa','visaRefused','visaRevoked']},
-  {id:8, name:'在美联系人', fields:['contactName','contactOrg','contactPhone','contactEmail']},
-  {id:9, name:'家庭信息', fields:['fatherName','motherName','spouseName']},
-  {id:10, name:'工作/教育', fields:['occupation','employerName','employerAddr','monthlySalary']},
-  {id:11, name:'安全背景', fields:['security_q0','security_q9']},
-  {id:12, name:'护照补充', fields:['passportLost','passportCountry']},
-  {id:13, name:'赴美详细', fields:['hadUSVisa','visaRefusedDetail']},
-  {id:14, name:'配偶信息', fields:['spouseDOB','spouseNationality']},
-  {id:15, name:'SEVIS', fields:['sevisId','sevisSchool']},
-  {id:16, name:'5年旅行史', fields:['countriesVisited']},
-  {id:17, name:'语言能力', fields:['primaryLanguage','englishLevel']},
-  {id:18, name:'额外联系人', fields:['ref1Name','ref2Name']},
-  {id:19, name:'军事服役', fields:['militaryService']},
-  {id:20, name:'所属组织', fields:['organization']},
-  {id:21, name:'特殊技能', fields:['specialTraining']},
-  {id:22, name:'工作履历', fields:['prevEmployer','prevJobTitle']},
-  {id:23, name:'教育背景', fields:['eduSchool','eduMajor','eduYears']},
+  {id:1, name:'个人信息(一) Personal Info 1', fields:['surname','givenName']},
+  {id:2, name:'个人信息(二) Personal Info 2', fields:['dob','sex','maritalStatus','birthCity','birthState']},
+  {id:3, name:'地址和联系方式 Address & Phone', fields:['addrLine1','addrCity','addrState','addrZip','phone','email','mailingAddrSame']},
+  {id:4, name:'护照信息 Passport', fields:['passportType','passportNo','passportIssue','passportExpiry']},
+  {id:5, name:'旅行信息 Travel Info', fields:['tripPurpose','visaType','arrivalDate','stayLength','usAddrLine1','usAddrCity','usAddrState','travelPlans']},
+  {id:6, name:'旅伴信息 Travel Companions', fields:['hasCompanion']},
+  {id:7, name:'赴美历史 Previous US Travel', fields:['prevUSTravel','prevVisa','visaRevoked']},
+  {id:8, name:'在美联系人 US Contact', fields:['contactType','contactName','contactRelation','contactPhone']},
+  {id:9, name:'家庭信息 Family', fields:['fatherSurname','fatherGivenName','motherSurname','motherGivenName']},
+  {id:10, name:'工作/教育 Work/Education', fields:['occupation','employerName','monthlySalary']},
+  {id:11, name:'安全背景 Security & Background', fields:['security_q0','security_q9']},
+  {id:12, name:'护照补充 Passport Additional', fields:['passportBookNo','passportLost']},
+  {id:13, name:'赴美详细 US Travel History', fields:['hadUSVisa','visaRefused']},
+  {id:14, name:'配偶信息 Spouse', fields:['spouseSurname','spouseGivenName']},
+  {id:15, name:'SEVIS 信息 SEVIS Info', fields:['sevisId','sevisSchool']},
+  {id:16, name:'5年旅行史 Countries Visited', fields:['countriesVisited']},
+  {id:17, name:'语言能力 Languages', fields:['primaryLanguage']},
+  {id:18, name:'额外联系人 Additional Contacts', fields:['ref1Name','ref2Name']},
+  {id:19, name:'军事服役 Military Service', fields:['militaryService']},
+  {id:20, name:'所属组织 Organizations', fields:['orgMember']},
+  {id:21, name:'特殊技能 Specialized Skills', fields:['specialTraining']},
+  {id:22, name:'工作履历 Previous Employment', fields:['prevEmployer1','prevJob1']},
+  {id:23, name:'教育背景 Education History', fields:['eduSchool','eduMajor','eduYears']},
 ];
 
 function buildSidebar() {
@@ -2765,7 +3534,24 @@ function toggleSidebar() {
   toggle.textContent = isCollapsed ? '▶' : '◀';
 }
 
-// ═════════════ 实时字段校验 ═════════════
+// ═════════════ 实时字段校验（增强版） ═════════════
+// 英文字段列表（自动大写 + 阻止中文）
+const ENGLISH_ONLY_FIELDS = ['surname','givenName','otherSurnames','otherGivenNames','addrLine1','addrLine2','addrCity','addrState','addrZip',
+  'mailingAddrLine1','mailingAddrCity','mailingAddrState','mailingAddrZip',
+  'usAddrLine1','usAddrCity','usAddrZip','passportNo','passportCity','passportBookNo',
+  'contactName','contactOrg','contactAddr','contactCity','contactZip',
+  'employerName','employerAddr','workCity','workState','workZip',
+  'fatherSurname','fatherGivenName','motherSurname','motherGivenName',
+  'spouseSurname','spouseGivenName','ref1Name','ref2Name',
+  'prevEmployer1','prevJob1','prevEmpAddr1','prevEmp1City','prevEmp1State','prevEmp1Zip',
+  'prevEmployer2','prevJob2','prevEmpAddr2','prevEmp2City','prevEmp2State','prevEmp2Zip',
+  'eduSchool','eduSchoolCity','eduSchoolState','eduSchoolZip',
+  'sevisSchool','sevisSchoolAddr','sevisSchoolCity','sevisSchoolState','sevisSchoolZip',
+  'arrivalFlight','departureFlight','travelPlaces'];
+
+// 自动大写的姓名字段
+const UPPERCASE_FIELDS = ['surname','givenName','otherSurnames','otherGivenNames','fatherSurname','fatherGivenName','motherSurname','motherGivenName','spouseSurname','spouseGivenName'];
+
 function liveValidate(el) {
   const name = el.name;
   const value = el.value.trim();
@@ -2792,6 +3578,31 @@ function liveValidate(el) {
     if (dobEl && dobEl.value) {
       if (new Date(value) <= new Date(dobEl.value)) msg = '⚠️ 护照签发日不能早于出生日';
     }
+    const expEl = document.querySelector('[name="passportExpiry"]');
+    if (expEl && expEl.value && !msg) {
+      if (new Date(value) >= new Date(expEl.value)) msg = '⚠️ 签发日期不能晚于或等于过期日期';
+    }
+  } else if (name === 'arrivalDate') {
+    const expEl = document.querySelector('[name="passportExpiry"]');
+    if (expEl && expEl.value) {
+      var arrivalPlus6 = new Date(value); arrivalPlus6.setMonth(arrivalPlus6.getMonth() + 6);
+      if (arrivalPlus6 > new Date(expEl.value)) msg = '⚠️ 预计抵达日期+6个月超出护照有效期';
+    }
+  } else if (name === 'nationalId' && value) {
+    // 中国身份证18位校验
+    if (/^\d{17}[\dXx]$/.test(value)) {
+      var weights = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+      var checkChars = '10X98765432';
+      var sum = 0;
+      for (var wi = 0; wi < 17; wi++) sum += parseInt(value[wi]) * weights[wi];
+      if (checkChars[sum % 11] !== value[17].toUpperCase()) msg = '⚠️ 身份证号校验位不正确，请核实';
+    } else if (value.length >= 15) {
+      // 不强制校验非中国身份证
+    }
+  } else if (name === 'phone' && value) {
+    if (!/^[\d\+\-\(\)\s]{7,20}$/.test(value)) msg = '⚠️ 电话号码格式不正确';
+  } else if (name === 'monthlySalary' && value) {
+    if (!/^\d+(\.\d{1,2})?$/.test(value)) msg = '⚠️ 月薪请填写数字（如 15000）';
   }
 
   if (msg) {
@@ -2806,7 +3617,7 @@ function liveValidate(el) {
   }
 }
 
-// Attach live validation to key fields
+// Attach live validation + auto-uppercase + Chinese blocking to key fields
 document.addEventListener('DOMContentLoaded', function() {
   buildSidebar();
   // Add expand/collapse arrows to all section headers
@@ -2817,10 +3628,50 @@ document.addEventListener('DOMContentLoaded', function() {
       h.appendChild(arrow);
     }
   });
-  ['passportExpiry','email','sevisId','passportIssue','passportNo'].forEach(name => {
+
+  // Auto-uppercase on name fields
+  UPPERCASE_FIELDS.forEach(function(fname) {
+    var el = document.querySelector('[name="' + fname + '"]');
+    if (el) {
+      el.addEventListener('input', function() {
+        var pos = this.selectionStart;
+        this.value = this.value.toUpperCase();
+        this.setSelectionRange(pos, pos);
+      });
+    }
+  });
+
+  // Block Chinese characters in English-only fields
+  ENGLISH_ONLY_FIELDS.forEach(function(fname) {
+    var el = document.querySelector('[name="' + fname + '"]');
+    if (el) {
+      el.addEventListener('input', function() {
+        var hasChinese = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(this.value);
+        if (hasChinese) {
+          var pos = this.selectionStart;
+          this.value = this.value.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '');
+          this.setSelectionRange(pos - 1 < 0 ? 0 : pos - 1, pos - 1 < 0 ? 0 : pos - 1);
+          // Show warning
+          var errEl = this.parentElement.querySelector('.field-error-live');
+          if (!errEl) {
+            errEl = document.createElement('div');
+            errEl.className = 'field-error-live';
+            this.parentElement.appendChild(errEl);
+          }
+          errEl.textContent = '⚠️ 此字段请使用英文填写';
+          errEl.classList.add('show');
+          setTimeout(function(){ errEl.classList.remove('show'); }, 3000);
+        }
+      });
+    }
+  });
+
+  // Live validation on blur for key fields
+  ['passportExpiry','email','sevisId','passportIssue','passportNo','arrivalDate','nationalId','phone','monthlySalary'].forEach(name => {
     const el = document.querySelector('[name="' + name + '"]');
     if (el) el.addEventListener('blur', function() { liveValidate(this); });
   });
+
   // Update sidebar on any input
   const form = document.getElementById('ds160Form');
   if (form) {

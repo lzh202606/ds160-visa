@@ -3,195 +3,506 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DS-160 链接生成器 - 管理后台</title>
+<title>DS-160 管理面板</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #0f172a; color: #e2e8f0; min-height: 100vh;
-  }
-  .container { max-width: 700px; margin: 0 auto; padding: 40px 20px; }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  @keyframes countUp{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 
-  .login-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 100;
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0e1a;--card:#111827;--card-border:#1e293b;--border:#1e293b;
+    --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+    --primary:#3b82f6;--primary-h:#2563eb;--primary-glow:rgba(59,130,246,.15);
+    --success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+    --radius:14px;--radius-sm:8px;
   }
-  .login-card {
-    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
-    padding: 40px; width: 360px; text-align: center;
-  }
-  .login-card h1 { font-size: 20px; margin-bottom: 8px; }
-  .login-card p { color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
-  .login-card input {
-    width: 100%; padding: 10px 14px; border: 1px solid #334155; border-radius: 8px;
-    background: #0f172a; color: #e2e8f0; font-size: 14px; margin-bottom: 12px;
-    text-align: center; letter-spacing: 4px;
-  }
-  .login-card .btn {
-    width: 100%; padding: 10px; border: none; border-radius: 8px;
-    background: #1a56db; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
-  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-  .header { text-align: center; margin-bottom: 32px; }
-  .header h1 { font-size: 24px; margin-bottom: 6px; }
-  .header p { color: #94a3b8; font-size: 13px; }
+  /* ── Mode Badge ── */
+  .mode-badge{position:fixed;top:12px;left:12px;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;z-index:200;display:flex;align-items:center;gap:6px}
+  .mode-badge.local{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+  .mode-badge.server{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
 
-  .card {
-    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-    padding: 24px; margin-bottom: 20px;
+  /* ── Login ── */
+  .login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100}
+  .login-card{background:var(--card);border:1px solid var(--card-border);border-radius:20px;padding:44px 36px;width:380px;text-align:center;animation:fadeUp .5s ease}
+  .login-card .logo{font-size:40px;margin-bottom:12px}
+  .login-card h1{font-size:22px;font-weight:800;margin-bottom:4px}
+  .login-card .sub{color:var(--text2);font-size:13px;margin-bottom:24px}
+  .login-card input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:15px;text-align:center;letter-spacing:3px;outline:none;transition:border .2s}
+  .login-card input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+  .login-card .btn{width:100%;margin-top:16px;padding:12px;border:none;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .login-card .btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,.35)}
+  .login-card .btn:active{transform:scale(.98)}
+
+  /* ── Header ── */
+  .header{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);background-size:200% 200%;animation:gradientMove 8s ease infinite;padding:28px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--card-border)}
+  .header-left h1{font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}
+  .header-left h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+  .header-left .sub{color:var(--text2);font-size:12px;margin-top:2px}
+  .header-stats{display:flex;gap:20px}
+  .h-stat{background:rgba(255,255,255,.04);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 20px;text-align:center;min-width:100px;animation:countUp .4s ease}
+  .h-stat .num{font-size:28px;font-weight:800;line-height:1}
+  .h-stat .label{font-size:11px;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+  .h-stat.total .num{color:var(--primary)}
+  .h-stat.active .num{color:var(--success)}
+  .h-stat.used .num{color:var(--danger)}
+
+  /* ── Main ── */
+  .container{max-width:1100px;margin:0 auto;padding:28px 24px}
+
+  .card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:24px;margin-bottom:20px;animation:fadeUp .5s ease both}
+  .card:nth-child(2){animation-delay:.08s}
+  .card:nth-child(3){animation-delay:.16s}
+  .card h2{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+  .card h2 .icon{font-size:18px}
+
+  /* ── Form ── */
+  .form-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+  .form-group{display:flex;flex-direction:column}
+  .form-group label{font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .form-group input,.form-group select{padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px;outline:none;transition:border .2s,box-shadow .2s}
+  .form-group input:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+
+  .btn{padding:10px 22px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,.35)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-danger:hover{background:#dc2626}
+  .btn-ghost{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border)}
+  .btn-ghost:hover{background:rgba(255,255,255,.1);color:var(--text)}
+  .btn-sm{padding:5px 14px;font-size:11px}
+  .btn:active{transform:scale(.96)}
+
+  /* ── Generated Links ── */
+  .gen-results{display:none;margin-top:16px}
+  .gen-results h3{font-size:14px;color:var(--success);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .link-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;animation:slideIn .3s ease both}
+  .link-box .token-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .link-box .token-val{font-family:"SF Mono","Fira Code",monospace;font-size:13px;color:var(--success);font-weight:700;letter-spacing:1px}
+  .link-box .url-val{font-size:12px;color:var(--text2);word-break:break-all;line-height:1.6}
+  .copy-btn{cursor:pointer;color:var(--primary);font-size:11px;font-weight:600;transition:color .15s;white-space:nowrap}
+  .copy-btn:hover{color:#60a5fa}
+
+  /* ── Table ── */
+  .table-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .table-toolbar .left{display:flex;gap:8px;align-items:center}
+  .table-toolbar .search{padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:12px;width:200px;outline:none;transition:border .2s}
+  .table-toolbar .search:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 10px;border-bottom:2px solid var(--border);color:var(--text2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.04)}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  td code{font-family:"SF Mono","Fira Code",monospace;font-size:12px;color:#818cf8}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .badge-active{background:rgba(16,185,129,.12);color:#34d399}
+  .badge-active::before{content:'';width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+  .badge-used{background:rgba(239,68,68,.12);color:#f87171}
+  .badge-expired{background:rgba(245,158,11,.12);color:#fbbf24}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+  .empty-state .icon{font-size:36px;margin-bottom:10px}
+  .empty-state p{font-size:13px}
+
+  /* ── Toast ── */
+  .toast{position:fixed;top:20px;right:20px;padding:14px 22px;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:600;z-index:999;animation:fadeUp .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+  .toast-success{background:linear-gradient(135deg,#059669,#10b981)}
+  .toast-error{background:linear-gradient(135deg,#dc2626,#ef4444)}
+
+  /* ── Config ── */
+  .config-row{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .config-row label{font-size:12px;color:var(--text2);min-width:80px}
+  .config-row input{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:12px;flex:1;min-width:200px;outline:none}
+  .config-row input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+  .config-hint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.6}
+
+  /* ── Responsive ── */
+  @media(max-width:768px){
+    .header{flex-direction:column;gap:16px;text-align:center}
+    .header-stats{flex-wrap:wrap;justify-content:center}
+    .form-row{flex-direction:column}
+    .form-group input,.form-group select{width:100%}
+    table{font-size:11px}
+    th,td{padding:8px 6px}
   }
-  .card h2 { font-size: 16px; margin-bottom: 16px; color: #60a5fa; }
-
-  .form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
-  .form-group { display: flex; flex-direction: column; }
-  .form-group label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
-  .form-group input, .form-group select {
-    padding: 8px 12px; border: 1px solid #334155; border-radius: 6px;
-    background: #0f172a; color: #e2e8f0; font-size: 13px;
-  }
-  .btn {
-    padding: 8px 20px; border: none; border-radius: 6px; font-size: 13px;
-    font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .btn-primary { background: #1a56db; color: #fff; }
-  .btn-primary:hover { background: #2563eb; }
-
-  .link-item {
-    background: #0f172a; border: 1px solid #334155; border-radius: 8px;
-    padding: 12px 16px; margin-bottom: 8px;
-  }
-  .link-item .token { font-family: monospace; color: #34d399; font-size: 14px; }
-  .link-item .url { font-size: 12px; color: #93c5fd; word-break: break-all; margin: 4px 0; }
-  .link-item .meta { font-size: 11px; color: #64748b; }
-  .copy-btn { color: #60a5fa; cursor: pointer; font-size: 11px; margin-left: 8px; }
-  .copy-btn:hover { text-decoration: underline; }
-
-  .note { font-size: 12px; color: #fbbf24; background: #451a03; padding: 12px; border-radius: 8px; margin-top: 16px; line-height: 1.8; }
-
-  #mainPanel { display: none; }
 </style>
 </head>
 <body>
 
+<!-- 模式标识 -->
+<div class="mode-badge" id="modeBadge">🔄 检测中...</div>
+
 <!-- 登录 -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card">
-    <h1>🔐 管理后台</h1>
-    <p>DS-160 一次性链接生成器</p>
-    <input type="password" id="adminPass" placeholder="输入管理密码" onkeydown="if(event.key==='Enter')login()">
-    <button class="btn" onclick="login()">进入</button>
+    <div class="logo">🔐</div>
+    <h1>管理后台</h1>
+    <p class="sub">DS-160 一次性链接管理系统</p>
+    <input type="password" id="adminPass" placeholder="输入管理密码" onkeydown="if(event.key==='Enter')login()" autofocus>
+    <button type="button" class="btn" onclick="login()">进入系统</button>
   </div>
 </div>
 
-<div class="container" id="mainPanel">
+<!-- 主面板 -->
+<div id="mainPanel" style="display:none">
   <div class="header">
-    <h1>DS-160 一次性链接生成器</h1>
-    <p>生成的链接每人仅能使用一次，PDF下载后自动作废</p>
+    <div class="header-left">
+      <h1><span class="dot"></span>DS-160 链接管理</h1>
+      <div class="sub">一次性付费链接 · 访问后限时 · PDF下载后失效</div>
+    </div>
+    <div class="header-stats">
+      <div class="h-stat total"><div class="num" id="statTotal">-</div><div class="label">Total</div></div>
+      <div class="h-stat active"><div class="num" id="statActive">-</div><div class="label">Active</div></div>
+      <div class="h-stat used"><div class="num" id="statUsed">-</div><div class="label">Used</div></div>
+    </div>
   </div>
 
-  <!-- 生成链接 -->
-  <div class="card">
-    <h2>生成一次性链接</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label>生成数量</label>
-        <input type="number" id="genCount" value="1" min="1" max="50" style="width:80px;">
+  <div class="container">
+    <!-- 部署配置 -->
+    <div class="card" id="configCard">
+      <h2><span class="icon">⚙️</span>部署配置</h2>
+      <div class="config-row">
+        <label>表单页面地址</label>
+        <input type="text" id="formUrl" placeholder="如：https://your-domain.com/form.html 或 form.html（相对路径）">
       </div>
-      <div class="form-group">
-        <label>备注标签</label>
-        <input type="text" id="genLabel" placeholder="如：客户张三-F1签证" style="width:200px;">
-      </div>
-      <div class="form-group" style="align-self: flex-end;">
-        <button class="btn btn-primary" onclick="generateLinks()">生成链接</button>
+      <div class="config-hint" id="configHint">
+        💡 本地模式：无需服务端，Token 签名在本地生成，链接可直接使用。<br>
+        设置表单页面地址后，生成的链接将指向该地址并附带 Token 参数。
       </div>
     </div>
-    <div id="generatedLinks"></div>
-  </div>
 
-  <!-- 使用说明 -->
-  <div class="card">
-    <h2>使用说明</h2>
-    <div class="note">
-      1. 输入数量和标签，点击"生成链接"<br>
-      2. 复制链接发给客户（微信/邮件）<br>
-      3. 客户打开链接填表 → 下载PDF → 链接自动失效<br>
-      4. 链接失效后，任何人再次打开都会看到"已使用"<br>
-      <br>
-      <strong>安全机制</strong>：<br>
-      • Token 经过 HMAC 签名，无法被伪造<br>
-      • 同一设备上 PDF 下载后记录已使用状态<br>
-      • 支持设置在几小时后过期<br>
-      • 默认管理密码: <code>ds160admin</code>（可在代码中修改）
+    <!-- 生成链接 -->
+    <div class="card">
+      <h2><span class="icon">⚡</span>生成一次性链接</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>数量</label>
+          <input type="number" id="genCount" value="1" min="1" max="100" style="width:80px">
+        </div>
+        <div class="form-group">
+          <label>标签 / 备注</label>
+          <input type="text" id="genLabel" placeholder="如：客户张三-F1签证" style="width:220px">
+        </div>
+        <div class="form-group">
+          <label>绝对有效期（小时，0=永久）</label>
+          <input type="number" id="genExpires" value="0" min="0" placeholder="0=永久" style="width:100px">
+        </div>
+        <div class="form-group">
+          <label>访问后有效（小时）</label>
+          <input type="number" id="genAccessHours" value="24" min="1" placeholder="默认24小时" style="width:100px">
+        </div>
+        <div class="form-group" style="align-self:flex-end">
+          <button type="button" class="btn btn-primary" onclick="generateTokens()">⚡ 生成链接</button>
+        </div>
+      </div>
+      <div class="gen-results" id="generatedLinks">
+        <h3>✅ 已生成链接</h3>
+        <div id="genResult"></div>
+      </div>
+    </div>
+
+    <!-- 链接列表 -->
+    <div class="card">
+      <h2><span class="icon">📋</span>链接管理</h2>
+      <div class="table-toolbar">
+        <div class="left">
+          <input type="text" class="search" id="searchInput" placeholder="🔍 搜索 Token 或标签..." oninput="filterTable()">
+          <select id="filterStatus" onchange="filterTable()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:12px;outline:none">
+            <option value="all">全部状态</option>
+            <option value="active">可用</option>
+            <option value="used">已使用</option>
+            <option value="expired">已过期</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="refreshStats()">🔄 刷新</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>标签</th>
+            <th>状态</th>
+            <th>访问限时</th>
+            <th>创建时间</th>
+            <th>使用时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tokenList">
+          <tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div><p>点击刷新加载数据...</p></div></td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
 
 <script>
-const ADMIN_PASS = 'ds160admin'; // 可修改
-const SECRET = 'ds160-secret-key-2026'; // HMAC签名密钥
+const ADMIN_PASS = 'ds160admin';
+const HMAC_SECRET = 'ds160-secret-key-2026';
+let allTokens = [];
+let isServerMode = false;
 
-// ═════════════ 登录 ═════════════
-function login() {
-  const pw = document.getElementById('adminPass').value;
-  if (pw === ADMIN_PASS) {
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('mainPanel').style.display = 'block';
-  } else {
-    alert('密码错误');
+// ── 检测运行模式 ──
+(async function detectMode(){
+  const badge = document.getElementById('modeBadge');
+  try{
+    const res = await fetch('/api/admin/stats',{
+      headers:{'X-Admin-Password':ADMIN_PASS,'Content-Type':'application/json'}
+    });
+    if(res.ok){
+      isServerMode = true;
+      badge.className = 'mode-badge server';
+      badge.innerHTML = '🟢 服务端模式';
+      document.getElementById('configCard').style.display = 'none';
+    } else { throw new Error('not ok'); }
+  }catch(e){
+    isServerMode = false;
+    badge.className = 'mode-badge local';
+    badge.innerHTML = '🟡 本地模式';
+    // 加载本地存储的 Token 和配置
+    loadLocalData();
+    // 设置默认表单URL
+    const savedUrl = localStorage.getItem('ds160_admin_formUrl') || '';
+    document.getElementById('formUrl').value = savedUrl;
   }
+})();
+
+function headers(){return{'X-Admin-Password':ADMIN_PASS,'Content-Type':'application/json'}}
+
+// ── 本地模式：Token 存储 ──
+function loadLocalData(){
+  try{ allTokens = JSON.parse(localStorage.getItem('ds160_admin_tokens')||'[]'); }catch{ allTokens=[]; }
+}
+function saveLocalData(){
+  localStorage.setItem('ds160_admin_tokens', JSON.stringify(allTokens));
 }
 
-// ═════════════ HMAC-SHA256 签名 ═════════════
-async function hmacSign(message, secret) {
+// ── HMAC-SHA256 签名（本地模式） ──
+async function hmacSign(message, secret){
   const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
-  return btoa(String.fromCharCode(...new Uint8Array(sig)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const key = await crypto.subtle.importKey('raw',encoder.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const sig = await crypto.subtle.sign('HMAC',key,encoder.encode(message));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
-// ═════════════ 生成链接 (本地 HMAC 签名) ═════════════
-async function generateLinks() {
-  const count = parseInt(document.getElementById('genCount').value) || 1;
-  const label = document.getElementById('genLabel').value.trim();
+// ── Toast ──
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className='toast toast-'+type;t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300)},2500);
+}
 
-  const links = [];
-  for (let i = 0; i < count; i++) {
-    const id = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
-    const ts = Date.now();
-    const payload = id + '.' + ts;
-    const sig = await hmacSign(payload, SECRET);
-    const token = payload + '.' + sig;
-    const baseUrl = getFormUrl();
-    links.push({ token, label, url: baseUrl + '?token=' + token, created: new Date().toISOString() });
+// ── Login ──
+function login(){
+  const pw=document.getElementById('adminPass').value;
+  if(pw===ADMIN_PASS){
+    document.getElementById('loginOverlay').style.opacity='0';
+    document.getElementById('loginOverlay').style.transition='opacity .3s';
+    setTimeout(()=>{
+      document.getElementById('loginOverlay').style.display='none';
+      document.getElementById('mainPanel').style.display='block';
+      refreshStats();
+    },300);
+  }else{
+    document.getElementById('adminPass').style.borderColor='var(--danger)';
+    document.getElementById('adminPass').value='';
+    document.getElementById('adminPass').focus();
+    showToast('密码错误，请输入正确密码','error');
   }
-
-  const html = links.map((l, i) =>
-    '<div class="link-item"><div class="token">Token #'+(i+1)+': '+l.token.substring(0,20)+'...</div>'+
-    '<div class="url">'+l.url+'</div><div class="meta">'+(l.label||'无标签')+' | '+l.created+
-    ' <span class="copy-btn" onclick="copyToClipboard(\''+l.url.replace(/'/g,"\\'")+'\')">📋 复制链接</span></div></div>'
-  ).join('');
-
-  document.getElementById('generatedLinks').innerHTML =
-    '<h3 style="font-size:14px;margin-bottom:8px;color:#34d399;">✅ 已生成 '+count+' 个一次性链接：</h3>' + html;
 }
 
-function getFormUrl() {
-  // GitHub Pages 线上地址
-  const PAGES_URL = 'https://lzh202606.github.io/ds160-visa/form-replica-v2.html';
-  if (window.location.protocol === 'https:' || window.location.protocol === 'http:') {
-    const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
-    return base + 'form-replica-v2.html';
+// ── 获取表单页面URL ──
+function getFormUrl(){
+  const customUrl = document.getElementById('formUrl').value.trim();
+  if(customUrl) return customUrl;
+  // 自动推断
+  if(window.location.protocol==='file:'){
+    // 本地文件模式 → 推断同目录下的 form.html
+    const dir = window.location.href.substring(0, window.location.href.lastIndexOf('/')+1);
+    return dir + 'form.html';
   }
-  return PAGES_URL;
+  // HTTP 模式 → 同源相对路径
+  return window.location.origin + window.location.pathname.replace(/[^/]*$/,'') + 'form.html';
 }
 
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => alert('已复制链接！\n\n' + text));
+// ── Stats ──
+async function refreshStats(){
+  if(isServerMode){
+    try{
+      const res=await fetch('/api/admin/stats',{headers:headers()});
+      const data=await res.json();
+      document.getElementById('statTotal').textContent=data.total;
+      document.getElementById('statActive').textContent=data.active;
+      document.getElementById('statUsed').textContent=data.used;
+      allTokens=data.list||[];
+      allTokens.sort((a,b)=>b.created.localeCompare(a.created));
+      filterTable();
+    }catch(e){showToast('加载失败: '+e.message,'error')}
+  }else{
+    // 本地模式：从 localStorage 读取
+    loadLocalData();
+    const total=allTokens.length;
+    const used=allTokens.filter(t=>t.used).length;
+    const active=allTokens.filter(t=>!t.used&&!isTokenExpired(t)).length;
+    document.getElementById('statTotal').textContent=total;
+    document.getElementById('statActive').textContent=active;
+    document.getElementById('statUsed').textContent=used;
+    filterTable();
+  }
 }
+
+function isTokenExpired(t){
+  if(t.used) return false;
+  if(t.expiresAt && Date.now()>t.expiresAt) return true;
+  if(t.accessDeadline && Date.now()>t.accessDeadline) return true;
+  return false;
+}
+
+// ── Filter & Render ──
+function filterTable(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  const status=document.getElementById('filterStatus').value;
+  let filtered=allTokens;
+  if(q)filtered=filtered.filter(t=>(t.token||'').toLowerCase().includes(q)||(t.label||'').toLowerCase().includes(q));
+  if(status==='active')filtered=filtered.filter(t=>!t.used&&!isTokenExpired(t));
+  if(status==='used')filtered=filtered.filter(t=>t.used);
+  if(status==='expired')filtered=filtered.filter(t=>!t.used&&isTokenExpired(t));
+
+  const tbody=document.getElementById('tokenList');
+  if(filtered.length===0){
+    tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="icon">📭</div><p>'+(allTokens.length===0?'暂无链接，请先生成':'无匹配结果')+'</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML=filtered.map(t=>{
+    const expired=isTokenExpired(t);
+    let badgeCls=t.used?'badge-used':expired?'badge-expired':'badge-active';
+    let badgeText=t.used?'已使用':expired?'已过期':'可用';
+    let accessInfo='-';
+    if(t.accessHours){accessInfo=t.accessHours+'h'}
+    if(t.accessDeadline&&!t.used&&!expired){
+      const rem=Math.max(0,t.accessDeadline-Date.now());
+      const rh=Math.floor(rem/3600000);const rm=Math.floor((rem%3600000)/60000);
+      accessInfo=t.accessHours+'h (剩'+rh+'时'+rm+'分)';
+    }
+    if(expired&&t.accessHours){accessInfo=t.accessHours+'h (已过期)'}
+    return`<tr>
+      <td><code>${t.token}</code></td>
+      <td>${t.label||'-'}</td>
+      <td><span class="badge ${badgeCls}">${badgeText}</span></td>
+      <td>${accessInfo}</td>
+      <td>${new Date(t.created).toLocaleString('zh-CN')}</td>
+      <td>${t.usedAt?new Date(t.usedAt).toLocaleString('zh-CN'):'-'}</td>
+      <td style="white-space:nowrap">
+        ${!t.used&&!expired?`<button type="button" class="btn btn-danger btn-sm" onclick="deleteToken('${t.token}')">删除</button>`:''}
+        <button type="button" class="btn btn-ghost btn-sm" onclick="copyLink('${t.token}')">📋 复制</button>
+      </td>
+    </tr>`}).join('');
+}
+
+// ── Generate ──
+async function generateTokens(){
+  const count=parseInt(document.getElementById('genCount').value)||1;
+  const label=document.getElementById('genLabel').value.trim();
+  const expiresHours=parseInt(document.getElementById('genExpires').value)||0;
+  const accessHours=parseInt(document.getElementById('genAccessHours').value)||24;
+
+  // 保存表单URL配置
+  const formUrl = document.getElementById('formUrl').value.trim();
+  if(formUrl) localStorage.setItem('ds160_admin_formUrl', formUrl);
+
+  if(isServerMode){
+    try{
+      const res=await fetch('/api/admin/generate',{
+        method:'POST',headers:headers(),
+        body:JSON.stringify({count,label,expiresHours,accessHours})
+      });
+      const data=await res.json();
+      renderGeneratedLinks(data.generated);
+      showToast('✅ 已生成 '+count+' 个链接');
+      refreshStats();
+    }catch(e){showToast('生成失败: '+e.message,'error')}
+  }else{
+    // 本地模式：HMAC签名生成Token
+    const generated=[];
+    for(let i=0;i<count;i++){
+      const id=crypto.randomUUID().replace(/-/g,'').substring(0,12);
+      const ts=Date.now();
+      const payload=id+'.'+ts;
+      const sig=await hmacSign(payload,HMAC_SECRET);
+      const token=payload+'.'+sig;
+      const now=new Date().toISOString();
+      allTokens.push({
+        token:token,
+        created:now,
+        used:false,
+        label:label||'批次-'+ts,
+        downloads:0,
+        expiresAt:expiresHours>0?ts+expiresHours*3600000:null,
+        accessHours:accessHours>0?accessHours:null,
+        firstAccessAt:null,
+        accessDeadline:null,
+        usedAt:null
+      });
+      const baseUrl=getFormUrl();
+      generated.push({token,link:'?token='+token,fullLink:baseUrl+'?token='+token});
+    }
+    saveLocalData();
+    renderGeneratedLinks(generated);
+    showToast('✅ 已生成 '+count+' 个链接');
+    refreshStats();
+  }
+}
+
+function renderGeneratedLinks(generated){
+  document.getElementById('generatedLinks').style.display='block';
+  document.getElementById('genResult').innerHTML=generated.map((g,i)=>
+    `<div class="link-box" style="animation-delay:${i*.06}s">
+      <div class="token-row"><span class="token-val">${g.token.substring(0,20)}${g.token.length>20?'...':''}</span></div>
+      <div class="url-val">${g.fullLink}</div>
+      <span class="copy-btn" onclick="copyLink('${g.token.replace(/'/g,"\\'")}')">📋 复制链接</span>
+    </div>`).join('');
+}
+
+// ── Delete ──
+async function deleteToken(token){
+  if(!confirm('确定删除此链接吗？'))return;
+  if(isServerMode){
+    try{
+      await fetch('/api/admin/token/'+token,{method:'DELETE',headers:headers()});
+      showToast('已删除');
+      refreshStats();
+    }catch(e){showToast('删除失败','error')}
+  }else{
+    allTokens=allTokens.filter(t=>t.token!==token);
+    saveLocalData();
+    showToast('已删除');
+    refreshStats();
+  }
+}
+
+// ── Copy ──
+function copyLink(token){
+  let link;
+  if(isServerMode){
+    link=window.location.origin+'/?token='+token;
+  }else{
+    link=getFormUrl()+'?token='+token;
+  }
+  navigator.clipboard.writeText(link).then(()=>{
+    showToast('✅ 已复制链接');
+  }).catch(()=>{
+    prompt('请手动复制链接：',link);
+  });
+}
+
+// ── 监听表单URL变化 ──
+document.getElementById('formUrl').addEventListener('change',function(){
+  localStorage.setItem('ds160_admin_formUrl',this.value.trim());
+});
 </script>
 </body>
 </html>
