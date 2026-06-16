@@ -988,9 +988,11 @@ function initCountdown() {
   const title = document.getElementById('gateTitle');
   const msg = document.getElementById('gateMsg');
 
-  // 鏃燭oken 鈫?鍏佽璁块棶锛堝吋瀹归潪浠樿垂鍦烘櫙锛?  if (!token) return;
+  // No token - allow access
+  if (!token) return;
 
-  // 瀹㈡埛绔揩閫熸牸寮忔鏌ワ紙鍏煎涓ょToken鏍煎紡锛?  const isHMAC = token.split('.').length === 3;
+  // Check token format
+  const isHMAC = token.split('.').length === 3;
   const isServerToken = /^DS[0-9A-Fa-f]{12}$/.test(token);
   if (!isHMAC && !isServerToken) {
     gate.style.display = 'flex';
@@ -1057,7 +1059,8 @@ function initCountdown() {
       window.consumeToken = function() {
         localStorage.setItem(usedKey, new Date().toISOString());
       };
-      // 鏈嶅姟绔繑鍥炲墿浣欐椂闂?      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
+      // Server returned remaining time
+      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
     } else {
       gate.style.display = 'flex';
       icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
