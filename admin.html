@@ -448,7 +448,8 @@ async function generateTokens(){
         usedAt:null
       });
       const baseUrl=getFormUrl();
-      generated.push({token,link:'?token='+token,fullLink:baseUrl+'?token='+token});
+      const accessParam = accessHours>0 ? '&h='+accessHours : '';
+      generated.push({token,link:'?token='+token+accessParam,fullLink:baseUrl+'?token='+token+accessParam});
     }
     saveLocalData();
     renderGeneratedLinks(generated);
@@ -487,10 +488,13 @@ async function deleteToken(token){
 // ── Copy ──
 function copyLink(token){
   let link;
+  // 查找token对应的accessHours
+  const t = allTokens.find(x=>x.token===token);
+  const accessParam = (t && t.accessHours && t.accessHours>0) ? '&h='+t.accessHours : '';
   if(isServerMode){
-    link=window.location.origin+'/?token='+token;
+    link=window.location.origin+'/?token='+token+accessParam;
   }else{
-    link=getFormUrl()+'?token='+token;
+    link=getFormUrl()+'?token='+token+accessParam;
   }
   navigator.clipboard.writeText(link).then(()=>{
     showToast('✅ 已复制链接');

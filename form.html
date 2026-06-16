@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -391,7 +391,7 @@
 
 <!-- 璁块棶闄愭椂鍊掕鏃?-->
 <div class="countdown-bar" id="countdownBar">
-  <span class="cd-icon">鈴?/span>
+  <span class="cd-icon">鈴憋笍</span>
   <span class="cd-label">閾炬帴鏈夋晥鍓╀綑鏃堕棿</span>
   <span class="cd-time" id="countdownTime">--:--:--</span>
 </div>
@@ -1746,6 +1746,21 @@ async function localHmacVerify(token) {
   return sig === expected;
 }
 
+// 璁块棶闄愭椂锛氭湰鍦癏MAC Token鐨勮闂檺鏃剁鐞?function checkAccessTimeLimit(tokenId, accessHours) {
+  if (!accessHours || accessHours <= 0) return { valid: true, remainingMs: Infinity };
+  const key = 'ds160_access_' + tokenId;
+  const now = Date.now();
+  let info = null;
+  try { info = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+  if (!info || !info.firstAccessAt) {
+    info = { firstAccessAt: now, accessHours: accessHours, accessDeadline: now + accessHours * 3600000 };
+    localStorage.setItem(key, JSON.stringify(info));
+  }
+  const remaining = info.accessDeadline - now;
+  if (remaining <= 0) return { valid: false, remainingMs: 0, accessDeadline: info.accessDeadline };
+  return { valid: true, remainingMs: remaining, accessDeadline: info.accessDeadline };
+}
+
 // 椤甸潰鍔犺浇鏃堕獙璇乀oken
 (async function validateToken() {
   const token = getQueryParam('token');
@@ -1760,41 +1775,59 @@ async function localHmacVerify(token) {
   const isServerToken = /^DS[0-9A-Fa-f]{12}$/.test(token);
   if (!isHMAC && !isServerToken) {
     gate.style.display = 'flex';
-    icon.textContent = '鈿狅笍'; title.textContent = '閾炬帴鏃犳晥'; msg.textContent = 'Token鏍煎紡閿欒锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨纭摼鎺ャ€?;
+    icon.textContent = '鉀?; title.textContent = '閾炬帴鏃犳晥'; msg.textContent = 'Token鏍煎紡閿欒锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨纭摼鎺ャ€?;
     return;
   }
 
   const tokenId = isHMAC ? token.split('.')[0] : token;
 
-  // 妫€鏌ユ湰鍦版槸鍚﹀凡浣跨敤锛堝揩閫熸湰鍦版鏌ワ級
+  // 妫€鏌ユ湰鍦版槸鍚﹀凡浣跨敤
   const usedKey = 'ds160_used_' + tokenId;
   if (localStorage.getItem(usedKey)) {
     gate.style.display = 'flex';
-    icon.textContent = '鈴憋笍'; title.textContent = '閾炬帴宸蹭娇鐢?;
+    icon.textContent = '馃敀'; title.textContent = '閾炬帴宸蹭娇鐢?;
     msg.innerHTML = '姝ら摼鎺ュ凡琚娇鐢ㄨ繃銆?br>姣忎釜閾炬帴浠呬緵涓€浜轰娇鐢ㄤ竴娆°€?br><br>濡傞渶鍐嶆浣跨敤锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
     return;
   }
 
-  // 鍒ゆ柇鏄惁涓烘湰鍦版枃浠舵ā寮?  const isLocalFile = window.location.protocol === 'file:';
-
-  if (isLocalFile && isHMAC) {
-    // 鏈湴鏂囦欢妯″紡 + HMAC Token 鈫?鏈湴楠岃瘉绛惧悕
+  // HMAC Token缁熶竴璧版湰鍦伴獙璇侊紙鏃犺file:///杩樻槸https://锛?  if (isHMAC) {
     const valid = await localHmacVerify(token);
-    if (valid) {
-      window.DS160_TOKEN_ID = tokenId;
-      window.DS160_TOKEN = token;
-      window.consumeToken = function() {
-        localStorage.setItem(usedKey, new Date().toISOString());
-      };
-    } else {
+    if (!valid) {
       gate.style.display = 'flex';
       icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
       msg.textContent = 'Token绛惧悕楠岃瘉澶辫触锛岄摼鎺ュ彲鑳借绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
+      return;
     }
+    // 妫€鏌ョ粷瀵硅繃鏈熸椂闂达紙1骞翠笂闄愶級
+    const ts = parseInt(token.split('.')[1]);
+    if (ts && Date.now() - ts > 365 * 24 * 3600000) {
+      gate.style.display = 'flex';
+      icon.textContent = '鈴?; title.textContent = '閾炬帴宸茶繃鏈?;
+      msg.textContent = '姝ら摼鎺ュ凡瓒呰繃鏈夋晥鏈熼檺銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
+      return;
+    }
+    window.DS160_TOKEN_ID = tokenId;
+    window.DS160_TOKEN = token;
+    window.consumeToken = function() {
+      localStorage.setItem(usedKey, new Date().toISOString());
+    };
+    // 璁块棶闄愭椂澶勭悊锛氫粠URL鍙傛暟h璇诲彇闄愭椂灏忔椂鏁帮紝榛樿24h
+    const urlAccessHours = parseInt(getQueryParam('h')) || 24;
+    const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
+    if (!accessResult.valid) {
+      gate.style.display = 'flex';
+      icon.textContent = '鈴?; title.textContent = '璁块棶宸茶繃鏈?;
+      msg.textContent = '姝ら摼鎺ョ殑璁块棶鏃堕檺宸插埌鏈燂紙' + urlAccessHours + '灏忔椂锛夈€傝鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?;
+      return;
+    }
+    if (accessResult.remainingMs !== Infinity) {
+      window.DS160_REMAINING_MS = accessResult.remainingMs;
+    }
+    initCountdown();
     return;
   }
 
-  // 鏈嶅姟绔獙璇乀oken
+  // 鏈嶅姟绔疶oken锛圖S+HEX鏍煎紡锛夆啋 璋冪敤鏈嶅姟绔疉PI楠岃瘉
   try {
     const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token));
     const checkData = await checkRes.json();
@@ -1804,14 +1837,15 @@ async function localHmacVerify(token) {
       window.consumeToken = function() {
         localStorage.setItem(usedKey, new Date().toISOString());
       };
-      // 鏈嶅姟绔繑鍥炲墿浣欐椂闂?      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
+      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
+      initCountdown();
     } else {
       gate.style.display = 'flex';
       icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
       msg.textContent = checkData.reason || 'Token楠岃瘉澶辫触锛岄摼鎺ュ彲鑳藉凡杩囨湡鎴栬绡℃敼銆傝鑱旂郴鏈嶅姟鎻愪緵鍟嗐€?;
     }
   } catch(e) {
-    // 缃戠粶涓嶅彲鐢ㄦ椂鐨勯檷绾х瓥鐣?    console.warn('Token鏈嶅姟绔獙璇佷笉鍙敤锛屽厑璁镐复鏃惰闂紙绂荤嚎妯″紡锛?);
+    console.warn('Token鏈嶅姟绔獙璇佷笉鍙敤锛屽厑璁镐复鏃惰闂紙绂荤嚎妯″紡锛?);
     window.DS160_TOKEN_ID = tokenId;
     window.DS160_TOKEN = token;
     window.DS160_TOKEN_OFFLINE = true;
@@ -1820,6 +1854,44 @@ async function localHmacVerify(token) {
     };
   }
 })();
+
+// 璁块棶闄愭椂鍊掕鏃?function initCountdown() {
+  if (!window.DS160_REMAINING_MS || window.DS160_REMAINING_MS === Infinity) return;
+  const bar = document.getElementById('countdownBar');
+  const timeEl = document.getElementById('countdownTime');
+  if (!bar || !timeEl) return;
+
+  let remaining = window.DS160_REMAINING_MS;
+  bar.classList.add('show');
+  updateDisplay();
+
+  const timer = setInterval(function() {
+    remaining -= 1000;
+    if (remaining <= 0) {
+      clearInterval(timer);
+      remaining = 0;
+      bar.classList.remove('cd-warning');
+      bar.classList.add('cd-expired');
+      timeEl.textContent = '00:00:00';
+      document.querySelectorAll('#submitBtn, #assessBtn, #printPdfBtn').forEach(function(btn) {
+        btn.disabled = true; btn.style.opacity = '0.5'; btn.title = '閾炬帴宸茶繃鏈?;
+      });
+      return;
+    }
+    if (remaining < 30 * 60 * 1000 && !bar.classList.contains('cd-warning')) {
+      bar.classList.add('cd-warning');
+    }
+    updateDisplay();
+  }, 1000);
+
+  function updateDisplay() {
+    var h = Math.floor(remaining / 3600000);
+    var m = Math.floor((remaining % 3600000) / 60000);
+    var s = Math.floor((remaining % 60000) / 1000);
+    timeEl.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+}
+;
 
 // ========== 安全背景问题列表 ==========
 const securityQuestions = [
@@ -2614,19 +2686,40 @@ function closePreview() {
 // ========== 导出PDF (jsPDF一键下载 + Token消耗) ==========
 async function printPDF() {
   const token = window.DS160_TOKEN;
-  // 如果带Token则验证，无Token则允许免费模式
-  if (token) {
-    try {
-      const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + token);
-      const checkData = await checkRes.json();
-      if (!checkData.valid) {
-        alert('您的链接已失效（可能已被使用或过期），请联系服务提供商获取新链接。');
+  // 濡傛灉甯oken鍒欓獙璇侊紝鏃燭oken鍒欏厑璁稿厤璐规ā寮?  if (token) {
+    const isHMAC = token.split('.').length === 3;
+    if (isHMAC) {
+      // HMAC Token 鈫?鏈湴楠岃瘉绛惧悕+妫€鏌ユ槸鍚﹀凡浣跨敤+妫€鏌ヨ闂檺鏃?      const tokenId = token.split('.')[0];
+      const usedKey = 'ds160_used_' + tokenId;
+      if (localStorage.getItem(usedKey)) {
+        alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙宸茶浣跨敤锛夛紝璇疯仈绯绘湇鍔℃彁渚涘晢鑾峰彇鏂伴摼鎺ャ€?);
         return;
       }
-    } catch(e) {
-      // 网络问题，继续允许使用（离线降级）
+      const valid = await localHmacVerify(token);
+      if (!valid) {
+        alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙绛惧悕鏃犳晥锛夛紝璇疯仈绯绘湇鍔℃彁渚涘晢鑾峰彇鏂伴摼鎺ャ€?);
+        return;
+      }
+      // 妫€鏌ヨ闂檺鏃?      const urlAccessHours = parseInt(getQueryParam('h')) || 24;
+      const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
+      if (!accessResult.valid) {
+        alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙璁块棶鏃堕檺宸插埌鏈燂級锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?);
+        return;
+      }
+    } else {
+      // 鏈嶅姟绔疶oken 鈫?璋冪敤鏈嶅姟绔疉PI楠岃瘉
+      try {
+        const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + token);
+        const checkData = await checkRes.json();
+        if (!checkData.valid) {
+          alert('鎮ㄧ殑閾炬帴宸插け鏁堬紙鍙兘宸茶浣跨敤鎴栬繃鏈燂級锛岃鑱旂郴鏈嶅姟鎻愪緵鍟嗚幏鍙栨柊閾炬帴銆?);
+          return;
+        }
+      } catch(e) {
+        // 缃戠粶闂锛岀户缁厑璁镐娇鐢紙绂荤嚎闄嶇骇锛?      }
     }
   }
+
 
   const form = document.getElementById('ds160Form');
   const fd = new FormData(form);
