@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -444,10 +444,10 @@
     </div>
     <div class="form-row col1"><div class="form-group"><label>Other Surnames Used 曾用姓氏 <span class="hint">Maiden name, professional name, etc. / 如无则填 N/A</span></label><input name="otherSurnames" data-field="Other Surnames" placeholder="N/A"></div></div>
     <div class="form-row col2">
-      <div class="form-group"><label>Sex 性别 <span class="req">*</span></label><select name="sex" data-field="Sex" required><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+      <div class="form-group"><label>Sex 性别 <span class="req">*</span></label><select name="sex" data-field="Sex" required><option value="">Select 请选择</option><option value="Male">Male 男</option><option value="Female">Female 女</option></select></div>
       <div class="form-group"><label>Marital Status 婚姻状态 <span class="req">*</span></label>
         <select name="maritalStatus" data-field="Marital Status" required>
-          <option value="">Select</option><option value="Single">Single 未婚</option><option value="Married">Married 已婚</option>
+          <option value="">Select 请选择</option><option value="Single">Single 未婚</option><option value="Married">Married 已婚</option>
           <option value="Common Law">Common Law 事实婚姻</option><option value="Widowed">Widowed 丧偶</option>
           <option value="Divorced">Divorced 离异</option><option value="Separated">Separated 分居</option><option value="Other">Other 其他</option>
         </select>
@@ -460,7 +460,7 @@
     <div class="form-row col2">
       <div class="form-group"><label>State/Province of Birth 出生省/州 <span class="req">*</span></label><input name="birthState" data-field="Birth State" placeholder="e.g. Fujian" required></div>
       <div class="form-group"><label>Country of Birth 出生国家 <span class="req">*</span></label>
-        <select name="birthCountry" data-field="Birth Country" required id="birthCountry"><option value="">Select</option><option value="CHINA">CHINA</option><option value="TAIWAN">TAIWAN</option><option value="HK">HONG KONG SAR</option><option value="MACAU">MACAU SAR</option><option value="OTHER">OTHER</option></select>
+        <select name="birthCountry" data-field="Birth Country" required id="birthCountry"><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="TAIWAN">TAIWAN 台湾</option><option value="HK">HONG KONG SAR 香港</option><option value="MACAU">MACAU SAR 澳门</option><option value="OTHER">OTHER 其他</option></select>
       </div>
     </div>
   </div>
@@ -472,7 +472,7 @@
   <div class="section-body">
     <div class="form-row col2">
       <div class="form-group"><label>Nationality 国籍 <span class="req">*</span></label><select name="nationality" data-field="Nationality" required><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="OTHER">OTHER 其他</option></select></div>
-      <div class="form-group"><label>Other Nationality? 其他国籍/永居</label><select name="otherNationality" data-field="Other Nationality"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+      <div class="form-group"><label>Other Nationality? 其他国籍/永居</label><select name="otherNationality" data-field="Other Nationality"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div>
     </div>
     <div id="otherNationalityBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><input name="otherNationalityList" placeholder="List countries"></div></div>
     <div class="form-row col2">
@@ -496,10 +496,10 @@
     </div>
     <div class="form-row col2">
       <div class="form-group"><label>Postal Code 邮编</label><input name="addrZip" data-field="ZIP"></div>
-      <div class="form-group"><label>Country 国家 <span class="req">*</span></label><select name="addrCountry" data-field="Country" required><option value="CHINA">CHINA</option></select></div>
+      <div class="form-group"><label>Country 国家 <span class="req">*</span></label><select name="addrCountry" data-field="Country" required><option value="CHINA">CHINA 中国</option></select></div>
     </div>
     <h3 style="margin-top:14px;">Mailing Address 邮寄地址</h3>
-    <div class="form-row col1"><div class="form-group"><label>Is your mailing address the same as home? 邮寄地址与家庭地址相同？ <span class="req">*</span></label><select name="mailingSame" data-field="Mail Same" required><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Is your mailing address the same as home? 邮寄地址与家庭地址相同？ <span class="req">*</span></label><select name="mailingSame" data-field="Mail Same" required><option value="">Select 请选择</option><option value="Yes">Yes</option><option value="No">No</option></select></div></div>
     <div id="mailingBlock" style="display:none;">
       <div class="form-row col1"><div class="form-group"><label>Mailing Address 邮寄地址</label><input name="mailingAddr"></div></div>
       <div class="form-row col2"><div class="form-group"><label>City 城市</label><input name="mailingCity"><label>State/Province 省/州</label><input name="mailingState"></div></div>
@@ -513,7 +513,7 @@
     <div class="form-row col1"><div class="form-group"><label>Email Address 电子邮箱 <span class="req">*</span></label><input name="email" data-field="Email" type="email" placeholder="you@email.com" required></div></div>
 
     <h3 style="margin-top:14px;">Email Addresses (Last 5 Years) 近5年其他邮箱</h3>
-    <div class="form-row col1"><div class="form-group"><label>Have you used other email addresses in the last 5 years? 近5年是否使用过其他邮箱?</label><select name="hasOtherEmails"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Have you used other email addresses in the last 5 years? 近5年是否使用过其他邮箱?</label><select name="hasOtherEmails"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="otherEmailsBlock" style="display:none;">
       <div class="form-row col2"><div class="form-group"><label>Email 1 邮箱1</label><input name="email2" type="email"><label>Email 2 邮箱2</label><input name="email3" type="email"></div></div>
       <div class="form-row col1"><div class="form-group"><label>Email 3 邮箱3</label><input name="email4" type="email"></div></div>
@@ -558,7 +558,7 @@
     </div>
     <div class="form-row col1"><div class="form-group"><label>Passport Book Number 护照本编号 <span class="hint">May not apply to all countries</span></label><input name="passportBookNo" data-field="Book #" placeholder=""></div></div>
     <div class="form-row col2">
-      <div class="form-group"><label>Country of Issuance 签发国家 <span class="req">*</span></label><select name="passportCty" data-field="Iss Country" required><option value="CHINA">CHINA</option></select></div>
+      <div class="form-group"><label>Country of Issuance 签发国家 <span class="req">*</span></label><select name="passportCty" data-field="Iss Country" required><option value="CHINA">CHINA 中国</option></select></div>
       <div class="form-group"><label>City of Issuance 签发城市</label><input name="passportCity" data-field="Iss City" placeholder="e.g. Fuzhou"></div>
     </div>
     <div class="form-row col1"><div class="form-group"><label>State/Province of Issuance 签发省/州</label><input name="passportState" placeholder="e.g. Fujian"></div></div>
@@ -566,7 +566,7 @@
       <div class="form-group"><label>Issuance Date 签发日期 <span class="req">*</span></label><input type="date" name="passportIssue" data-field="Iss Date" required></div>
       <div class="form-group"><label>Expiration Date 有效期至 <span class="req">*</span></label><input type="date" name="passportExpiry" data-field="Exp Date" required></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>Lost/Stolen Passport? 护照遗失/被盗? <span class="req">*</span></label><select name="passportLost" data-field="Passport Lost" required><option value="">Select</option><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Lost/Stolen Passport? 护照遗失/被盗? <span class="req">*</span></label><select name="passportLost" data-field="Passport Lost" required><option value="">Select 请选择</option><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="passportLostBlock" style="display:none;">
       <div class="form-row col2"><div class="form-group"><label>Lost Passport # 遗失护照号</label><input name="passportLostNo"><label>Country Where Lost 遗失地</label><input name="passportLostCty"></div></div>
       <div class="form-row col1"><div class="form-group"><label>Explanation 说明</label><textarea name="passportLostEx" rows="2"></textarea></div></div>
@@ -580,10 +580,10 @@
   <div class="section-body">
     <div class="form-row col2">
       <div class="form-group"><label>Purpose of Trip 赴美目的 <span class="req">*</span></label><select name="tripPurpose" data-field="Trip Purpose" required id="tripPurpose"><option value="">Select 请选择</option><option value="B1">BUSINESS / CONFERENCE (B1) 商务/会议</option><option value="B2">TOURISM / PLEASURE (B2) 旅游/观光</option><option value="B1/B2">BUSINESS & TOURISM (B1/B2) 商务兼旅游</option><option value="F1">STUDENT (F1) 学生</option><option value="F2">STUDENT DEPENDENT (F2) 学生家属</option><option value="J1">EXCHANGE VISITOR (J1) 交流访问</option><option value="J2">EXCHANGE DEPENDENT (J2) 交流访问家属</option><option value="H1B">TEMPORARY WORKER (H1B) 短期工作</option><option value="L1">INTRA-COMPANY TRANSFER (L1) 公司内部调动</option><option value="M1">VOCATIONAL TRAINING (M1) 职业培训</option><option value="O1">EXTRAORDINARY ABILITY (O1) 杰出人才</option></select></div>
-      <div class="form-group"><label>Intended Visa Type 签证类型 <span class="req">*</span></label><select name="visaType" data-field="Visa Type" required><option value="">Select</option><option value="B1">B1</option><option value="B2">B2</option><option value="B1/B2">B1/B2</option><option value="F1">F1</option><option value="F2">F2</option><option value="J1">J1</option><option value="J2">J2</option><option value="H1B">H1B</option><option value="L1">L1</option><option value="M1">M1</option><option value="O1">O1</option></select></div>
+      <div class="form-group"><label>Intended Visa Type 签证类型 <span class="req">*</span></label><select name="visaType" data-field="Visa Type" required><option value="">Select 请选择</option><option value="B1">B1</option><option value="B2">B2</option><option value="B1/B2">B1/B2</option><option value="F1">F1</option><option value="F2">F2</option><option value="J1">J1</option><option value="J2">J2</option><option value="H1B">H1B</option><option value="L1">L1</option><option value="M1">M1</option><option value="O1">O1</option></select></div>
     </div>
     <h3>Travel Plans 旅行计划</h3>
-    <div class="form-row col1"><div class="form-group"><label>Have you made specific travel plans? 是否已制定具体旅行计划? <span class="req">*</span></label><select name="hasTravelPlans" data-field="Travel Plans" required id="hasTravelPlans"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Have you made specific travel plans? 是否已制定具体旅行计划? <span class="req">*</span></label><select name="hasTravelPlans" data-field="Travel Plans" required id="hasTravelPlans"><option value="">Select 请选择</option><option value="Yes">Yes</option><option value="No">No</option></select></div></div>
     <div id="travelPlansBlock" style="display:none;">
       <div class="form-row col2"><div class="form-group"><label>Intended Date of Arrival 预计抵达</label><input type="date" name="arrivalDate" data-field="Arrival"><label>Intended Date of Departure 预计离境</label><input type="date" name="departureDate" data-field="Departure"></div></div>
       <div class="form-row col1"><div class="form-group"><label>Intended Length of Stay 预计停留时长</label><input name="stayLength" data-field="Stay Length" placeholder="e.g. 2 weeks / 4 years"></div></div>
@@ -592,7 +592,7 @@
     </div>
     <h3 style="margin-top:14px;">U.S. Address 在美地址</h3>
     <div class="form-row col1"><div class="form-group"><label>Street Address 街道地址 <span class="req">*</span></label><input name="usAddrLine1" data-field="US Address" placeholder="School/hotel address" required></div></div>
-    <div class="form-row col3"><div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="usAddrCity" data-field="US City" placeholder="e.g. New York" required><label>State 州 <span class="req">*</span></label><select name="usAddrState" data-field="US State" required><option value="">Select</option><option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option><option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option><option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option><option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option><option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option><option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option><option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option><option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option><option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option><option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option><option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option><option value="WI">WI</option><option value="WY">WY</option><option value="DC">DC</option></select><label>ZIP 邮编 <span class="req">*</span></label><input name="usAddrZip" data-field="US ZIP" placeholder="e.g. 10001" required></div></div>
+    <div class="form-row col3"><div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="usAddrCity" data-field="US City" placeholder="e.g. New York" required><label>State 州 <span class="req">*</span></label><select name="usAddrState" data-field="US State" required><option value="">Select 请选择</option><option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option><option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option><option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option><option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option><option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option><option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option><option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option><option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option><option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option><option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option><option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option><option value="WI">WI</option><option value="WY">WY</option><option value="DC">DC</option></select><label>ZIP 邮编 <span class="req">*</span></label><input name="usAddrZip" data-field="US ZIP" placeholder="e.g. 10001" required></div></div>
     <h3 style="margin-top:14px;">Trip Payment 旅行费用</h3>
     <div class="form-row col1"><div class="form-group"><label>Person/Entity Paying 付款方 <span class="req">*</span></label><select name="tripPayer" data-field="Trip Payer" required id="tripPayer"><option value="">Select 请选择</option><option value="SELF">SELF 本人</option><option value="PARENTS">PARENTS 父母</option><option value="OTHER PERSON">OTHER PERSON 他人</option><option value="COMPANY/ORG">COMPANY / ORGANIZATION 公司/组织</option><option value="OTHER">OTHER 其他</option></select></div></div>
     <div id="payerBlock" style="display:none;">
@@ -607,10 +607,10 @@
 <div class="section" id="section-6">
   <div class="section-header" onclick="toggleSection(6)"><span class="section-num">6</span><span class="section-title">Travel Companions Information 旅伴信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="form-row col1"><div class="form-group"><label>Traveling with others? 是否与其他人同行? <span class="req">*</span></label><select name="hasCompanion" data-field="Companions" required id="hasCompanion"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Traveling with others? 是否与其他人同行? <span class="req">*</span></label><select name="hasCompanion" data-field="Companions" required id="hasCompanion"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="companionBlock" style="display:none;">
       <div class="form-row col1"><div class="form-group"><label>Names & Relationships 姓名与关系</label><textarea name="companionList" rows="2" placeholder="LI SI (Spouse)&#10;WANG WU (Colleague)"></textarea></div></div>
-      <div class="form-row col1"><div class="form-group"><label>Traveling as part of a group/organization? 是否团体出行?</label><select name="travelGroup" data-field="Group Travel"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Traveling as part of a group/organization? 是否团体出行?</label><select name="travelGroup" data-field="Group Travel"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
       <div id="groupNameBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Group/Organization Name 团体名称</label><input name="groupName"></div></div>
     </div>
   </div>
@@ -620,14 +620,14 @@
 <div class="section" id="section-7">
   <div class="section-header" onclick="toggleSection(7)"><span class="section-num">7</span><span class="section-title">Previous U.S. Travel Information 赴美旅行历史</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="form-row col1"><div class="form-group"><label>Ever been to the U.S.? 是否去过美国? <span class="req">*</span></label><select name="prevUSTravel" data-field="Prev US Travel" required id="prevUSTravel"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Ever been to the U.S.? 是否去过美国? <span class="req">*</span></label><select name="prevUSTravel" data-field="Prev US Travel" required id="prevUSTravel"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="prevTravelBlock" style="display:none;"><div class="form-row col1"><div class="form-group"><label>Last 5 visits (date, length) 最近5次访美记录</label><textarea name="prevTravelRec" rows="3" placeholder="2023-06-01 to 2023-06-20 (20 days) Tourism&#10;2019-01-10 to 2019-01-25 (15 days) Business"></textarea></div></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Ever issued a U.S. visa? 曾获美国签证? <span class="req">*</span></label><select name="hadUSVisa" data-field="US Visa Issued" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Visa ever cancelled/revoked? 签证曾被取消/撤销? <span class="req">*</span></label><select name="visaRevoked" data-field="Visa Revoked" required id="visaRevoked"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Ever issued a U.S. visa? 曾获美国签证? <span class="req">*</span></label><select name="hadUSVisa" data-field="US Visa Issued" required><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Visa ever cancelled/revoked? 签证曾被取消/撤销? <span class="req">*</span></label><select name="visaRevoked" data-field="Visa Revoked" required id="visaRevoked"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="visaRevokedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><textarea name="visaRevokedEx" rows="2"></textarea></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Immigrant petition filed for you? 曾有人为您提交移民申请? <span class="req">*</span></label><select name="immPetition" data-field="Imm Petition" required id="immPetition"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Immigrant petition filed for you? 曾有人为您提交移民申请? <span class="req">*</span></label><select name="immPetition" data-field="Imm Petition" required id="immPetition"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="immPetitionBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><textarea name="immPetitionEx" rows="2" placeholder="Who filed, when"></textarea></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Ever refused a U.S. visa or denied entry? 曾被拒签/拒绝入境? <span class="req">*</span></label><select name="visaRefused" data-field="Visa Refused" required id="visaRefused"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Ever refused a U.S. visa or denied entry? 曾被拒签/拒绝入境? <span class="req">*</span></label><select name="visaRefused" data-field="Visa Refused" required id="visaRefused"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="visaRefusedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><textarea name="visaRefusedEx" rows="3" placeholder="When, where, what visa type, reason"></textarea></div></div>
   </div>
 </div>
@@ -653,12 +653,12 @@
   <div class="section-body">
     <h3>Father 父亲</h3>
     <div class="form-row col2"><div class="form-group"><label>Surname 姓氏 <span class="req">*</span></label><input name="fatherSurname" data-field="Father Sur" placeholder="e.g. CHEN" required><label>Given Name 名字 <span class="req">*</span></label><input name="fatherGiven" data-field="Father Giv" placeholder="e.g. DAWEI" required></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="fatherDob" data-field="Father DOB"><label>In the U.S.? 在美国? <span class="req">*</span></label><select name="fatherInUS" data-field="Father US" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="fatherDob" data-field="Father DOB"><label>In the U.S.? 在美国? <span class="req">*</span></label><select name="fatherInUS" data-field="Father US" required><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <h3 style="margin-top:14px;">Mother 母亲</h3>
     <div class="form-row col2"><div class="form-group"><label>Surname 姓氏 <span class="req">*</span></label><input name="motherSurname" data-field="Mother Sur" placeholder="e.g. LIN" required><label>Given Name 名字 <span class="req">*</span></label><input name="motherGiven" data-field="Mother Giv" placeholder="e.g. MEILING" required></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="motherDob" data-field="Mother DOB"><label>In the U.S.? 在美国? <span class="req">*</span></label><select name="motherInUS" data-field="Mother US" required><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="motherDob" data-field="Mother DOB"><label>In the U.S.? 在美国? <span class="req">*</span></label><select name="motherInUS" data-field="Mother US" required><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <h3 style="margin-top:14px;">Immediate Relatives in U.S. 在美直系亲属</h3>
-    <div class="form-row col1"><div class="form-group"><label>Any immediate relatives in the U.S.? 是否有直系亲属在美国? <span class="req">*</span></label><select name="relativeInUS" data-field="Relatives US" required id="relativeInUS"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Any immediate relatives in the U.S.? 是否有直系亲属在美国? <span class="req">*</span></label><select name="relativeInUS" data-field="Relatives US" required id="relativeInUS"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="relativeBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List 列举</label><textarea name="relativeList" rows="2" placeholder="CHEN LI, Brother, Green Card&#10;WANG HUA, Father, Citizen"></textarea></div></div>
   </div>
 </div>
@@ -670,7 +670,7 @@
     <div class="alert alert-info" style="font-size:10px;">Complete if married / common law. Otherwise skip.</div>
     <div class="form-row col2"><div class="form-group"><label>Spouse's Surname 配偶姓氏</label><input name="spouseSur"><label>Spouse's Given Name 配偶名字</label><input name="spouseGiv"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="spouseDob"><label>Nationality 国籍</label><input name="spouseNat" placeholder="China"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>City of Birth 出生城市</label><input name="spouseBirthCity"><label>Country of Birth 出生国家</label><select name="spouseBirthCty"><option value="">Select</option><option value="CHINA">CHINA</option><option value="OTHER">OTHER</option></select></div></div>
+    <div class="form-row col2"><div class="form-group"><label>City of Birth 出生城市</label><input name="spouseBirthCity"><label>Country of Birth 出生国家</label><select name="spouseBirthCty"><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="OTHER">OTHER 其他</option></select></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address (if different from yours) 配偶地址(如不同)</label><input name="spouseAddr"></div></div>
   </div>
 </div>
@@ -702,7 +702,7 @@
     <div class="form-row col2"><div class="form-group"><label>City 城市</label><input name="employerCity"><label>State/Province 省/州</label><input name="employerState"></div></div>
     <div class="form-row col3"><div class="form-group"><label>Postal Code 邮编</label><input name="employerZip"><label>Country 国家</label><input name="employerCountry" placeholder="China"><label>Work Phone 工作电话</label><input name="workPhone"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Monthly Salary (local currency) 月薪(本币) <span class="req">*</span></label><input name="monthlySalary" type="number" data-field="Salary" placeholder="e.g. 8000" required><label>Briefly Describe Duties 工作职责简述 <span class="req">*</span></label><input name="jobDuties" data-field="Duties" placeholder="e.g. Software Engineer" required></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Were you previously employed? 此前是否有其他工作? <span class="req">*</span></label><select name="prevEmployed" data-field="Prev Employed" required id="prevEmployed"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Were you previously employed? 此前是否有其他工作? <span class="req">*</span></label><select name="prevEmployed" data-field="Prev Employed" required id="prevEmployed"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div class="alert alert-warning" style="font-size:10px;">If Yes, complete Section 12 (Previous Work).</div>
   </div>
 </div>
@@ -738,7 +738,7 @@
     <div class="form-row col2"><div class="form-group"><label>Primary Language 主要语言</label><select name="lang1"><option value="">Select 请选择</option><option>Chinese (Mandarin) 普通话</option><option>Chinese (Cantonese) 粤语</option><option>English 英语</option><option>Spanish 西班牙语</option><option>Other 其他</option></select></div></div>
 
     <h3 style="margin-top:14px;">Education History 教育背景</h3>
-    <div class="form-row col2"><div class="form-group"><label>Highest Education Level 最高学历</label><select name="eduLvl"><option value="">Select 请选择</option><option>High School 高中</option><option>Associate 大专</option><option>Bachelor's 本科</option><option>Master's 硕士</option><option>Doctorate 博士</option><option>Professional (MD/JD) 专业学位(医学/法学)</option><option>Other 其他</option></select><label>Institution Name 学校/机构名称</label><input name="eduSchool" data-field="School"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Institution Name 学校/机构名称</label><input name="eduSchool" data-field="School"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="eduAddr"></div></div>
     <div class="form-row col3"><div class="form-group"><label>City 城市</label><input name="eduCity"><label>State/Province 省/州</label><input name="eduState"><label>ZIP 邮编</label><input name="eduZip"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Country 国家</label><input name="eduCty" placeholder="China"><label>Major / Course of Study 专业</label><input name="eduMajor" placeholder="e.g. Computer Science"></div></div>
@@ -748,11 +748,11 @@
     <div class="form-row col1"><div class="form-group"><label>List countries visited 列举访问国家</label><textarea name="countriesVisited" rows="3" placeholder="Japan, 2024&#10;Thailand, 2023&#10;South Korea, 2022"></textarea></div></div>
 
     <h3 style="margin-top:14px;">Organizational Memberships 组织隶属</h3>
-    <div class="form-row col1"><div class="form-group"><label>Have you belonged to or contributed to any professional, social, or charitable organization? 是否加入或捐助过任何专业/社会/慈善组织?</label><select name="orgMember" data-field="Orgs"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Have you belonged to or contributed to any professional, social, or charitable organization? 是否加入或捐助过任何专业/社会/慈善组织?</label><select name="orgMember" data-field="Orgs"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="orgMemberBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List organizations 列举组织</label><textarea name="orgList" rows="2" placeholder="Name, purpose, dates"></textarea></div></div>
 
     <h3 style="margin-top:14px;">Military Service 军事服役</h3>
-    <div class="form-row col1"><div class="form-group"><label>Have you ever served in the military? 是否曾服役? <span class="req">*</span></label><select name="military" data-field="Military" required id="military"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Have you ever served in the military? 是否曾服役? <span class="req">*</span></label><select name="military" data-field="Military" required id="military"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="militaryBlock" style="display:none;">
       <div class="form-row col2"><div class="form-group"><label>Country 国家</label><input name="milCty"><label>Branch 军种</label><input name="milBranch" placeholder="e.g. Army, Navy"></div></div>
       <div class="form-row col2"><div class="form-group"><label>Rank 军衔</label><input name="milRank"><label>Dates 服役时间</label><input name="milDates" placeholder="e.g. 2010-2012"></div></div>
@@ -761,9 +761,9 @@
 
     <h3 style="margin-top:14px;">Specialized Skills/Training 特殊技能</h3>
     <div class="alert alert-warning" style="font-size:10px;">Most applicants answer No. Answer truthfully.</div>
-    <div class="sec-q"><label>Firearms, explosives, WMD training? 枪支/爆炸物/大规模杀伤性武器?</label><select name="skill_weapons" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="skill_weapons_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Nuclear, biological, chemical training? 核/生物/化学培训?</label><select name="skill_nbc" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="skill_nbc_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Child soldier training/use? 儿童兵相关?</label><select name="skill_child" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="skill_child_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Firearms, explosives, WMD training? 枪支/爆炸物/大规模杀伤性武器?</label><select name="skill_weapons" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_weapons_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Nuclear, biological, chemical training? 核/生物/化学培训?</label><select name="skill_nbc" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_nbc_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Child soldier training/use? 儿童兵相关?</label><select name="skill_child" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_child_ex" placeholder="Explain" style="display:none;"></div>
   </div>
 </div>
 
@@ -773,26 +773,26 @@
   <div class="section-body">
     <div class="alert alert-warning" style="font-size:10px;">Answer ALL questions honestly. Most applicants answer "No" to all.</div>
     <h4>Part 1 — Medical & Health</h4>
-    <div class="sec-q"><label>Communicable disease of public health significance? 患有公共卫生传染性疾病?</label><select name="s1_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s1_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Physical or mental disorder posing threat? 有危害他人的身体或精神疾病?</label><select name="s1_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s1_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Drug abuser or addict? 吸毒或药物成瘾?</label><select name="s1_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s1_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Communicable disease of public health significance? 患有公共卫生传染性疾病?</label><select name="s1_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Physical or mental disorder posing threat? 有危害他人的身体或精神疾病?</label><select name="s1_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Drug abuser or addict? 吸毒或药物成瘾?</label><select name="s1_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_3_ex" placeholder="Explain" style="display:none;"></div>
     <h4>Part 2 — Criminal 犯罪</h4>
-    <div class="sec-q"><label>Arrested or convicted? 曾被逮捕或定罪?</label><select name="s2_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Drug law violations? 违反毒品相关法律?</label><select name="s2_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Money laundering? 洗钱?</label><select name="s2_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_3_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Prostitution or procuring? 卖淫或组织卖淫?</label><select name="s2_4" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s2_4_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Arrested or convicted? 曾被逮捕或定罪?</label><select name="s2_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Drug law violations? 违反毒品相关法律?</label><select name="s2_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Money laundering? 洗钱?</label><select name="s2_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Prostitution or procuring? 卖淫或组织卖淫?</label><select name="s2_4" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_4_ex" placeholder="Explain" style="display:none;"></div>
     <h4>Part 3 — National Security 国家安全</h4>
-    <div class="sec-q"><label>Espionage, sabotage, terrorism? 间谍/破坏/恐怖主义活动?</label><select name="s3_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s3_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Member of terrorist organization? 恐怖组织成员?</label><select name="s3_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s3_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Genocide / extrajudicial killings / persecution? 种族灭绝/法外处决/迫害?</label><select name="s3_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s3_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Espionage, sabotage, terrorism? 间谍/破坏/恐怖主义活动?</label><select name="s3_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Member of terrorist organization? 恐怖组织成员?</label><select name="s3_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Genocide / extrajudicial killings / persecution? 种族灭绝/法外处决/迫害?</label><select name="s3_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_3_ex" placeholder="Explain" style="display:none;"></div>
     <h4>Part 4 — Immigration 移民</h4>
-    <div class="sec-q"><label>Overstayed U.S. visa? 逾期滞留美国签证?</label><select name="s4_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s4_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Deported or removed from U.S.? 曾被美国驱逐或遣返?</label><select name="s4_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s4_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Alien smuggling? 参与偷渡/人口走私?</label><select name="s4_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s4_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Overstayed U.S. visa? 逾期滞留美国签证?</label><select name="s4_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Deported or removed from U.S.? 曾被美国驱逐或遣返?</label><select name="s4_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Alien smuggling? 参与偷渡/人口走私?</label><select name="s4_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_3_ex" placeholder="Explain" style="display:none;"></div>
     <h4>Part 5 — Miscellaneous 其他</h4>
-    <div class="sec-q"><label>Withheld custody of U.S. citizen child? 非法扣留美国公民子女?</label><select name="s5_1" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s5_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Human trafficking? 人口贩卖?</label><select name="s5_2" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s5_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>War crimes / crimes against humanity? 战争罪行/反人类罪?</label><select name="s5_3" required onchange="toggleExplain(this)"><option value="No">No</option><option value="Yes">Yes</option></select><input name="s5_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Withheld custody of U.S. citizen child? 非法扣留美国公民子女?</label><select name="s5_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_1_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Human trafficking? 人口贩卖?</label><select name="s5_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_2_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>War crimes / crimes against humanity? 战争罪行/反人类罪?</label><select name="s5_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_3_ex" placeholder="Explain" style="display:none;"></div>
   </div>
 </div>
 
