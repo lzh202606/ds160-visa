@@ -1016,18 +1016,16 @@ function initCountdown() {
 
   // 第1步：尝试服务端验证（最强保障）
   try {
-    const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token), {signal: AbortSignal.timeout(8000)});
+    const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token), {signal: (function(){var ac=new AbortController();setTimeout(function(){ac.abort()},8000);return ac.signal})()});
     const checkData = await checkRes.json();
     if (checkData.valid) {
       window.DS160_TOKEN_ID = tokenId;
       window.DS160_TOKEN = token;
       window.consumeToken = function() {
         localStorage.setItem(usedKey, new Date().toISOString());
+        try{fetch((window.API_BASE||'')+'/api/consume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:window.DS160_TOKEN||''})});}catch(e){}
       };
-      // 立即消耗：服务端标记
-      try { fetch((window.API_BASE||'') + '/api/consume', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token})}); } catch(ce){}
-      // 立即消耗：本地标记
-      localStorage.setItem(usedKey, new Date().toISOString());
+      // Token仅在 PDF 下载时消耗，页面加载仅验证不消耗
       // 倒计时
       if (checkData.remainingMs && checkData.remainingMs !== Infinity) {
         window.DS160_REMAINING_MS = checkData.remainingMs;
@@ -1092,11 +1090,9 @@ function initCountdown() {
   window.DS160_TOKEN = token;
   window.consumeToken = function() {
     localStorage.setItem(usedKey, new Date().toISOString());
+    try{fetch((window.API_BASE||'')+'/api/consume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:window.DS160_TOKEN||''})});}catch(e){}
   };
-  // 立即消耗：本地标记
-  localStorage.setItem(usedKey, new Date().toISOString());
-  // 尝试消耗：服务端标记（fire-and-forget）
-  try { fetch((window.API_BASE||'') + '/api/consume', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token})}); } catch(ce){}
+  // Token仅在 PDF 下载时消耗
 
   // 倒计时
   if (accessResult.remainingMs !== Infinity) {
@@ -1900,32 +1896,7 @@ async function printPDF() {
   if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') { alert('\u8BF7\u7A0D\u5019\uFF0C\u9875\u9762\u8D44\u6E90\u52A0\u8F7D\u4E2D\uFF0C\u8BF7\u518D\u8BD5\u3002'); return; }
   const token = window.DS160_TOKEN;
  if (token) {
-    // PDF下载前验证token（服务端优先，本地回退）
-    var pdfTokenValid = false;
-    try {
-      const recheck = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token), {signal: AbortSignal.timeout(8000)});
-      const recheckData = await recheck.json();
-      if (!recheckData.valid) {
-        var failMsg = '\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-        if (recheckData.reason === 'already used') failMsg = '\u60A8\u7684\u94FE\u63A5\u5DF2\u88AB\u4F7F\u7528\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-        else if (recheckData.reason === 'expired') failMsg = '\u60A8\u7684\u94FE\u63A5\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-        else if (recheckData.reason === 'access time expired') failMsg = '\u60A8\u7684\u94FE\u63A5\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-        alert(failMsg);
-        return;
-      }
-      pdfTokenValid = true;
-    } catch(e) {
-      // 服务端不可达，回退本地HMAC验证
-      const hmacOk = await localHmacVerify(token);
-      if (hmacOk) {
-        const p = token.split('.');
-        const tid = p[0];
-        const uk = 'ds160_used_' + tid;
-        if (localStorage.getItem(uk)) { alert('\u94FE\u63A5\u5DF2\u5931\u6548\uFF0C\u8BF7\u83B7\u53D6\u65B0\u94FE\u63A5\u3002'); return; }
-        pdfTokenValid = true;
-      }
-    }
-    if (!pdfTokenValid) { alert('\u94FE\u63A5\u65E0\u6548\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002'); return; }
+    // Token已在页面加载时验证，无需重复验证
   } const form = document.getElementById('ds160Form');
   const fd = new FormData(form);
   const data = {};
@@ -2980,15 +2951,9 @@ document.addEventListener('DOMContentLoaded', function() {
        const section = document.getElementById('section-' + c.id);
        if (section && section.getBoundingClientRect().top < 200) activeId = c.id;
      });
-     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-     const item = document.querySelector('.sidebar-item[data-chapter="' + activeId + '"]');
-     if (item) item.classList.add('active');
    });
  });
-    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-    const item = document.querySelector('.sidebar-item[data-chapter="' + activeId + '"]');
-    if (item) item.classList.add('active');
-  });
+    });
 });
 </script>
 </body>
