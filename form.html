@@ -156,14 +156,14 @@
   .alert-info { background: #e8f0fe; color: #1a56db; border: 1px solid #bfdbfe; }
   .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
-  /* Save indicator */
+  /* 保存指示器 */
   .save-indicator { font-size: 11px; padding: 3px 10px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; transition: all 0.3s; }
   .save-indicator.saved { background: rgba(52,211,153,0.1); color: #34d399; }
   .save-indicator.saving { background: rgba(251,191,36,0.1); color: #fbbf24; animation: pulse 1s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
   .save-indicator.draft { background: rgba(248,113,113,0.1); color: #f87171; }
 
-  /* Validation modal */
+  /* 校验弹窗 */
   .val-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .val-modal { background: #fff; border-radius: 20px; padding: 28px 32px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
@@ -180,7 +180,7 @@
   .val-close { margin-top: 16px; width: 100%; padding: 12px; border: none; border-radius: 12px; background: #1a56db; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
   .val-close.all-clear { background: #16a34a; }
 
-  /* ── Chapter Sidebar ── */
+  /* ── 章节侧边栏 ── */
   .sidebar { position: fixed; left: 0; top: 0; width: 200px; height: 100vh; background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; z-index: 100; transition: transform 0.3s; padding: 16px 0; box-shadow: 2px 0 20px rgba(0,0,0,0.04); }
   .sidebar.collapsed { transform: translateX(-200px); }
   .sidebar-toggle { position: fixed; left: 200px; top: 50%; transform: translateY(-50%); z-index: 101; width: 24px; height: 48px; background: #fff; border: 1px solid #e2e8f0; border-left: none; border-radius: 0 8px 8px 0; cursor: pointer; font-size: 12px; color: #64748b; transition: left 0.3s; display: flex; align-items: center; justify-content: center; }
@@ -195,13 +195,13 @@
   .sidebar-item .s-num { font-weight: 700; font-size: 10px; color: #94a3b8; width: 18px; }
   @media (max-width: 900px) { .sidebar { display: none; } .sidebar-toggle { display: none; } }
 
-  /* ── Field Tooltip ── */
+  /* ── 字段提示 ── */
   .field-hint { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #e2e8f0; color: #64748b; font-size: 10px; text-align: center; line-height: 16px; cursor: help; margin-left: 4px; vertical-align: middle; font-weight: 700; }
   .field-hint:hover { background: #1a56db; color: #fff; }
   .field-error-live { font-size: 11px; color: var(--danger); margin-top: 3px; display: none; }
   .field-error-live.show { display: block; }
 
-  /* ── Bottom Nav Bar ── */
+  /* ── 底部导航条 ── */
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; padding: 8px 16px; display: flex; justify-content: center; gap: 20px; z-index: 99; }
   .bottom-nav a { font-size: 12px; color: #64748b; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
   .bottom-nav a:hover { background: #f1f5f9; color: #1a56db; }
@@ -251,7 +251,7 @@
   }
   #assessPanel > * { position: relative; z-index: 1; }
 
-  /* Score Hero */
+  /* 评分主区 */
   #assessPanel .as-score {
     display: flex; align-items: center; justify-content: center; gap: 28px;
     flex-wrap: wrap; margin-bottom: 24px; padding: 20px 0;
@@ -277,7 +277,7 @@
   .as-verdict .vhi { color: #2ed573; } .as-verdict .vmd { color: #ffae42; } .as-verdict .vlo { color: #ff5367; }
   .as-verdict p { font-size: 12px; color: #6e7899; margin-top: 4px; animation: none; }
 
-  /* Dimension Cards - Glassmorphism */
+  /* 维度卡片 - 毛玻璃效果 */
   .as-dims {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px; margin-bottom: 20px;
@@ -306,7 +306,7 @@
   .as-dim .ad-fill.lo { background: linear-gradient(90deg, #ff5367, #ff7979); }
   .as-dim .ad-tip { font-size: 10px; color: #6e7899; margin-top: 4px; line-height: 1.5; }
 
-  /* Risk Alerts */
+  /* 风险提示 */
   .as-risks {
     background: linear-gradient(135deg, rgba(255,83,103,.06), rgba(255,83,103,.02));
     border: 1px solid rgba(255,83,103,.15); border-radius: 16px;
@@ -326,7 +326,7 @@
   .as-risks .ar-item:hover { background: rgba(255,83,103,.08); }
   .as-risks .ar-act { color: #5b8def; font-size: 11px; margin-top: 4px; padding-left: 2px; }
 
-  /* Checklist - Grouped Cards */
+  /* 清单 - 分组卡片 */
   .as-checklist { margin-bottom: 18px; animation: asFadeUp .6s ease-out .5s both; }
   .as-checklist h4 { color: #5b8def; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
   .cl-group { border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
@@ -343,7 +343,7 @@
   .cl-group.important .cl-item { color: #d4b87a; } .cl-group.important .cl-item::before { border-color: #ffae42; }
   .cl-group.suggested .cl-item { color: #8cc9a0; } .cl-group.suggested .cl-item::before { border-color: #2ed573; }
 
-  /* Button */
+  /* 按钮 */
   #assessBtn {
     padding: 14px 36px; border: none; border-radius: 12px;
     background: linear-gradient(135deg, #1a56db, #4870e0, #6c5ce7);
@@ -429,20 +429,20 @@
   </div>
 
 <form id="ds160Form" novalidate>
-<!-- ═══ 1. Personal Information 1 ═══ -->
+<!-- ═══ 1. Personal Information 1 个人信息(一) ═══ -->
 <div class="section open" id="section-1">
   <div class="section-header" onclick="toggleSection(1)"><span class="section-num">1</span><span class="section-title">Personal Information 1 个人信息（一）</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col2">
-      <div class="form-group"><label>Surnames 姓氏 <span class="req">*</span></label><input name="surname" data-field="Surnames" placeholder="e.g. CHEN" required></div>
-      <div class="form-group"><label>Given Names 名字 <span class="req">*</span></label><input name="givenName" data-field="Given Names" placeholder="e.g. XIAOMING" required></div>
+      <div class="form-group"><label>Surnames 姓氏 <span class="req">*</span></label><input name="surname" data-field="Surnames" placeholder="如 CHEN" required></div>
+      <div class="form-group"><label>Given Names 名字 <span class="req">*</span></label><input name="givenName" data-field="Given Names" placeholder="如 XIAOMING" required></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>Full Name in Native Alphabet 中文姓名 <span class="req">*</span></label><input name="nativeName" data-field="Name in Native" placeholder="e.g. 陈小明" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Full Name in Native Alphabet 中文姓名 <span class="req">*</span></label><input name="nativeName" data-field="Name in Native" placeholder="如 陈小明" required></div></div>
     <div class="form-row col2">
-      <div class="form-group"><label>Surname Telecode 姓氏电码 <span class="hint">4 digits</span></label><input name="surTelecode" placeholder="e.g. 7115"></div>
-      <div class="form-group"><label>Given Name Telecode 名字电码 <span class="hint">4 digits</span></label><input name="givTelecode" placeholder="e.g. 1129 2494"></div>
+      <div class="form-group"><label>Surname Telecode 姓氏电码 <span class="hint">4位数字</span></label><input name="surTelecode" placeholder="如 7115"></div>
+      <div class="form-group"><label>Given Name Telecode 名字电码 <span class="hint">4位数字</span></label><input name="givTelecode" placeholder="如 1129 2494"></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>Other Surnames Used 曾用姓氏 <span class="hint">Maiden name, professional name, etc. / 如无则填 N/A</span></label><input name="otherSurnames" data-field="Other Surnames" placeholder="N/A"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Other Surnames Used 曾用姓氏 <span class="hint">娘家姓、职业用名等 / 如无则填 N/A</span></label><input name="otherSurnames" data-field="Other Surnames" placeholder="N/A"></div></div>
     <div class="form-row col2">
       <div class="form-group"><label>Sex 性别 <span class="req">*</span></label><select name="sex" data-field="Sex" required><option value="">Select 请选择</option><option value="Male">Male 男</option><option value="Female">Female 女</option></select></div>
       <div class="form-group"><label>Marital Status 婚姻状态 <span class="req">*</span></label>
@@ -455,10 +455,10 @@
     </div>
     <div class="form-row col2">
       <div class="form-group"><label>Date of Birth 出生日期 <span class="req">*</span></label><input type="date" name="dob" data-field="DOB" required></div>
-      <div class="form-group"><label>City of Birth 出生城市 <span class="req">*</span></label><input name="birthCity" data-field="Birth City" placeholder="e.g. Fuzhou" required></div>
+      <div class="form-group"><label>City of Birth 出生城市 <span class="req">*</span></label><input name="birthCity" data-field="Birth City" placeholder="如 福州" required></div>
     </div>
     <div class="form-row col2">
-      <div class="form-group"><label>State/Province of Birth 出生省/州 <span class="req">*</span></label><input name="birthState" data-field="Birth State" placeholder="e.g. Fujian" required></div>
+      <div class="form-group"><label>State/Province of Birth 出生省/州 <span class="req">*</span></label><input name="birthState" data-field="Birth State" placeholder="如 福建" required></div>
       <div class="form-group"><label>Country of Birth 出生国家 <span class="req">*</span></label>
         <select name="birthCountry" data-field="Birth Country" required id="birthCountry"><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="OTHER">OTHER 其他</option></select>
       </div>
@@ -466,7 +466,7 @@
   </div>
 </div>
 
-<!-- ═══ 2. Personal Information 2 ═══ -->
+<!-- ═══ 2. Personal Information 2 个人信息(二) ═══ -->
 <div class="section" id="section-2">
   <div class="section-header" onclick="toggleSection(2)"><span class="section-num">2</span><span class="section-title">Personal Information 2 个人信息（二）</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
@@ -474,25 +474,25 @@
       <div class="form-group"><label>Nationality 国籍 <span class="req">*</span></label><select name="nationality" data-field="Nationality" required><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="OTHER">OTHER 其他</option></select></div>
       <div class="form-group"><label>Other Nationality? 其他国籍/永居</label><select name="otherNationality" data-field="Other Nationality"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div>
     </div>
-    <div id="otherNationalityBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><input name="otherNationalityList" placeholder="List countries"></div></div>
+    <div id="otherNationalityBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>请说明 说明</label><input name="otherNationalityList" placeholder="列举国家"></div></div>
     <div class="form-row col2">
-      <div class="form-group"><label>National Identification Number 身份证号</label><input name="nationalId" data-field="National ID" placeholder="N/A if not applicable"></div>
-      <div class="form-group"><label>U.S. Social Security Number 美国社安号</label><input name="ssn" data-field="SSN" placeholder="Does Not Apply"></div>
+      <div class="form-group"><label>National Identification Number 身份证号</label><input name="nationalId" data-field="National ID" placeholder="不适用填 N/A"></div>
+      <div class="form-group"><label>U.S. Social Security Number 美国社安号</label><input name="ssn" data-field="SSN" placeholder="不适用"></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>U.S. Taxpayer ID Number 美国纳税人识别号</label><input name="taxpayerId" data-field="Taxpayer ID" placeholder="Does Not Apply"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>U.S. Taxpayer ID Number 美国纳税人识别号</label><input name="taxpayerId" data-field="Taxpayer ID" placeholder="不适用"></div></div>
   </div>
 </div>
 
-<!-- ═══ 3. Address and Phone (including Social Media) ═══ -->
+<!-- ═══ 3. Address and Phone 地址和联系方式 ═══ -->
 <div class="section" id="section-3">
   <div class="section-header" onclick="toggleSection(3)"><span class="section-num">3</span><span class="section-title">Address and Phone Information 地址和联系方式</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <h3>Home Address 家庭地址</h3>
-    <div class="form-row col1"><div class="form-group"><label>Street Address 1 详细地址 <span class="req">*</span></label><input name="addrLine1" data-field="Address 1" placeholder="e.g. Room 301, No.88 Wusi Rd" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Street Address 1 详细地址 <span class="req">*</span></label><input name="addrLine1" data-field="Address 1" placeholder="如 房间301，五四路88号" required></div></div>
     <div class="form-row col1"><div class="form-group"><label>Street Address 2 地址第二行 <span class="hint">选填</span></label><input name="addrLine2" data-field="Address 2"></div></div>
     <div class="form-row col2">
-      <div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="addrCity" data-field="City" placeholder="e.g. Fuzhou" required></div>
-      <div class="form-group"><label>State/Province 省/州 <span class="req">*</span></label><input name="addrState" data-field="State" placeholder="e.g. Fujian" required></div>
+      <div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="addrCity" data-field="City" placeholder="如 福州" required></div>
+      <div class="form-group"><label>State/Province 省/州 <span class="req">*</span></label><input name="addrState" data-field="State" placeholder="如 福建" required></div>
     </div>
     <div class="form-row col2">
       <div class="form-group"><label>Postal Code 邮编</label><input name="addrZip" data-field="ZIP"></div>
@@ -507,10 +507,10 @@
     </div>
     <h3 style="margin-top:14px;">Phone & Email 电话和邮箱</h3>
     <div class="form-row col2">
-      <div class="form-group"><label>Primary Phone 主要电话 <span class="req">*</span></label><input name="phone" data-field="Phone" placeholder="e.g. 13800138000" required></div>
+      <div class="form-group"><label>Primary Phone 主要电话 <span class="req">*</span></label><input name="phone" data-field="Phone" placeholder="如 13800138000" required></div>
       <div class="form-group"><label>Secondary Phone 备用电话</label><input name="phone2" data-field="Phone2"></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>Email Address 电子邮箱 <span class="req">*</span></label><input name="email" data-field="Email" type="email" placeholder="you@email.com" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Email Address 电子邮箱 <span class="req">*</span></label><input name="email" data-field="Email" type="email" placeholder="您的邮箱" required></div></div>
 
     <h3 style="margin-top:14px;">Email Addresses (Last 5 Years) 近5年其他邮箱</h3>
     <div class="form-row col1"><div class="form-group"><label>Have you used other email addresses in the last 5 years? 近5年是否使用过其他邮箱?</label><select name="hasOtherEmails"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
@@ -520,48 +520,48 @@
     </div>
 
     <h3 style="margin-top:14px;">Social Media Identifiers 社交媒体信息 (过去5年)</h3>
-    <div class="alert alert-info" style="font-size:10px;">Provide identifiers used in the last 5 years. Leave blank if not applicable.</div>
+    <div class="alert alert-info" style="font-size:10px;">请提供过去5年使用的社交媒体账号。如不适用请留空。</div>
     <div class="form-row col2">
-      <div class="form-group"><label>Facebook 脸书</label><input name="sm_facebook" placeholder="@username"></div>
-      <div class="form-group"><label>Twitter / X 推特</label><input name="sm_twitter" placeholder="@username"></div>
+      <div class="form-group"><label>Facebook 脸书</label><input name="sm_facebook" placeholder="@用户名"></div>
+      <div class="form-group"><label>Twitter / X 推特</label><input name="sm_twitter" placeholder="@用户名"></div>
     </div>
     <div class="form-row col2">
-      <div class="form-group"><label>Instagram 照片墙</label><input name="sm_instagram" placeholder="@username"></div>
-      <div class="form-group"><label>YouTube 油管</label><input name="sm_youtube" placeholder="Channel / 频道"></div>
+      <div class="form-group"><label>Instagram 照片墙</label><input name="sm_instagram" placeholder="@用户名"></div>
+      <div class="form-group"><label>YouTube 油管</label><input name="sm_youtube" placeholder="频道"></div>
     </div>
     <div class="form-row col2">
-      <div class="form-group"><label>LinkedIn 领英</label><input name="sm_linkedin" placeholder="Profile URL"></div>
-      <div class="form-group"><label>WeChat 微信</label><input name="sm_wechat" placeholder="WeChat ID"></div>
+      <div class="form-group"><label>LinkedIn 领英</label><input name="sm_linkedin" placeholder="个人主页链接"></div>
+      <div class="form-group"><label>WeChat 微信</label><input name="sm_wechat" placeholder="微信号"></div>
     </div>
     <div class="form-row col2">
-      <div class="form-group"><label>Weibo 微博</label><input name="sm_weibo" placeholder="Username"></div>
+      <div class="form-group"><label>Weibo 微博</label><input name="sm_weibo" placeholder="用户名"></div>
       <div class="form-group"><label>QQ</label><input name="sm_qq" placeholder="QQ号"></div>
     </div>
     <div class="form-row col2">
-      <div class="form-group"><label>Douyin / TikTok 抖音</label><input name="sm_douyin" placeholder="Username"></div>
-      <div class="form-group"><label>Telegram 电报</label><input name="sm_telegram" placeholder="@username"></div>
+      <div class="form-group"><label>Douyin / TikTok 抖音</label><input name="sm_douyin" placeholder="用户名"></div>
+      <div class="form-group"><label>Telegram 电报</label><input name="sm_telegram" placeholder="@用户名"></div>
     </div>
     <div class="form-row col2">
-      <div class="form-group"><label>Reddit 红迪</label><input name="sm_reddit" placeholder="u/username"></div>
-      <div class="form-group"><label>Other 其他平台</label><input name="sm_other" placeholder="Platform + ID"></div>
+      <div class="form-group"><label>Reddit 红迪</label><input name="sm_reddit" placeholder="u/用户名"></div>
+      <div class="form-group"><label>Other 其他平台</label><input name="sm_other" placeholder="平台+账号"></div>
     </div>
   </div>
 </div>
 
-<!-- ═══ 4. Passport ═══ -->
+<!-- ═══ 4. Passport 护照 ═══ -->
 <div class="section" id="section-4">
   <div class="section-header" onclick="toggleSection(4)"><span class="section-num">4</span><span class="section-title">Passport/Travel Document Information 护照信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col2">
       <div class="form-group"><label>Passport Type 护照类型 <span class="req">*</span></label><select name="passportType" data-field="Passport Type" required><option value="">Select 请选择</option><option value="Regular">Regular 普通护照</option><option value="Official">Official 公务护照</option><option value="Diplomatic">Diplomatic 外交护照</option><option value="Service">Service 因公护照</option><option value="Other">Other Travel Document 其他旅行证件</option></select></div>
-      <div class="form-group"><label>Passport Number 护照号码 <span class="req">*</span></label><input name="passportNo" data-field="Passport #" placeholder="e.g. E12345678" required></div>
+      <div class="form-group"><label>Passport Number 护照号码 <span class="req">*</span></label><input name="passportNo" data-field="Passport #" placeholder="如 E12345678" required></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>Passport Book Number 护照本编号 <span class="hint">May not apply to all countries</span></label><input name="passportBookNo" data-field="Book #" placeholder=""></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Passport Book Number 护照本编号 <span class="hint">部分国家不适用</span></label><input name="passportBookNo" data-field="Book #" placeholder=""></div></div>
     <div class="form-row col2">
       <div class="form-group"><label>Country of Issuance 签发国家 <span class="req">*</span></label><select name="passportCty" data-field="Iss Country" required><option value="CHINA">CHINA 中国</option></select></div>
-      <div class="form-group"><label>City of Issuance 签发城市</label><input name="passportCity" data-field="Iss City" placeholder="e.g. Fuzhou"></div>
+      <div class="form-group"><label>City of Issuance 签发城市</label><input name="passportCity" data-field="Iss City" placeholder="如 福州"></div>
     </div>
-    <div class="form-row col1"><div class="form-group"><label>State/Province of Issuance 签发省/州</label><input name="passportState" placeholder="e.g. Fujian"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>State/Province of Issuance 签发省/州</label><input name="passportState" placeholder="如 福建"></div></div>
     <div class="form-row col2">
       <div class="form-group"><label>Issuance Date 签发日期 <span class="req">*</span></label><input type="date" name="passportIssue" data-field="Iss Date" required></div>
       <div class="form-group"><label>Expiration Date 有效期至 <span class="req">*</span></label><input type="date" name="passportExpiry" data-field="Exp Date" required></div>
@@ -574,7 +574,7 @@
   </div>
 </div>
 
-<!-- ═══ 5. Travel ═══ -->
+<!-- ═══ 5. Travel 旅行 ═══ -->
 <div class="section" id="section-5">
   <div class="section-header" onclick="toggleSection(5)"><span class="section-num">5</span><span class="section-title">Travel Information 旅行信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
@@ -586,13 +586,13 @@
     <div class="form-row col1"><div class="form-group"><label>Have you made specific travel plans? 是否已制定具体旅行计划? <span class="req">*</span></label><select name="hasTravelPlans" data-field="Travel Plans" required id="hasTravelPlans"><option value="">Select 请选择</option><option value="Yes">Yes 是</option><option value="No">No 否</option></select></div></div>
     <div id="travelPlansBlock" style="display:none;">
       <div class="form-row col2"><div class="form-group"><label>Intended Date of Arrival 预计抵达</label><input type="date" name="arrivalDate" data-field="Arrival"><label>Intended Date of Departure 预计离境</label><input type="date" name="departureDate" data-field="Departure"></div></div>
-      <div class="form-row col1"><div class="form-group"><label>Intended Length of Stay 预计停留时长</label><input name="stayLength" data-field="Stay Length" placeholder="e.g. 2 weeks / 4 years"></div></div>
-      <div class="form-row col2"><div class="form-group"><label>Flight to U.S. 赴美航班 <span class="hint">选填</span></label><input name="arrivalFlight" placeholder="e.g. CA981"><label>Flight from U.S. 离美航班 <span class="hint">选填</span></label><input name="departureFlight" placeholder="e.g. DL124"></div></div>
-      <div class="form-row col1"><div class="form-group"><label>Places to Visit 计划旅游地点</label><input name="travelPlaces" data-field="Places" placeholder="e.g. NYC, Washington DC"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Intended Length of Stay 预计停留时长</label><input name="stayLength" data-field="Stay Length" placeholder="如 2周 / 4年"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Flight to U.S. 赴美航班 <span class="hint">选填</span></label><input name="arrivalFlight" placeholder="如 CA981"><label>Flight from U.S. 离美航班 <span class="hint">选填</span></label><input name="departureFlight" placeholder="如 DL124"></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Places to Visit 计划旅游地点</label><input name="travelPlaces" data-field="Places" placeholder="如 纽约、华盛顿特区"></div></div>
     </div>
     <h3 style="margin-top:14px;">U.S. Address 在美地址</h3>
-    <div class="form-row col1"><div class="form-group"><label>Street Address 街道地址 <span class="req">*</span></label><input name="usAddrLine1" data-field="US Address" placeholder="School/hotel address" required></div></div>
-    <div class="form-row col3"><div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="usAddrCity" data-field="US City" placeholder="e.g. New York" required><label>State 州 <span class="req">*</span></label><select name="usAddrState" data-field="US State" required><option value="">Select 请选择</option><option value="AL">AL 阿拉巴马</option><option value="AK">AK 阿拉斯加</option><option value="AZ">AZ 亚利桑那</option><option value="AR">AR 阿肯色</option><option value="CA">CA 加利福尼亚</option><option value="CO">CO 科罗拉多</option><option value="CT">CT 康涅狄格</option><option value="DE">DE 特拉华</option><option value="FL">FL 佛罗里达</option><option value="GA">GA 佐治亚</option><option value="HI">HI 夏威夷</option><option value="ID">ID 爱达荷</option><option value="IL">IL 伊利诺伊</option><option value="IN">IN 印第安纳</option><option value="IA">IA 艾奥瓦</option><option value="KS">KS 堪萨斯</option><option value="KY">KY 肯塔基</option><option value="LA">LA 路易斯安那</option><option value="ME">ME 缅因</option><option value="MD">MD 马里兰</option><option value="MA">MA 马萨诸塞</option><option value="MI">MI 密歇根</option><option value="MN">MN 明尼苏达</option><option value="MS">MS 密西西比</option><option value="MO">MO 密苏里</option><option value="MT">MT 蒙大拿</option><option value="NE">NE 内布拉斯加</option><option value="NV">NV 内华达</option><option value="NH">NH 新罕布什尔</option><option value="NJ">NJ 新泽西</option><option value="NM">NM 新墨西哥</option><option value="NY">NY 纽约</option><option value="NC">NC 北卡罗来纳</option><option value="ND">ND 北达科他</option><option value="OH">OH 俄亥俄</option><option value="OK">OK 俄克拉荷马</option><option value="OR">OR 俄勒冈</option><option value="PA">PA 宾夕法尼亚</option><option value="RI">RI 罗德岛</option><option value="SC">SC 南卡罗来纳</option><option value="SD">SD 南达科他</option><option value="TN">TN 田纳西</option><option value="TX">TX 德克萨斯</option><option value="UT">UT 犹他</option><option value="VT">VT 佛蒙特</option><option value="VA">VA 弗吉尼亚</option><option value="WA">WA 华盛顿</option><option value="WV">WV 西弗吉尼亚</option><option value="WI">WI 威斯康星</option><option value="WY">WY 怀俄明</option><option value="DC">DC 华盛顿特区</option></select><label>ZIP 邮编 <span class="req">*</span></label><input name="usAddrZip" data-field="US ZIP" placeholder="e.g. 10001" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Street Address 街道地址 <span class="req">*</span></label><input name="usAddrLine1" data-field="US Address" placeholder="学校/酒店地址" required></div></div>
+    <div class="form-row col3"><div class="form-group"><label>City 城市 <span class="req">*</span></label><input name="usAddrCity" data-field="US City" placeholder="如 纽约" required><label>State 州 <span class="req">*</span></label><select name="usAddrState" data-field="US State" required><option value="">Select 请选择</option><option value="AL">AL 阿拉巴马</option><option value="AK">AK 阿拉斯加</option><option value="AZ">AZ 亚利桑那</option><option value="AR">AR 阿肯色</option><option value="CA">CA 加利福尼亚</option><option value="CO">CO 科罗拉多</option><option value="CT">CT 康涅狄格</option><option value="DE">DE 特拉华</option><option value="FL">FL 佛罗里达</option><option value="GA">GA 佐治亚</option><option value="HI">HI 夏威夷</option><option value="ID">ID 爱达荷</option><option value="IL">IL 伊利诺伊</option><option value="IN">IN 印第安纳</option><option value="IA">IA 艾奥瓦</option><option value="KS">KS 堪萨斯</option><option value="KY">KY 肯塔基</option><option value="LA">LA 路易斯安那</option><option value="ME">ME 缅因</option><option value="MD">MD 马里兰</option><option value="MA">MA 马萨诸塞</option><option value="MI">MI 密歇根</option><option value="MN">MN 明尼苏达</option><option value="MS">MS 密西西比</option><option value="MO">MO 密苏里</option><option value="MT">MT 蒙大拿</option><option value="NE">NE 内布拉斯加</option><option value="NV">NV 内华达</option><option value="NH">NH 新罕布什尔</option><option value="NJ">NJ 新泽西</option><option value="NM">NM 新墨西哥</option><option value="NY">NY 纽约</option><option value="NC">NC 北卡罗来纳</option><option value="ND">ND 北达科他</option><option value="OH">OH 俄亥俄</option><option value="OK">OK 俄克拉荷马</option><option value="OR">OR 俄勒冈</option><option value="PA">PA 宾夕法尼亚</option><option value="RI">RI 罗德岛</option><option value="SC">SC 南卡罗来纳</option><option value="SD">SD 南达科他</option><option value="TN">TN 田纳西</option><option value="TX">TX 德克萨斯</option><option value="UT">UT 犹他</option><option value="VT">VT 佛蒙特</option><option value="VA">VA 弗吉尼亚</option><option value="WA">WA 华盛顿</option><option value="WV">WV 西弗吉尼亚</option><option value="WI">WI 威斯康星</option><option value="WY">WY 怀俄明</option><option value="DC">DC 华盛顿特区</option></select><label>ZIP 邮编 <span class="req">*</span></label><input name="usAddrZip" data-field="US ZIP" placeholder="如 10001" required></div></div>
     <h3 style="margin-top:14px;">Trip Payment 旅行费用</h3>
     <div class="form-row col1"><div class="form-group"><label>Person/Entity Paying 付款方 <span class="req">*</span></label><select name="tripPayer" data-field="Trip Payer" required id="tripPayer"><option value="">Select 请选择</option><option value="SELF">SELF 本人</option><option value="PARENTS">PARENTS 父母</option><option value="OTHER PERSON">OTHER PERSON 他人</option><option value="COMPANY/ORG">COMPANY / ORGANIZATION 公司/组织</option><option value="OTHER">OTHER 其他</option></select></div></div>
     <div id="payerBlock" style="display:none;">
@@ -603,42 +603,42 @@
   </div>
 </div>
 
-<!-- ═══ 6. Travel Companions ═══ -->
+<!-- ═══ 6. Travel Companions 旅伴 ═══ -->
 <div class="section" id="section-6">
   <div class="section-header" onclick="toggleSection(6)"><span class="section-num">6</span><span class="section-title">Travel Companions Information 旅伴信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col1"><div class="form-group"><label>Traveling with others? 是否与其他人同行? <span class="req">*</span></label><select name="hasCompanion" data-field="Companions" required id="hasCompanion"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="companionBlock" style="display:none;">
-      <div class="form-row col1"><div class="form-group"><label>Names & Relationships 姓名与关系</label><textarea name="companionList" rows="2" placeholder="LI SI (Spouse)&#10;WANG WU (Colleague)"></textarea></div></div>
+      <div class="form-row col1"><div class="form-group"><label>Names & Relationships 姓名与关系</label><textarea name="companionList" rows="2" placeholder="李四 (配偶)&#10;王五 (同事)"></textarea></div></div>
       <div class="form-row col1"><div class="form-group"><label>Traveling as part of a group/organization? 是否团体出行?</label><select name="travelGroup" data-field="Group Travel"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
       <div id="groupNameBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Group/Organization Name 团体名称</label><input name="groupName"></div></div>
     </div>
   </div>
 </div>
 
-<!-- ═══ 7. Previous U.S. Travel ═══ -->
+<!-- ═══ 7. Previous U.S. Travel 赴美旅行历史 ═══ -->
 <div class="section" id="section-7">
   <div class="section-header" onclick="toggleSection(7)"><span class="section-num">7</span><span class="section-title">Previous U.S. Travel Information 赴美旅行历史</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <div class="form-row col1"><div class="form-group"><label>Ever been to the U.S.? 是否去过美国? <span class="req">*</span></label><select name="prevUSTravel" data-field="Prev US Travel" required id="prevUSTravel"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div id="prevTravelBlock" style="display:none;"><div class="form-row col1"><div class="form-group"><label>Last 5 visits (date, length) 最近5次访美记录</label><textarea name="prevTravelRec" rows="3" placeholder="2023-06-01 to 2023-06-20 (20 days) Tourism&#10;2019-01-10 to 2019-01-25 (15 days) Business"></textarea></div></div></div>
+    <div id="prevTravelBlock" style="display:none;"><div class="form-row col1"><div class="form-group"><label>Last 5 visits (date, length) 最近5次访美记录</label><textarea name="prevTravelRec" rows="3" placeholder="2023-06-01 至 2023-06-20 (20天) 旅游&#10;2019-01-10 至 2019-01-25 (15天) 商务"></textarea></div></div></div>
     <div class="form-row col1"><div class="form-group"><label>Ever issued a U.S. visa? 曾获美国签证? <span class="req">*</span></label><select name="hadUSVisa" data-field="US Visa Issued" required><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div class="form-row col1"><div class="form-group"><label>Visa ever cancelled/revoked? 签证曾被取消/撤销? <span class="req">*</span></label><select name="visaRevoked" data-field="Visa Revoked" required id="visaRevoked"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div id="visaRevokedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><textarea name="visaRevokedEx" rows="2"></textarea></div></div>
+    <div id="visaRevokedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>请说明 说明</label><textarea name="visaRevokedEx" rows="2"></textarea></div></div>
     <div class="form-row col1"><div class="form-group"><label>Immigrant petition filed for you? 曾有人为您提交移民申请? <span class="req">*</span></label><select name="immPetition" data-field="Imm Petition" required id="immPetition"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div id="immPetitionBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><textarea name="immPetitionEx" rows="2" placeholder="Who filed, when"></textarea></div></div>
+    <div id="immPetitionBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>请说明 说明</label><textarea name="immPetitionEx" rows="2" placeholder="谁提交的，何时"></textarea></div></div>
     <div class="form-row col1"><div class="form-group"><label>Ever refused a U.S. visa or denied entry? 曾被拒签/拒绝入境? <span class="req">*</span></label><select name="visaRefused" data-field="Visa Refused" required id="visaRefused"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div id="visaRefusedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>Explain 说明</label><textarea name="visaRefusedEx" rows="3" placeholder="When, where, what visa type, reason"></textarea></div></div>
+    <div id="visaRefusedBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>请说明 说明</label><textarea name="visaRefusedEx" rows="3" placeholder="何时、何地、何种签证、原因"></textarea></div></div>
   </div>
 </div>
 
-<!-- ═══ 8. U.S. Point of Contact ═══ -->
+<!-- ═══ 8. U.S. Point of Contact 在美联系人 ═══ -->
 <div class="section" id="section-8">
   <div class="section-header" onclick="toggleSection(8)"><span class="section-num">8</span><span class="section-title">U.S. Point of Contact Information 在美联系人</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="alert alert-info" style="font-size:10px;">Provide contact information of a person or organization in the U.S. (school official, friend, relative, hotel, etc.)</div>
-    <div class="form-row col1"><div class="form-group"><label>Contact Name 联系人姓名 <span class="req">*</span></label><input name="contactName" data-field="Contact Name" placeholder="Individual or organization" required></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Organization Name 组织名称</label><input name="contactOrg" data-field="Contact Org" placeholder="School / company name"></div></div>
+    <div class="alert alert-info" style="font-size:10px;">请提供在美的联系人或机构信息（学校官员、朋友、亲属、酒店等）</div>
+    <div class="form-row col1"><div class="form-group"><label>Contact Name 联系人姓名 <span class="req">*</span></label><input name="contactName" data-field="Contact Name" placeholder="个人或机构" required></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Organization Name 组织名称</label><input name="contactOrg" data-field="Contact Org" placeholder="学校/公司名称"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Relationship to You 与您的关系</label><select name="contactRelation" data-field="Contact Rel"><option value="">Select 请选择</option><option value="SCHOOL OFFICIAL">School Official 学校</option><option value="FRIEND">Friend 朋友</option><option value="RELATIVE">Relative 亲属</option><option value="SPOUSE">Spouse 配偶</option><option value="EMPLOYER">Employer 雇主</option><option value="BUSINESS ASSOCIATE">Business Associate 商务</option><option value="OTHER">Other 其他</option></select></div></div>
     <h4 style="margin-top:10px;">Contact Address 联系人地址</h4>
     <div class="form-row col1"><div class="form-group"><label>Street 街道</label><input name="contactAddr" data-field="Contact Addr"></div></div>
@@ -647,35 +647,35 @@
   </div>
 </div>
 
-<!-- ═══ 9. Family: Relatives ═══ -->
+<!-- ═══ 9. Family: Relatives 家庭信息：父母 ═══ -->
 <div class="section" id="section-9">
   <div class="section-header" onclick="toggleSection(9)"><span class="section-num">9</span><span class="section-title">Family Information: Relatives 家庭信息：父母</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
     <h3>Father 父亲</h3>
-    <div class="form-row col2"><div class="form-group"><label>Surname 姓氏 <span class="req">*</span></label><input name="fatherSurname" data-field="Father Sur" placeholder="e.g. CHEN" required><label>Given Name 名字 <span class="req">*</span></label><input name="fatherGiven" data-field="Father Giv" placeholder="e.g. DAWEI" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Surname 姓氏 <span class="req">*</span></label><input name="fatherSurname" data-field="Father Sur" placeholder="如 CHEN" required><label>Given Name 名字 <span class="req">*</span></label><input name="fatherGiven" data-field="Father Giv" placeholder="如 大伟" required></div></div>
     <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="fatherDob" data-field="Father DOB"><label>In the U.S.? 在美国? <span class="req">*</span></label><select name="fatherInUS" data-field="Father US" required><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <h3 style="margin-top:14px;">Mother 母亲</h3>
-    <div class="form-row col2"><div class="form-group"><label>Surname 姓氏 <span class="req">*</span></label><input name="motherSurname" data-field="Mother Sur" placeholder="e.g. LIN" required><label>Given Name 名字 <span class="req">*</span></label><input name="motherGiven" data-field="Mother Giv" placeholder="e.g. MEILING" required></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Surname 姓氏 <span class="req">*</span></label><input name="motherSurname" data-field="Mother Sur" placeholder="如 LIN" required><label>Given Name 名字 <span class="req">*</span></label><input name="motherGiven" data-field="Mother Giv" placeholder="如 美玲" required></div></div>
     <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="motherDob" data-field="Mother DOB"><label>In the U.S.? 在美国? <span class="req">*</span></label><select name="motherInUS" data-field="Mother US" required><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <h3 style="margin-top:14px;">Immediate Relatives in U.S. 在美直系亲属</h3>
     <div class="form-row col1"><div class="form-group"><label>Any immediate relatives in the U.S.? 是否有直系亲属在美国? <span class="req">*</span></label><select name="relativeInUS" data-field="Relatives US" required id="relativeInUS"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div id="relativeBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List 列举</label><textarea name="relativeList" rows="2" placeholder="CHEN LI, Brother, Green Card&#10;WANG HUA, Father, Citizen"></textarea></div></div>
+    <div id="relativeBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List 列举</label><textarea name="relativeList" rows="2" placeholder="陈琉, 兄弟, 绿卡&#10;王华, 父亲, 公民"></textarea></div></div>
   </div>
 </div>
 
-<!-- ═══ 10. Family: Spouse ═══ -->
+<!-- ═══ 10. Family: Spouse 配偶信息 ═══ -->
 <div class="section" id="section-10">
   <div class="section-header" onclick="toggleSection(10)"><span class="section-num">10</span><span class="section-title">Family Information: Spouse 配偶信息 (如适用)</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="alert alert-info" style="font-size:10px;">Complete if married / common law. Otherwise skip.</div>
+    <div class="alert alert-info" style="font-size:10px;">已婚/事实婚姻者填写，否则跳过。</div>
     <div class="form-row col2"><div class="form-group"><label>Spouse's Surname 配偶姓氏</label><input name="spouseSur"><label>Spouse's Given Name 配偶名字</label><input name="spouseGiv"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="spouseDob"><label>Nationality 国籍</label><input name="spouseNat" placeholder="China"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Date of Birth 出生日期</label><input type="date" name="spouseDob"><label>Nationality 国籍</label><input name="spouseNat" placeholder="中国"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City of Birth 出生城市</label><input name="spouseBirthCity"><label>Country of Birth 出生国家</label><select name="spouseBirthCty"><option value="">Select 请选择</option><option value="CHINA">CHINA 中国</option><option value="OTHER">OTHER 其他</option></select></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address (if different from yours) 配偶地址(如不同)</label><input name="spouseAddr"></div></div>
   </div>
 </div>
 
-<!-- ═══ 11. Work/Education: Present ═══ -->
+<!-- ═══ 11. Work/Education: Present 当前工作/教育 ═══ -->
 <div class="section" id="section-11">
   <div class="section-header" onclick="toggleSection(11)"><span class="section-num">11</span><span class="section-title">Work/Education/Training: Present 当前工作/教育信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
@@ -696,41 +696,41 @@
         <option value="OTHER">OTHER 其他</option>
       </select>
     </div></div>
-    <div id="occExplain" class="alert alert-info" style="display:none;font-size:10px;"><span id="occExplainText"></span><div id="occOtherInput" hidden style="margin-top:4px;"><label>Specify occupation: 具体职业</label><input name="occupationOther" style="width:100%;"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Employer / School Name 工作单位/学校名称 <span class="req">*</span></label><input name="employerName" data-field="Employer" placeholder="e.g. X Company / Fuzhou University" required></div></div>
+    <div id="occ请说明" class="alert alert-info" style="display:none;font-size:10px;"><span id="occ请说明Text"></span><div id="occOtherInput" hidden style="margin-top:4px;"><label>Specify occupation: 具体职业</label><input name="occupationOther" style="width:100%;"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Employer / School Name 工作单位/学校名称 <span class="req">*</span></label><input name="employerName" data-field="Employer" placeholder="如 X公司 / 福州大学" required></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="employerAddr" data-field="Employer Addr"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City 城市</label><input name="employerCity"><label>State/Province 省/州</label><input name="employerState"></div></div>
-    <div class="form-row col3"><div class="form-group"><label>Postal Code 邮编</label><input name="employerZip"><label>Country 国家</label><input name="employerCountry" placeholder="China"><label>Work Phone 工作电话</label><input name="workPhone"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Monthly Salary (local currency) 月薪(本币) <span class="req">*</span></label><input name="monthlySalary" type="number" data-field="Salary" placeholder="e.g. 8000" required><label>Briefly Describe Duties 工作职责简述 <span class="req">*</span></label><input name="jobDuties" data-field="Duties" placeholder="e.g. Software Engineer" required></div></div>
+    <div class="form-row col3"><div class="form-group"><label>Postal Code 邮编</label><input name="employerZip"><label>Country 国家</label><input name="employerCountry" placeholder="中国"><label>Work Phone 工作电话</label><input name="workPhone"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Monthly Salary (local currency) 月薪(本币) <span class="req">*</span></label><input name="monthlySalary" type="number" data-field="Salary" placeholder="如 8000" required><label>Briefly Describe Duties 工作职责简述 <span class="req">*</span></label><input name="jobDuties" data-field="Duties" placeholder="如 软件工程师" required></div></div>
     <div class="form-row col1"><div class="form-group"><label>Were you previously employed? 此前是否有其他工作? <span class="req">*</span></label><select name="prevEmployed" data-field="Prev Employed" required id="prevEmployed"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div class="alert alert-warning" style="font-size:10px;">If Yes, complete Section 12 (Previous Work).</div>
+    <div class="alert alert-warning" style="font-size:10px;">如选“是”，请填写第12章（过往工作）。</div>
   </div>
 </div>
 
-<!-- ═══ 12. Work/Education: Previous ═══ -->
+<!-- ═══ 12. Work/Education: Previous 过往工作 ═══ -->
 <div class="section" id="section-12">
   <div class="section-header" onclick="toggleSection(12)"><span class="section-num">12</span><span class="section-title">Work/Education/Training: Previous 过往工作 (过去5年)</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="alert alert-info" style="font-size:10px;">List all previous employment/school in the last 5 years. Leave blank if none.</div>
-    <h4>Previous Employer 1</h4>
+    <div class="alert alert-info" style="font-size:10px;">请列出过去5年的所有工作/学校经历。如无则留空。</div>
+    <h4>Previous Employer 1 前雇主 1</h4>
     <div class="form-row col2"><div class="form-group"><label>Employer Name 雇主名称</label><input name="prevEmp1"><label>Job Title 职位</label><input name="prevJob1"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="prevAddr1"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City 城市</label><input name="prevCity1"><label>State 州/省</label><input name="prevState1"></div></div>
     <div class="form-row col3"><div class="form-group"><label>ZIP 邮编</label><input name="prevZip1"><label>Phone 电话</label><input name="prevPhone1"><label>Country 国家</label><input name="prevCty1"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Salary 薪资</label><input name="prevSal1" type="number"><label>Dates (From-To) 任职期间</label><input name="prevDates1" placeholder="e.g. 2021-2023"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Salary 薪资</label><input name="prevSal1" type="number"><label>Dates (From-To) 任职期间</label><input name="prevDates1" placeholder="如 2021-2023"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Duties 工作职责</label><input name="prevDuties1"></div></div>
     <hr style="border-color:#e0e0e0;margin:12px 0;">
-    <h4>Previous Employer 2</h4>
+    <h4>Previous Employer 2 前雇主 2</h4>
     <div class="form-row col2"><div class="form-group"><label>Employer Name 雇主名称</label><input name="prevEmp2"><label>Job Title 职位</label><input name="prevJob2"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="prevAddr2"></div></div>
     <div class="form-row col2"><div class="form-group"><label>City 城市</label><input name="prevCity2"><label>State 州/省</label><input name="prevState2"></div></div>
     <div class="form-row col3"><div class="form-group"><label>ZIP 邮编</label><input name="prevZip2"><label>Phone 电话</label><input name="prevPhone2"><label>Country 国家</label><input name="prevCty2"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Salary 薪资</label><input name="prevSal2" type="number"><label>Dates 任职期间</label><input name="prevDates2" placeholder="e.g. 2019-2021"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Salary 薪资</label><input name="prevSal2" type="number"><label>Dates 任职期间</label><input name="prevDates2" placeholder="如 2019-2021"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Duties 工作职责</label><input name="prevDuties2"></div></div>
   </div>
 </div>
 
-<!-- ═══ 13. Work/Education: Additional ═══ -->
+<!-- ═══ 13. Work/Education: Additional 补充信息 ═══ -->
 <div class="section" id="section-13">
   <div class="section-header" onclick="toggleSection(13)"><span class="section-num">13</span><span class="section-title">Work/Education/Training: Additional 补充信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
@@ -741,83 +741,83 @@
     <div class="form-row col2"><div class="form-group"><label>Institution Name 学校/机构名称</label><input name="eduSchool" data-field="School"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Address 地址</label><input name="eduAddr"></div></div>
     <div class="form-row col3"><div class="form-group"><label>City 城市</label><input name="eduCity"><label>State/Province 省/州</label><input name="eduState"><label>ZIP 邮编</label><input name="eduZip"></div></div>
-    <div class="form-row col2"><div class="form-group"><label>Country 国家</label><input name="eduCty" placeholder="China"><label>Major / Course of Study 专业</label><input name="eduMajor" placeholder="e.g. Computer Science"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Dates Attended 就读时间</label><input name="eduYears" placeholder="e.g. 2018-2022"></div></div>
+    <div class="form-row col2"><div class="form-group"><label>Country 国家</label><input name="eduCty" placeholder="中国"><label>Major / Course of Study 专业</label><input name="eduMajor" placeholder="如 计算机科学"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Dates Attended 就读时间</label><input name="eduYears" placeholder="如 2018-2022"></div></div>
 
     <h3 style="margin-top:14px;">Countries Visited (Last 5 Years) 过去5年访问国家</h3>
-    <div class="form-row col1"><div class="form-group"><label>List countries visited 列举访问国家</label><textarea name="countriesVisited" rows="3" placeholder="Japan, 2024&#10;Thailand, 2023&#10;South Korea, 2022"></textarea></div></div>
+    <div class="form-row col1"><div class="form-group"><label>列举国家 visited 列举访问国家</label><textarea name="countriesVisited" rows="3" placeholder="日本, 2024&#10;泰国, 2023&#10;韩国, 2022"></textarea></div></div>
 
     <h3 style="margin-top:14px;">Organizational Memberships 组织隶属</h3>
     <div class="form-row col1"><div class="form-group"><label>Have you belonged to or contributed to any professional, social, or charitable organization? 是否加入或捐助过任何专业/社会/慈善组织?</label><select name="orgMember" data-field="Orgs"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
-    <div id="orgMemberBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List organizations 列举组织</label><textarea name="orgList" rows="2" placeholder="Name, purpose, dates"></textarea></div></div>
+    <div id="orgMemberBlock" style="display:none;" class="form-row col1"><div class="form-group"><label>List organizations 列举组织</label><textarea name="orgList" rows="2" placeholder="名称、目的、日期"></textarea></div></div>
 
     <h3 style="margin-top:14px;">Military Service 军事服役</h3>
     <div class="form-row col1"><div class="form-group"><label>Have you ever served in the military? 是否曾服役? <span class="req">*</span></label><select name="military" data-field="Military" required id="military"><option value="No">No 否</option><option value="Yes">Yes 是</option></select></div></div>
     <div id="militaryBlock" style="display:none;">
-      <div class="form-row col2"><div class="form-group"><label>Country 国家</label><input name="milCty"><label>Branch 军种</label><input name="milBranch" placeholder="e.g. Army, Navy"></div></div>
-      <div class="form-row col2"><div class="form-group"><label>Rank 军衔</label><input name="milRank"><label>Dates 服役时间</label><input name="milDates" placeholder="e.g. 2010-2012"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Country 国家</label><input name="milCty"><label>Branch 军种</label><input name="milBranch" placeholder="如 陆军、海军"></div></div>
+      <div class="form-row col2"><div class="form-group"><label>Rank 军衔</label><input name="milRank"><label>Dates 服役时间</label><input name="milDates" placeholder="如 2010-2012"></div></div>
       <div class="form-row col1"><div class="form-group"><label>Specialty 专业/特长</label><input name="milSpecialty"></div></div>
     </div>
 
     <h3 style="margin-top:14px;">Specialized Skills/Training 特殊技能</h3>
-    <div class="alert alert-warning" style="font-size:10px;">Most applicants answer No. Answer truthfully.</div>
-    <div class="sec-q"><label>Firearms, explosives, WMD training? 枪支/爆炸物/大规模杀伤性武器?</label><select name="skill_weapons" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_weapons_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Nuclear, biological, chemical training? 核/生物/化学培训?</label><select name="skill_nbc" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_nbc_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Child soldier training/use? 儿童兵相关?</label><select name="skill_child" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_child_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="alert alert-warning" style="font-size:10px;">大多数申请人选“否”。请如实回答。</div>
+    <div class="sec-q"><label>Firearms, explosives, WMD training? 枪支/爆炸物/大规模杀伤性武器?</label><select name="skill_weapons" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_weapons_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Nuclear, biological, chemical training? 核/生物/化学培训?</label><select name="skill_nbc" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_nbc_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Child soldier training/use? 儿童兵相关?</label><select name="skill_child" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="skill_child_ex" placeholder="请说明" style="display:none;"></div>
   </div>
 </div>
 
-<!-- ═══ 14-18. Security & Background (5 parts) ═══ -->
+<!-- ═══ 14-18. Security & Background 安全与背景 (5部分) ═══ -->
 <div class="section" id="section-14">
   <div class="section-header" onclick="toggleSection(14)"><span class="section-num">14-18</span><span class="section-title">Security and Background 安全与背景</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="alert alert-warning" style="font-size:10px;">Answer ALL questions honestly. Most applicants answer "No" to all.</div>
-    <h4>Part 1 — Medical & Health</h4>
-    <div class="sec-q"><label>Communicable disease of public health significance? 患有公共卫生传染性疾病?</label><select name="s1_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Physical or mental disorder posing threat? 有危害他人的身体或精神疾病?</label><select name="s1_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Drug abuser or addict? 吸毒或药物成瘾?</label><select name="s1_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_3_ex" placeholder="Explain" style="display:none;"></div>
-    <h4>Part 2 — Criminal 犯罪</h4>
-    <div class="sec-q"><label>Arrested or convicted? 曾被逮捕或定罪?</label><select name="s2_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Drug law violations? 违反毒品相关法律?</label><select name="s2_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Money laundering? 洗钱?</label><select name="s2_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_3_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Prostitution or procuring? 卖淫或组织卖淫?</label><select name="s2_4" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_4_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="alert alert-warning" style="font-size:10px;">请如实回答所有问题。大多数申请人全部选“否”。</div>
+    <h4>第一部分 — 医疗与健康</h4>
+    <div class="sec-q"><label>Communicable disease of public health significance? 患有公共卫生传染性疾病?</label><select name="s1_1" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_1_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Physical or mental disorder posing threat? 有危害他人的身体或精神疾病?</label><select name="s1_2" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_2_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Drug abuser or addict? 吸毒或药物成瘾?</label><select name="s1_3" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s1_3_ex" placeholder="请说明" style="display:none;"></div>
+    <h4>第二部分 — 犯罪</h4>
+    <div class="sec-q"><label>Arrested or convicted? 曾被逮捕或定罪?</label><select name="s2_1" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_1_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Drug law violations? 违反毒品相关法律?</label><select name="s2_2" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_2_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Money laundering? 洗钱?</label><select name="s2_3" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_3_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Prostitution or procuring? 卖淫或组织卖淫?</label><select name="s2_4" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s2_4_ex" placeholder="请说明" style="display:none;"></div>
     <h4>Part 3 — National Security 国家安全</h4>
-    <div class="sec-q"><label>Espionage, sabotage, terrorism? 间谍/破坏/恐怖主义活动?</label><select name="s3_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Member of terrorist organization? 恐怖组织成员?</label><select name="s3_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Genocide / extrajudicial killings / persecution? 种族灭绝/法外处决/迫害?</label><select name="s3_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Espionage, sabotage, terrorism? 间谍/破坏/恐怖主义活动?</label><select name="s3_1" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_1_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Member of terrorist organization? 恐怖组织成员?</label><select name="s3_2" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_2_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Genocide / extrajudicial killings / persecution? 种族灭绝/法外处决/迫害?</label><select name="s3_3" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s3_3_ex" placeholder="请说明" style="display:none;"></div>
     <h4>Part 4 — Immigration 移民</h4>
-    <div class="sec-q"><label>Overstayed U.S. visa? 逾期滞留美国签证?</label><select name="s4_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Deported or removed from U.S.? 曾被美国驱逐或遣返?</label><select name="s4_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Alien smuggling? 参与偷渡/人口走私?</label><select name="s4_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Overstayed U.S. visa? 逾期滞留美国签证?</label><select name="s4_1" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_1_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Deported or removed from U.S.? 曾被美国驱逐或遣返?</label><select name="s4_2" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_2_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Alien smuggling? 参与偷渡/人口走私?</label><select name="s4_3" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s4_3_ex" placeholder="请说明" style="display:none;"></div>
     <h4>Part 5 — Miscellaneous 其他</h4>
-    <div class="sec-q"><label>Withheld custody of U.S. citizen child? 非法扣留美国公民子女?</label><select name="s5_1" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_1_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>Human trafficking? 人口贩卖?</label><select name="s5_2" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_2_ex" placeholder="Explain" style="display:none;"></div>
-    <div class="sec-q"><label>War crimes / crimes against humanity? 战争罪行/反人类罪?</label><select name="s5_3" required onchange="toggleExplain(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_3_ex" placeholder="Explain" style="display:none;"></div>
+    <div class="sec-q"><label>Withheld custody of U.S. citizen child? 非法扣留美国公民子女?</label><select name="s5_1" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_1_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>Human trafficking? 人口贩卖?</label><select name="s5_2" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_2_ex" placeholder="请说明" style="display:none;"></div>
+    <div class="sec-q"><label>War crimes / crimes against humanity? 战争罪行/反人类罪?</label><select name="s5_3" required onchange="toggle请说明(this)"><option value="No">No 否</option><option value="Yes">Yes 是</option></select><input name="s5_3_ex" placeholder="请说明" style="display:none;"></div>
   </div>
 </div>
 
-<!-- ═══ 19. Additional Point of Contact (F/M/J only) ═══ -->
+<!-- ═══ 19. Additional Point of Contact 额外联系人 (F/M/J) ═══ -->
 <div class="section" id="section-19" style="opacity:0.6;">
   <div class="section-header" onclick="toggleSection(19)"><span class="section-num">19</span><span class="section-title">Additional Point of Contact 额外联系人 (F/M/J 签证填写)</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="alert alert-info" style="font-size:10px;">Provide 2 contacts who do NOT live with you. Not necessarily U.S. citizens.</div>
-    <h4>Contact 1</h4>
+    <div class="alert alert-info" style="font-size:10px;">请提供2位不与您同住的联系人。不要求是美国公民。</div>
+    <h4>Contact 1 联系人 1</h4>
     <div class="form-row col2"><div class="form-group"><label>Full Name 姓名</label><input name="ref1Name"><label>Phone 电话</label><input name="ref1Phone"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Email 邮箱</label><input name="ref1Email" type="email"><label>Address 地址</label><input name="ref1Addr"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Relationship 关系</label><input name="ref1Rel" placeholder="e.g. Friend, Colleague"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Relationship 关系</label><input name="ref1Rel" placeholder="如 朋友、同事"></div></div>
     <hr style="border-color:#e0e0e0;margin:12px 0;">
-    <h4>Contact 2</h4>
+    <h4>Contact 2 联系人 2</h4>
     <div class="form-row col2"><div class="form-group"><label>Full Name 姓名</label><input name="ref2Name"><label>Phone 电话</label><input name="ref2Phone"></div></div>
     <div class="form-row col2"><div class="form-group"><label>Email 邮箱</label><input name="ref2Email" type="email"><label>Address 地址</label><input name="ref2Addr"></div></div>
-    <div class="form-row col1"><div class="form-group"><label>Relationship 关系</label><input name="ref2Rel" placeholder="e.g. Uncle, Neighbor"></div></div>
+    <div class="form-row col1"><div class="form-group"><label>Relationship 关系</label><input name="ref2Rel" placeholder="如 叔叔、邻居"></div></div>
   </div>
 </div>
 
-<!-- ═══ 20. SEVIS (F/M/J only) ═══ -->
+<!-- ═══ 20. SEVIS 信息 (F/M/J) ═══ -->
 <div class="section" id="section-20" style="opacity:0.6;">
   <div class="section-header" onclick="toggleSection(20)"><span class="section-num">20</span><span class="section-title">SEVIS Information (F/M/J only) SEVIS信息</span><span class="section-arrow">▶</span></div>
   <div class="section-body">
-    <div class="alert alert-info" style="font-size:10px;">Required ONLY for F, M, or J visa applicants. Others skip.</div>
+    <div class="alert alert-info" style="font-size:10px;">仅F/M/J签证申请人需要填写，其他跳过。</div>
     <div class="form-row col2"><div class="form-group"><label>SEVIS ID SEVIS编号</label><input name="sevisId" placeholder="N00XXXXXXXXX"><label>Program/School Name 项目/学校名称</label><input name="sevisSchool"></div></div>
     <div class="form-row col1"><div class="form-group"><label>School Address 学校地址</label><input name="sevisAddr"></div></div>
     <div class="form-row col1"><div class="form-group"><label>Course of Study / Major 课程/专业</label><input name="sevisMajor"></div></div>
@@ -837,7 +837,7 @@
       请先填写 DS-160 表单，评估将自动生成…
     </div>
     <div id="assessmentResult" style="display:none;">
-      <!-- Top: Score + Gauge -->
+      <!-- 顶部：评分+仪表 -->
       <div id="asScoreCard" style="display:flex;align-items:center;gap:24px;padding:20px;border-radius:12px;margin-bottom:20px;flex-wrap:wrap;">
         <div id="asGauge" style="width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;">
           <svg width="120" height="120" viewBox="0 0 120 120" style="position:absolute;">
@@ -854,13 +854,13 @@
           <div id="asLevelDesc" style="font-size:12px;color:#555;line-height:1.6;"></div>
         </div>
       </div>
-      <!-- Category Bars -->
+      <!-- 分类进度条 -->
       <h4 style="color:var(--primary);border-bottom:2px solid #dce8f0;padding-bottom:6px;margin-bottom:12px;">风险维度分析</h4>
       <div id="asCategories"></div>
-      <!-- Key Findings -->
+      <!-- 关键发现 -->
       <h4 style="color:var(--primary);border-bottom:2px solid #dce8f0;padding-bottom:6px;margin-top:20px;margin-bottom:12px;">关键发现</h4>
       <div id="asFindings" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
-      <!-- Questions + Advice -->
+      <!-- 问题+建议 -->
       <h4 style="color:var(--primary);border-bottom:2px solid #dce8f0;padding-bottom:6px;margin-top:20px;margin-bottom:12px;">预测面签问题</h4>
       <div id="asQuestions"></div>
       <h4 style="color:var(--primary);border-bottom:2px solid #dce8f0;padding-bottom:6px;margin-top:20px;margin-bottom:12px;">准备建议</h4>
@@ -869,7 +869,7 @@
   </div>
 </div>
 
-<!-- ═══ Buttons ═══ -->
+<!-- ═══ Buttons 按钮 ═══ -->
 <div class="btn-row">
       <button type="button" class="btn btn-outline" onclick="expandAll()">&#x5C55;&#x5F00;&#x5168;&#x90E8;&#x7AE0;&#x8282;</button>
       <button type="button" class="btn btn-outline" onclick="validateForm()">&#x6821;&#x9A8C;&#x586B;&#x5199;</button>
@@ -1063,7 +1063,7 @@ function initCountdown() {
       if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
     } else {
       gate.style.display = 'flex';
-      icon.textContent = '馃毇'; title.textContent = '閾炬帴鏃犳晥';
+      icon.textContent = '🚫'; title.textContent = '链接无效';
       msg.textContent = checkData.reason || 'Token\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u5DF2\u8FC7\u671F\u6216\u88AB\u7BE1\u6539\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
     }
   } catch(e) {
@@ -1463,7 +1463,7 @@ function validateForm() {
 
   // 9e. Visa refused → explanation
   if (d.visaRefused === 'Yes' || d.visaRefused.includes('Yes')) {
-    if (!d.visaRefusedExplain) {
+    if (!d.visaRefused请说明) {
       errors.push({ text: '曾被拒签，必须填写拒签说明' });
     }
   }
@@ -1961,8 +1961,8 @@ async function printPDF() {
     formHTML += fieldRow('国籍 (Nationality)', data.nationality);
     formHTML += fieldRow('其他国籍 (Other Nationality Held)', data.otherNationality || 'No');
     formHTML += fieldRow('身份证号 (National ID Number)', data.nationalId || 'N/A');
-    formHTML += fieldRow('美国社保号 (U.S. SSN)', data.ssn || 'Does Not Apply');
-    formHTML += fieldRow('纳税人号 (U.S. Taxpayer ID)', data.taxpayerId || 'Does Not Apply');
+    formHTML += fieldRow('美国社保号 (U.S. SSN)', data.ssn || '不适用');
+    formHTML += fieldRow('纳税人号 (U.S. Taxpayer ID)', data.taxpayerId || '不适用');
     formHTML += spacerRow();
 
     // ===== Section 3 =====
@@ -2114,11 +2114,11 @@ async function printPDF() {
     formHTML += fieldRow('曾获美签 (Had US Visa Before)', data.hadUSVisa || 'N/A');
     if (data.lastVisaDate) formHTML += fieldRow('上次签证日期 (Last Visa Issue Date)', data.lastVisaDate);
     formHTML += fieldRow('曾被拒签 (Ever Refused Visa)', data.visaRefused || 'No');
-    if ((data.visaRefused||'').includes('Yes') && data.visaRefusedExplain) formHTML += fieldRow('拒签说明 (Refusal Explanation)', data.visaRefusedExplain);
+    if ((data.visaRefused||'').includes('Yes') && data.visaRefused请说明) formHTML += fieldRow('拒签说明 (Refusal Explanation)', data.visaRefused请说明);
     formHTML += fieldRow('曾被拒绝入境 (Ever Denied Entry)', data.entryDenied || 'No');
     formHTML += fieldRow('曾逾期滞留 (Ever Overstayed)', data.overstayed || 'No');
     formHTML += fieldRow('移民违规 (Immigration Violation)', data.immigrationViolation || 'No');
-    if ((data.immigrationViolation||'').includes('Yes') && data.immigrationViolationExplain) formHTML += fieldRow('违规说明 (Violation Explanation)', data.immigrationViolationExplain);
+    if ((data.immigrationViolation||'').includes('Yes') && data.immigrationViolation请说明) formHTML += fieldRow('违规说明 (Violation Explanation)', data.immigrationViolation请说明);
     formHTML += spacerRow();
 
     // ===== Section 14: Spouse Info =====
@@ -2181,7 +2181,7 @@ async function printPDF() {
       formHTML += fieldRow('组织成员 (Organization Member)', data.orgMember || 'No');
       if ((data.orgMember||'').includes('Yes') && data.orgName) formHTML += fieldRow('  组织详情 (Org Details)', data.orgName);
       formHTML += fieldRow('特殊训练 (Special Training)', data.specialTraining || 'No');
-      if ((data.specialTraining||'').includes('Yes') && data.specialTrainingExplain) formHTML += fieldRow('  训练详情 (Training Details)', data.specialTrainingExplain);
+      if ((data.specialTraining||'').includes('Yes') && data.specialTraining请说明) formHTML += fieldRow('  训练详情 (Training Details)', data.specialTraining请说明);
       formHTML += spacerRow();
     }
 
@@ -2681,7 +2681,7 @@ function runAssess() {
   // Render
   document.getElementById('assessPanel').style.display = 'block';
   document.getElementById('assessContent').innerHTML = `
-    <!-- SVG Gradient Defs -->
+    <!-- SVG 渐变定义 -->
     <svg width="0" height="0" style="position:absolute">
       <defs>
         <linearGradient id="gradHi" x1="0%" y1="0%" x2="100%" y2="100%">
