@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DS-160 智能填表助手 - 美签纵横团</title>
-  <script src="jspdf.umd.min.js"></script>
-  <script src="html2canvas.min.js"></script>
+  <script src="jspdf.umd.min.js" async></script>
+  <script src="html2canvas.min.js" async></script>
 <style>
   :root {
     --primary: #1a56db;
@@ -1267,15 +1267,19 @@ function onVisaTypeChange() {
 
 // ========== 进度条 ==========
 const coreFields = 100;
-setInterval(() => {
-  const inputs = document.querySelectorAll('input, select, textarea');
-  let filled = 0;
-  inputs.forEach(el => { if (el.value && el.value !== '') filled++; });
-  const pct = Math.min(100, Math.round(filled / coreFields * 100));
-  document.getElementById('progressPercent').textContent = pct + '%';
-  document.getElementById('filledCount').textContent = filled;
-  document.getElementById('progressFill').style.width = pct + '%';
-}, 500);
+let _progressRAF = 0;
+function updateProgress() {
+  cancelAnimationFrame(_progressRAF);
+  _progressRAF = requestAnimationFrame(() => {
+    const inputs = document.querySelectorAll('input, select, textarea');
+    let filled = 0;
+    inputs.forEach(el => { if (el.value && el.value !== '') filled++; });
+    const pct = Math.min(100, Math.round(filled / coreFields * 100));
+    document.getElementById('progressPercent').textContent = pct + '%';
+    document.getElementById('filledCount').textContent = filled;
+    document.getElementById('progressFill').style.width = pct + '%';
+  });
+}
 
 // ========== 表单校验 ==========
 function validateForm() {
@@ -1651,12 +1655,8 @@ function autoSave() {
       localStorage.setItem(SAVE_DRAFT_KEY, JSON.stringify(safeData));
       localStorage.setItem(SAVE_DRAFT_KEY + '_ts', Date.now().toString());
 
-      // Also sync individual fields for assessment page（敏感字段不单独存储）
-      for (let [k, v] of fd) {
-        if (v && v.toString().trim() && SENSITIVE_FIELDS.indexOf(k) === -1) {
-          localStorage.setItem('ds160_' + k, v.toString().trim());
-        }
-      }
+      // Per-field localStorage removed for performance
+
 
       // 版本化保存（每5分钟存一个版本）
       var lastVerTs = 0;
@@ -1869,6 +1869,7 @@ function closePreview() {
 
 // ========== 导出PDF (jsPDF一键下载 + Token消耗) ==========
 async function printPDF() {
+  if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') { alert('\u8BF7\u7A0D\u5019\uFF0C\u9875\u9762\u8D44\u6E90\u52A0\u8F7D\u4E2D\uFF0C\u8BF7\u518D\u8BD5\u3002'); return; }
   const token = window.DS160_TOKEN;
   if (token) {
     const isHMAC = token.split('.').length === 3;
@@ -2904,41 +2905,35 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Auto-uppercase on name fields
-  UPPERCASE_FIELDS.forEach(function(fname) {
-    var el = document.querySelector('[name="' + fname + '"]');
-    if (el) {
-      el.addEventListener('input', function() {
-        var pos = this.selectionStart;
-        this.value = this.value.toUpperCase();
-        this.setSelectionRange(pos, pos);
-      });
-    }
-  });
+  UPPERCASE_FIELDS.forEach(function(fname) { /* delegation */ });
+   form.addEventListener('input', function(e) {
+     if (UPPERCASE_FIELDS.indexOf(e.target.name) !== -1) {
+       var pos = e.target.selectionStart;
+       e.target.value = e.target.value.toUpperCase();
+       e.target.setSelectionRange(pos, pos);
+     }
+   });
 
   // Block Chinese characters in English-only fields
-  ENGLISH_ONLY_FIELDS.forEach(function(fname) {
-    var el = document.querySelector('[name="' + fname + '"]');
-    if (el) {
-      el.addEventListener('input', function() {
-        var hasChinese = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(this.value);
-        if (hasChinese) {
-          var pos = this.selectionStart;
-          this.value = this.value.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '');
-          this.setSelectionRange(pos - 1 < 0 ? 0 : pos - 1, pos - 1 < 0 ? 0 : pos - 1);
-          // Show warning
-          var errEl = this.parentElement.querySelector('.field-error-live');
-          if (!errEl) {
-            errEl = document.createElement('div');
-            errEl.className = 'field-error-live';
-            this.parentElement.appendChild(errEl);
-          }
-          errEl.textContent = '⚠️ 此字段请使用英文填写';
-          errEl.classList.add('show');
-          setTimeout(function(){ errEl.classList.remove('show'); }, 3000);
-        }
-      });
-    }
-  });
+  ENGLISH_ONLY_FIELDS.forEach(function(fname) { /* delegation */ });
+   form.addEventListener('input', function(e) {
+     if (ENGLISH_ONLY_FIELDS.indexOf(e.target.name) === -1) return;
+     var hasChinese = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(e.target.value);
+     if (hasChinese) {
+       var pos = e.target.selectionStart;
+       e.target.value = e.target.value.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '');
+       e.target.setSelectionRange(pos - 1 < 0 ? 0 : pos - 1, pos - 1 < 0 ? 0 : pos - 1);
+       var errEl = e.target.parentElement.querySelector('.field-error-live');
+       if (!errEl) {
+         errEl = document.createElement('div');
+         errEl.className = 'field-error-live';
+         e.target.parentElement.appendChild(errEl);
+       }
+       errEl.textContent = '\u26A0 \u6B64\u5B57\u6BB5\u8BF7\u4F7F\u7528\u82F1\u6587\u586B\u5199';
+       errEl.classList.add('show');
+       setTimeout(function(){ errEl.classList.remove('show'); }, 3000);
+     }
+   });
 
   // Live validation on blur for key fields
   ['passportExpiry','email','sevisId','passportIssue','passportNo','arrivalDate','nationalId','phone','monthlySalary'].forEach(name => {
@@ -2949,16 +2944,24 @@ document.addEventListener('DOMContentLoaded', function() {
   // Update sidebar on any input
   const form = document.getElementById('ds160Form');
   if (form) {
-    form.addEventListener('input', function() { setTimeout(updateSidebarStatus, 100); });
-    form.addEventListener('change', function() { setTimeout(updateSidebarStatus, 100); });
+    form.addEventListener('input', function() { setTimeout(updateSidebarStatus, 100); updateProgress(); });
+    form.addEventListener('change', function() { setTimeout(updateSidebarStatus, 100); updateProgress(); });
   }
   // Scroll-aware chapter highlighting
-  window.addEventListener('scroll', function() {
-    let activeId = 1;
-    CHAPTERS.forEach(c => {
-      const section = document.getElementById('section-' + c.id);
-      if (section && section.getBoundingClientRect().top < 200) activeId = c.id;
-    });
+  let _scrollRAF = 0;
+ window.addEventListener('scroll', function() {
+   cancelAnimationFrame(_scrollRAF);
+   _scrollRAF = requestAnimationFrame(() => {
+     let activeId = 1;
+     CHAPTERS.forEach(c => {
+       const section = document.getElementById('section-' + c.id);
+       if (section && section.getBoundingClientRect().top < 200) activeId = c.id;
+     });
+     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+     const item = document.querySelector('.sidebar-item[data-chapter="' + activeId + '"]');
+     if (item) item.classList.add('active');
+   });
+ });
     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
     const item = document.querySelector('.sidebar-item[data-chapter="' + activeId + '"]');
     if (item) item.classList.add('active');
