@@ -265,15 +265,19 @@ let modeDetected = false;
 async function detectMode(){
   const badge = document.getElementById('modeBadge');
   if(!ADMIN_PASS){
-    // 未登录，显示待检测状态
     badge.className = 'mode-badge local';
     badge.innerHTML = '⚪ 待登录';
     return;
   }
   try{
-    const res = await fetch(apiBase() + '/api/admin/stats',{
+    const url = apiBase() + '/api/admin/stats';
+    console.log('[detectMode] API_BASE:', window.API_BASE);
+    console.log('[detectMode] fetch URL:', url);
+    console.log('[detectMode] ADMIN_PASS:', ADMIN_PASS ? '(已设置' + ADMIN_PASS.length + '位)' : '(空)');
+    const res = await fetch(url, {
       headers:{'X-Admin-Password':ADMIN_PASS,'Content-Type':'application/json'}
     });
+    console.log('[detectMode] response status:', res.status, res.ok);
     if(res.ok){
       isServerMode = true;
       modeDetected = true;
@@ -282,6 +286,7 @@ async function detectMode(){
       document.getElementById('configCard').style.display = 'none';
     } else { throw new Error('not ok'); }
   }catch(e){
+    console.error('[detectMode] error:', e.message);
     isServerMode = false;
     modeDetected = true;
     badge.className = 'mode-badge local';
