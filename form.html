@@ -923,7 +923,7 @@ function getQueryParam(name) {
 
 // 本地HMAC验证（回退方案：当服务端不可达时使用）
 async function localHmacVerify(token) {
-  const _K = 'ds160-hmac-key-2026-prod';
+  const _K = 'ds160-secret-key-2026';
   const parts = token.split('.');
   if (parts.length !== 3) return false;
   const [id, ts, sig] = parts;
