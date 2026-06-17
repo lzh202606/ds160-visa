@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -904,17 +904,14 @@
 </div>
 
 <script>
-// ═════════════ Token 验证（安全版：前端不存储密钥） ═════════════
-// 注意：HMAC密钥已从前端移除，Token验证改为服务端API校验
-// 保留客户端快速格式检查作为第一层过滤
+// ═════════════ Token 验证（强制服务端验证版） ═════════════
+// 安全策略：无token拒绝访问 / 统一服务端验证 / 离线拒绝 / 首次访问即消耗
 
 function getQueryParam(name) {
-  // 鍏煎 file:/// 鏈湴鏂囦欢妯″紡锛歎RL.searchParams 鍦ㄦ煇浜涙祻瑙堝櫒瀵规湰鍦版枃浠朵笉宸ヤ綔
   try {
     const url = new URL(window.location.href);
     if (url.searchParams && url.searchParams.get(name)) return url.searchParams.get(name);
   } catch(e) {}
-  // Fallback: 鎵嬪姩瑙ｆ瀽 location.search
   const qs = window.location.search || window.location.hash;
   if (qs) {
     const match = qs.match(new RegExp('[?&]' + name + '=([^&]+)'));
@@ -922,21 +919,6 @@ function getQueryParam(name) {
   }
   return null;
 }
-
-// HMAC-SHA256 鏈湴楠岃瘉锛堟棤闇€鏈嶅姟绔級
-async function localHmacVerify(token) {
-  const HMAC_SECRET = 'ds160-secret-key-2026';
-  const parts = token.split('.');
-  if (parts.length !== 3) return false;
-  const [id, ts, sig] = parts;
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', encoder.encode(HMAC_SECRET), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
-  const sigBuf = await crypto.subtle.sign('HMAC', key, encoder.encode(id + '.' + ts));
-  const expected = btoa(String.fromCharCode(...new Uint8Array(sigBuf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  return sig === expected;
-}
-
-// 椤甸潰鍔犺浇鏃堕獙璇乀oken
 
 function checkAccessTimeLimit(tokenId, accessHours) {
   if (!accessHours || accessHours <= 0) return { valid: true, remainingMs: Infinity };
@@ -981,6 +963,7 @@ function initCountdown() {
   }
   tick();
 }
+
 (async function validateToken() {
   const token = getQueryParam('token');
   const gate = document.getElementById('tokenGate');
@@ -988,22 +971,28 @@ function initCountdown() {
   const title = document.getElementById('gateTitle');
   const msg = document.getElementById('gateMsg');
 
-  // No token - allow access
-  if (!token) return;
-
-  // Check token format
-  const isHMAC = token.split('.').length === 3;
-  const isServerToken = /^DS[0-9A-Fa-f]{12}$/.test(token);
-  if (!isHMAC && !isServerToken) {
+  // 修复1: 无token = 拒绝访问
+  if (!token) {
     gate.style.display = 'flex';
-    icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548'; msg.textContent = 'Token\u683C\u5F0F\u9519\u8BEF\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u6B63\u786E\u94FE\u63A5\u3002';
+    icon.textContent = '\u274C';
+    title.textContent = '\u8BBF\u95EE\u53D7\u9650';
+    msg.innerHTML = '\u8BF7\u4F7F\u7528\u6709\u6548\u7684\u4E13\u5C5E\u94FE\u63A5\u8BBF\u95EE\u6B64\u9875\u9762\u3002<br><br>\u5982\u9700\u83B7\u53D6\u94FE\u63A5\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
     return;
   }
 
-  const tokenId = isHMAC ? token.split('.')[0] : token;
+  // 格式检查：token 必须是 id.ts.sig 三段式
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    gate.style.display = 'flex';
+    icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548';
+    msg.textContent = 'Token\u683C\u5F0F\u9519\u8BEF\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u6B63\u786E\u94FE\u63A5\u3002';
+    return;
+  }
 
-  // 妫€鏌ユ湰鍦版槸鍚﹀凡浣跨敤锛堝揩閫熸湰鍦版鏌ワ級
+  const tokenId = parts[0];
   const usedKey = 'ds160_used_' + tokenId;
+
+  // 本地快速检查：是否已使用
   if (localStorage.getItem(usedKey)) {
     gate.style.display = 'flex';
     icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u4F7F\u7528';
@@ -1011,69 +1000,50 @@ function initCountdown() {
     return;
   }
 
-  // HMAC always verifies locally (GitHub Pages + local file)
-
-  if (isHMAC) {
-    const valid = await localHmacVerify(token);
-    if (!valid) {
-      gate.style.display = 'flex';
-      icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548';
-      msg.textContent = 'Token\u7B7E\u540D\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u88AB\u7BE1\u6539\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
-      return;
-    }
-    const ts = parseInt(token.split('.')[1]);
-    if (ts && Date.now() - ts > 365 * 24 * 3600000) {
-      gate.style.display = 'flex';
-      icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u8FC7\u671F';
-      msg.textContent = '\u6B64\u94FE\u63A5\u5DF2\u8D85\u8FC7\u6709\u6548\u671F\u9650\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-      return;
-    }
-    window.DS160_TOKEN_ID = tokenId;
-    window.DS160_TOKEN = token;
-    window.consumeToken = function() {
-      localStorage.setItem(usedKey, new Date().toISOString());
-    };
-    // Access time limit
-    const urlAccessHours = parseInt(getQueryParam('h')) || 24;
-    const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
-    if (!accessResult.valid) {
-      gate.style.display = 'flex';
-      icon.textContent = '\u23F0'; title.textContent = '\u8BBF\u95EE\u5DF2\u8FC7\u671F';
-      msg.textContent = '\u6B64\u94FE\u63A5\u7684\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\uFF08' + urlAccessHours + '\u5C0F\u65F6\uFF09\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-      return;
-    }
-    if (accessResult.remainingMs !== Infinity) {
-      window.DS160_REMAINING_MS = accessResult.remainingMs;
-    }
-    initCountdown();
-    return;
-  }
-
-  // 鏈嶅姟绔獙璇乀oken
+  // 统一服务端验证（修复2+7: 删除前端HMAC密钥，所有验证走服务端）
   try {
     const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token));
     const checkData = await checkRes.json();
     if (checkData.valid) {
       window.DS160_TOKEN_ID = tokenId;
       window.DS160_TOKEN = token;
+      // 修复4: 验证通过后立即标记已使用（服务端+本地双保险）
       window.consumeToken = function() {
         localStorage.setItem(usedKey, new Date().toISOString());
       };
-      // Server returned remaining time
-      if (checkData.remainingMs) window.DS160_REMAINING_MS = checkData.remainingMs;
+      // 立即消耗token：服务端标记
+      try { fetch((window.API_BASE||'') + '/api/consume', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token})}); } catch(ce){}
+      // 立即消耗token：本地标记
+      localStorage.setItem(usedKey, new Date().toISOString());
+      // 倒计时
+      if (checkData.remainingMs && checkData.remainingMs !== Infinity) {
+        window.DS160_REMAINING_MS = checkData.remainingMs;
+        initCountdown();
+      }
     } else {
       gate.style.display = 'flex';
-      icon.textContent = '🚫'; title.textContent = '链接无效';
-      msg.textContent = checkData.reason || 'Token\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u5DF2\u8FC7\u671F\u6216\u88AB\u7BE1\u6539\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
+      icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548';
+      // 根据服务端返回的原因显示不同提示
+      var reasonMsg = checkData.reason || 'Token\u9A8C\u8BC1\u5931\u8D25';
+      if (checkData.reason === 'already used') {
+        icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u4F7F\u7528';
+        reasonMsg = '\u6B64\u94FE\u63A5\u5DF2\u88AB\u4F7F\u7528\u8FC7\u3002\u6BCF\u4E2A\u94FE\u63A5\u4EC5\u4F9B\u4E00\u4EBA\u4F7F\u7528\u4E00\u6B21\u3002';
+      } else if (checkData.reason === 'expired') {
+        icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u8FC7\u671F';
+        reasonMsg = '\u6B64\u94FE\u63A5\u5DF2\u8D85\u8FC7\u6709\u6548\u671F\u9650\u3002';
+      } else if (checkData.reason === 'access time expired') {
+        icon.textContent = '\u23F0'; title.textContent = '\u8BBF\u95EE\u5DF2\u8FC7\u671F';
+        reasonMsg = '\u6B64\u94FE\u63A5\u7684\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\u3002';
+      } else if (checkData.reason === 'signature mismatch') {
+        reasonMsg = '\u94FE\u63A5\u7B7E\u540D\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u88AB\u7BE1\u6539\u3002';
+      }
+      msg.textContent = reasonMsg + '\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
     }
   } catch(e) {
-    console.warn('Token\u670D\u52A1\u7AEF\u9A8C\u8BC1\u4E0D\u53EF\u7528\uFF0C\u5141\u8BB8\u4E34\u65F6\u8BBF\u95EE\uFF08\u79BB\u7EBF\u6A21\u5F0F\uFF09');
-    window.DS160_TOKEN_ID = tokenId;
-    window.DS160_TOKEN = token;
-    window.DS160_TOKEN_OFFLINE = true;
-    window.consumeToken = function() {
-      localStorage.setItem(usedKey, new Date().toISOString());
-    };
+    // 修复3: 离线模式 = 拒绝访问（不再允许临时访问）
+    gate.style.display = 'flex';
+    icon.textContent = '\u26A0\uFE0F'; title.textContent = '\u7F51\u7EDC\u8FDE\u63A5\u5931\u8D25';
+    msg.innerHTML = '\u65E0\u6CD5\u8FDE\u63A5\u670D\u52A1\u5668\u9A8C\u8BC1\u94FE\u63A5\u6709\u6548\u6027\u3002<br>\u8BF7\u68C0\u67E5\u7F51\u7EDC\u8FDE\u63A5\u540E\u91CD\u65B0\u6253\u5F00\u94FE\u63A5\u3002<br><br>\u5982\u95EE\u9898\u6301\u7EED\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
   }
 })();
 
@@ -1872,34 +1842,21 @@ async function printPDF() {
   if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') { alert('\u8BF7\u7A0D\u5019\uFF0C\u9875\u9762\u8D44\u6E90\u52A0\u8F7D\u4E2D\uFF0C\u8BF7\u518D\u8BD5\u3002'); return; }
   const token = window.DS160_TOKEN;
   if (token) {
-    const isHMAC = token.split('.').length === 3;
-    if (isHMAC) {
-      const tokenId = token.split('.')[0];
-      const usedKey = 'ds160_used_' + tokenId;
-      if (localStorage.getItem(usedKey)) {
-        alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF08\u5DF2\u88AB\u4F7F\u7528\uFF09\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
+    // 安全增强：PDF下载前再次验证token有效性（服务端校验）
+    try {
+      const recheck = await fetch((window.API_BASE||'') + '/api/check?token=' + encodeURIComponent(token));
+      const recheckData = await recheck.json();
+      if (!recheckData.valid) {
+        var failMsg = '您的链接已失效，请联系服务提供商获取新链接。';
+        if (recheckData.reason === 'already used') failMsg = '您的链接已被使用，请联系服务提供商获取新链接。';
+        else if (recheckData.reason === 'expired') failMsg = '您的链接已过期，请联系服务提供商获取新链接。';
+        else if (recheckData.reason === 'access time expired') failMsg = '您的链接访问时限已到期，请联系服务提供商获取新链接。';
+        alert(failMsg);
         return;
       }
-      const valid = await localHmacVerify(token);
-      if (!valid) {
-        alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF08\u7B7E\u540D\u65E0\u6548\uFF09\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
-        return;
-      }
-      const urlAccessHours = parseInt(getQueryParam('h')) || 24;
-      const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
-      if (!accessResult.valid) {
-        alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF08\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\uFF09\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
-        return;
-      }
-    } else {
-      try {
-        const checkRes = await fetch((window.API_BASE||'') + '/api/check?token=' + token);
-        const checkData = await checkRes.json();
-        if (!checkData.valid) {
-          alert('\u60A8\u7684\u94FE\u63A5\u5DF2\u5931\u6548\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002');
-          return;
-        }
-      } catch(e) {}
+    } catch(e) {
+      alert('网络连接失败，无法验证链接有效性，请检查网络后重试。');
+      return;
     }
   }
 
