@@ -903,10 +903,11 @@
 
 </div>
 
+<script src="api-config.js"></script>
 <script>
-// ═════════════ Token 验证（服务端优先 + 本地HMAC回退） ═════════════
-// 策略：先尝试服务端验证（最强），服务端不可达时回退本地HMAC验证（保证可用性）
-// 无token拒绝访问 / 首次访问即消耗（服务端+本地双保险）
+// ═════════════ Token 验证（纯服务端验证） ═════════════
+// 策略：仅服务端验证，服务端不可达时提示网络问题
+// 无token拒绝访问 / Token仅在 PDF 下载时消耗
 
 function getQueryParam(name) {
   try {
@@ -919,35 +920,6 @@ function getQueryParam(name) {
     if (match) return decodeURIComponent(match[1]);
   }
   return null;
-}
-
-// 本地HMAC验证（回退方案：当服务端不可达时使用）
-async function localHmacVerify(token) {
-  const _K = 'ds160-secret-key-2026';
-  const parts = token.split('.');
-  if (parts.length !== 3) return false;
-  const [id, ts, sig] = parts;
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', encoder.encode(_K), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
-  const sigBuf = await crypto.subtle.sign('HMAC', key, encoder.encode(id + '.' + ts));
-  const expected = btoa(String.fromCharCode(...new Uint8Array(sigBuf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  return sig === expected;
-}
-
-function checkAccessTimeLimit(tokenId, accessHours) {
-  if (!accessHours || accessHours <= 0) return { valid: true, remainingMs: Infinity };
-  var firstKey = 'ds160_first_access_' + tokenId;
-  var firstStr = localStorage.getItem(firstKey);
-  var now = Date.now();
-  if (!firstStr) {
-    localStorage.setItem(firstKey, now.toString());
-    firstStr = now.toString();
-  }
-  var firstAt = parseInt(firstStr);
-  var deadline = firstAt + accessHours * 3600000;
-  var remaining = deadline - now;
-  if (remaining <= 0) return { valid: false, remainingMs: 0 };
-  return { valid: true, remainingMs: remaining };
 }
 
 function initCountdown() {
@@ -1053,51 +1025,13 @@ function initCountdown() {
       return;
     }
   } catch(e) {
-    // 服务端不可达 → 回退到本地HMAC验证（保证国内用户可用）
-    console.warn('服务端验证不可用，回退本地HMAC验证');
-  }
-
-  // 第2步：本地HMAC回退验证
-  const hmacValid = await localHmacVerify(token);
-  if (!hmacValid) {
+    // 服务端不可达 → 提示网络问题，不再本地绕过验证
+    console.warn('服务端验证不可用', e);
     gate.style.display = 'flex';
-    icon.textContent = '\u274C'; title.textContent = '\u94FE\u63A5\u65E0\u6548';
-    msg.textContent = 'Token\u7B7E\u540D\u9A8C\u8BC1\u5931\u8D25\uFF0C\u94FE\u63A5\u53EF\u80FD\u88AB\u7BE1\u6539\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
+    icon.textContent = '\u26A0';
+    title.textContent = '\u7F51\u7EDC\u8FDE\u63A5\u5931\u8D25';
+    msg.innerHTML = '\u65E0\u6CD5\u8FDE\u63A5\u5230\u9A8C\u8BC1\u670D\u52A1\u5668\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u540E\u91CD\u8BD5\u3002<br><br>\u5982\u95EE\u9898\u6301\u7EED\uFF0C\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u3002';
     return;
-  }
-
-  // 检查绝对过期（本地）
-  const ts = parseInt(parts[1]);
-  if (ts && Date.now() - ts > 365 * 24 * 3600000) {
-    gate.style.display = 'flex';
-    icon.textContent = '\u23F0'; title.textContent = '\u94FE\u63A5\u5DF2\u8FC7\u671F';
-    msg.textContent = '\u6B64\u94FE\u63A5\u5DF2\u8D85\u8FC7\u6709\u6548\u671F\u9650\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-    return;
-  }
-
-  // 访问时限检查（本地）
-  const urlAccessHours = parseInt(getQueryParam('h')) || 24;
-  const accessResult = checkAccessTimeLimit(tokenId, urlAccessHours);
-  if (!accessResult.valid) {
-    gate.style.display = 'flex';
-    icon.textContent = '\u23F0'; title.textContent = '\u8BBF\u95EE\u5DF2\u8FC7\u671F';
-    msg.textContent = '\u6B64\u94FE\u63A5\u7684\u8BBF\u95EE\u65F6\u9650\u5DF2\u5230\u671F\uFF08' + urlAccessHours + '\u5C0F\u65F6\uFF09\u3002\u8BF7\u8054\u7CFB\u670D\u52A1\u63D0\u4F9B\u5546\u83B7\u53D6\u65B0\u94FE\u63A5\u3002';
-    return;
-  }
-
-  // 本地验证通过
-  window.DS160_TOKEN_ID = tokenId;
-  window.DS160_TOKEN = token;
-  window.consumeToken = function() {
-    localStorage.setItem(usedKey, new Date().toISOString());
-    try{fetch((window.API_BASE||'')+'/api/consume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:window.DS160_TOKEN||''})});}catch(e){}
-  };
-  // Token仅在 PDF 下载时消耗
-
-  // 倒计时
-  if (accessResult.remainingMs !== Infinity) {
-    window.DS160_REMAINING_MS = accessResult.remainingMs;
-    initCountdown();
   }
 })();
 

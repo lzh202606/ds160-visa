@@ -142,6 +142,8 @@
     <h1>管理后台</h1>
     <p class="sub">DS-160 一次性链接管理系统</p>
     <input type="password" id="adminPass" placeholder="输入管理密码" onkeydown="if(event.key==='Enter')login()" autofocus>
+    <input type="password" id="hmacSecretInput" placeholder="HMAC 签名密钥（本地模式必填）" onkeydown="if(event.key==='Enter')login()">
+    <div class="config-hint" style="margin-top:8px;text-align:center;color:var(--text3);font-size:11px;">本地模式需设置 HMAC 密钥，需与服务端一致才能验证链接</div>
     <button type="button" class="btn" onclick="login()">进入系统</button>
   </div>
 </div>
@@ -167,6 +169,10 @@
       <div class="config-row">
         <label>表单页面地址</label>
         <input type="text" id="formUrl" placeholder="如：https://your-domain.com/form.html 或 form.html（相对路径）">
+      </div>
+      <div class="config-row">
+        <label>HMAC 签名密钥</label>
+        <input type="password" id="hmacSecretConfig" placeholder="设置 HMAC 签名密钥（本地模式必填）" onchange="HMAC_SECRET=this.value;localStorage.setItem('ds160_hmac_secret',this.value)">
       </div>
       <div class="config-hint" id="configHint">
         💡 本地模式：无需服务端，Token 签名在本地生成，链接可直接使用。<br>
@@ -239,19 +245,23 @@
   </div>
 </div>
 
+<script src="api-config.js"></script>
 <script>
 // 密码由用户登录时输入，不再硬编码
 let ADMIN_PASS = '';
 // HMAC密钥由用户设置或从localStorage读取，不再硬编码
-let HMAC_SECRET = 'ds160-secret-key-2026';
+let HMAC_SECRET = localStorage.getItem('ds160_hmac_secret') || '';
 let allTokens = [];
 let isServerMode = false;
+
+// API 基础路径：优先使用 api-config.js 中的 API_BASE，否则用相对路径
+function apiBase() { return window.API_BASE || ''; }
 
 // ── 检测运行模式 ──
 (async function detectMode(){
   const badge = document.getElementById('modeBadge');
   try{
-    const res = await fetch('/api/admin/stats',{
+    const res = await fetch(apiBase() + '/api/admin/stats',{
       headers:{'X-Admin-Password':ADMIN_PASS,'Content-Type':'application/json'}
     });
     if(res.ok){
@@ -269,6 +279,9 @@ let isServerMode = false;
     // 设置默认表单URL
     const savedUrl = localStorage.getItem('ds160_admin_formUrl') || '';
     document.getElementById('formUrl').value = savedUrl;
+    // 设置已保存的HMAC密钥
+    const savedHmac = localStorage.getItem('ds160_hmac_secret') || '';
+    document.getElementById('hmacSecretConfig').value = savedHmac;
   }
 })();
 
@@ -303,7 +316,13 @@ function login(){
   const pw=document.getElementById('adminPass').value;
   if(!pw){showToast('\u8BF7\u8F93\u5165\u5BC6\u7801','error');return;}
   ADMIN_PASS=pw;
-  // \u672C\u5730\u6A21\u5F0F\uFF1A\u7528\u6237\u8F93\u5165\u5373\u4E3A\u5BC6\u7801\uFF0C\u540C\u65F6\u4F5C\u4E3AHMAC\u5BC6\u94A5
+  // HMAC密钥：从输入框读取并保存到localStorage
+  const hmacInput=document.getElementById('hmacSecretInput').value;
+  if(hmacInput){
+    HMAC_SECRET=hmacInput;
+    localStorage.setItem('ds160_hmac_secret',hmacInput);
+  }
+  // 本地模式下必须设置HMAC密钥才能生成Token
   
   document.getElementById('loginOverlay').style.opacity='0';
   document.getElementById('loginOverlay').style.transition='opacity .3s';
@@ -330,7 +349,7 @@ function getFormUrl(){
 async function refreshStats(){
   if(isServerMode){
     try{
-      const res=await fetch('/api/admin/stats',{headers:headers()});
+      const res=await fetch(apiBase() + '/api/admin/stats',{headers:headers()});
       const data=await res.json();
       document.getElementById('statTotal').textContent=data.total;
       document.getElementById('statActive').textContent=data.active;
@@ -413,7 +432,7 @@ async function generateTokens(){
 
   if(isServerMode){
     try{
-      const res=await fetch('/api/admin/generate',{
+      const res=await fetch(apiBase() + '/api/admin/generate',{
         method:'POST',headers:headers(),
         body:JSON.stringify({count,label,expiresHours,accessHours})
       });
@@ -424,6 +443,7 @@ async function generateTokens(){
     }catch(e){showToast('生成失败: '+e.message,'error')}
   }else{
     // 本地模式：HMAC签名生成Token
+    if(!HMAC_SECRET){showToast('请先设置 HMAC 签名密钥','error');return;}
     const generated=[];
     for(let i=0;i<count;i++){
       const id=crypto.randomUUID().replace(/-/g,'').substring(0,12);
@@ -470,7 +490,7 @@ async function deleteToken(token){
   if(!confirm('确定删除此链接吗？'))return;
   if(isServerMode){
     try{
-      await fetch('/api/admin/token/'+token,{method:'DELETE',headers:headers()});
+      await fetch(apiBase() + '/api/admin/token/'+token,{method:'DELETE',headers:headers()});
       showToast('已删除');
       refreshStats();
     }catch(e){showToast('删除失败','error')}
