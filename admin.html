@@ -258,32 +258,44 @@ let isServerMode = false;
 function apiBase() { return window.API_BASE || ''; }
 
 // ── 检测运行模式 ──
-(async function detectMode(){
+// 注意：登录前 ADMIN_PASS 为空，不能此时检测服务端模式
+// 改为登录后再检测
+let modeDetected = false;
+
+async function detectMode(){
   const badge = document.getElementById('modeBadge');
+  if(!ADMIN_PASS){
+    // 未登录，显示待检测状态
+    badge.className = 'mode-badge local';
+    badge.innerHTML = '⚪ 待登录';
+    return;
+  }
   try{
     const res = await fetch(apiBase() + '/api/admin/stats',{
       headers:{'X-Admin-Password':ADMIN_PASS,'Content-Type':'application/json'}
     });
     if(res.ok){
       isServerMode = true;
+      modeDetected = true;
       badge.className = 'mode-badge server';
       badge.innerHTML = '🟢 服务端模式';
       document.getElementById('configCard').style.display = 'none';
     } else { throw new Error('not ok'); }
   }catch(e){
     isServerMode = false;
+    modeDetected = true;
     badge.className = 'mode-badge local';
     badge.innerHTML = '🟡 本地模式';
-    // 加载本地存储的 Token 和配置
     loadLocalData();
-    // 设置默认表单URL
     const savedUrl = localStorage.getItem('ds160_admin_formUrl') || '';
     document.getElementById('formUrl').value = savedUrl;
-    // 设置已保存的HMAC密钥
     const savedHmac = localStorage.getItem('ds160_hmac_secret') || '';
     document.getElementById('hmacSecretConfig').value = savedHmac;
   }
-})();
+}
+
+// 初始调用（仅显示待登录状态）
+detectMode();
 
 function headers(){return{'X-Admin-Password':ADMIN_PASS,'Content-Type':'application/json'}}
 
@@ -329,7 +341,8 @@ function login(){
   setTimeout(()=>{
     document.getElementById('loginOverlay').style.display='none';
     document.getElementById('mainPanel').style.display='block';
-    refreshStats();
+    // 登录后再检测服务端模式
+    detectMode().then(() => refreshStats());
   },300);
 }// ── 获取表单页面URL ──
 function getFormUrl(){
